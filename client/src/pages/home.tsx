@@ -849,36 +849,36 @@ export default function Home() {
       <AnimatePresence>
         {showSpinWheel && (
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowSpinWheel(false)}
             style={{ 
-              touchAction: 'pan-y',
+              touchAction: 'none',
               transform: 'translateZ(0)', // Hardware acceleration
-              willChange: 'scroll-position'
+              overflow: 'hidden'
             }}
           >
-            <div className="h-full w-full flex items-center justify-center p-4" style={{ overflow: 'hidden' }}>
-              <motion.div
-                className="rounded-3xl max-w-md w-full relative flex flex-col will-change-transform"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  backdropFilter: 'blur(20px)',
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
-                  maxHeight: '90vh',
-                  transform: 'translateZ(0)', // Hardware acceleration
-                  backfaceVisibility: 'hidden',
-                  border: 'none',
-                  outline: 'none',
-                  margin: 'auto'
-                }}
+            <motion.div
+              className="absolute top-1/2 left-1/2 rounded-3xl max-w-md w-full relative flex flex-col will-change-transform"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
+                maxHeight: '90vh',
+                transform: 'translate(-50%, -50%)',
+                backfaceVisibility: 'hidden',
+                border: 'none',
+                outline: 'none',
+                maxWidth: '400px',
+                margin: '0 16px'
+              }}
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-              >
+              onClick={(e) => e.stopPropagation()}
+            >
                 {/* Top highlight */}
                 <div 
                   className="absolute top-0 left-0 right-0 h-px"
@@ -935,7 +935,6 @@ export default function Home() {
                   />
                 </div>
               </motion.div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
