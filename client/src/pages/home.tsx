@@ -860,18 +860,19 @@ export default function Home() {
               willChange: 'scroll-position'
             }}
           >
-            <div className="max-h-full w-full flex items-center justify-center p-4" style={{ overflow: 'hidden' }}>
+            <div className="h-full w-full flex items-center justify-center p-4" style={{ overflow: 'hidden' }}>
               <motion.div
                 className="rounded-3xl max-w-md w-full relative flex flex-col will-change-transform"
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
                   backdropFilter: 'blur(20px)',
                   boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
-                  maxHeight: '95vh',
+                  maxHeight: '90vh',
                   transform: 'translateZ(0)', // Hardware acceleration
                   backfaceVisibility: 'hidden',
                   border: 'none',
-                  outline: 'none'
+                  outline: 'none',
+                  margin: 'auto'
                 }}
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
