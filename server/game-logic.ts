@@ -12,31 +12,31 @@ export interface SpinResult {
 export const TOKEN_CONFIG = {
   TOKEN1: {
     address: "",
-    symbol: "TOKEN1", 
-    rewardAmount: "1000000000000000000" // 1 token
+    symbol: "AIDOGE", 
+    rewardAmount: "1000000000000000000" // 1 AIDOGE
   },
   TOKEN2: {
     address: "",
-    symbol: "TOKEN2",
-    rewardAmount: "2000000000000000000" // 2 tokens
+    symbol: "BOOP",
+    rewardAmount: "2000000000000000000" // 2 BOOP
   },
   TOKEN3: {
     address: "",
-    symbol: "TOKEN3",
-    rewardAmount: "500000000000000000" // 0.5 tokens
+    symbol: "ARB",
+    rewardAmount: "500000000000000000" // 0.5 ARB
   }
 } as const;
 
 // Wheel segments with probabilities - reduced BUST for more wins
 const WHEEL_SEGMENTS = [
-  { name: 'IARB', weight: 20 }, // 20%
+  { name: 'AIDOGE', weight: 20 }, // 20%
   { name: 'BUST', weight: 15 },   // 15% (reduced from 25%)
-  { name: 'JUICE', weight: 18 },   // 18% (increased)
-  { name: 'BONUS', weight: 12 },   // 12% (2x JUICE, increased)
-  { name: 'ABET', weight: 20 }, // 20% (increased)
+  { name: 'BOOP', weight: 18 },   // 18% (increased)
+  { name: 'BONUS', weight: 12 },   // 12% (2x BOOP, increased)
+  { name: 'ARB', weight: 20 }, // 20% (increased)
   { name: 'BUST', weight: 10 },   // 10% (reduced from 20%)
-  { name: 'IARB', weight: 3 },  // 3%
-  { name: 'JACKPOT', weight: 2 }, // 2% (10x IARB)
+  { name: 'AIDOGE', weight: 3 },  // 3%
+  { name: 'JACKPOT', weight: 2 }, // 2% (10x AIDOGE)
 ];
 
 // Calculate winning probabilities based on user's daily spin count
@@ -90,21 +90,21 @@ export function performSpin(): SpinResult {
   let rewardAmount = "0";
   
   switch (segment) {
-    case 'IARB':
+    case 'AIDOGE':
       isWin = true;
       tokenType = "TOKEN1";
       tokenAddress = TOKEN_CONFIG.TOKEN1.address || "";
       rewardAmount = TOKEN_CONFIG.TOKEN1.rewardAmount;
       break;
       
-    case 'JUICE':
+    case 'BOOP':
       isWin = true;
       tokenType = "TOKEN2";
       tokenAddress = TOKEN_CONFIG.TOKEN2.address || "";
       rewardAmount = TOKEN_CONFIG.TOKEN2.rewardAmount;
       break;
       
-    case 'ABET':
+    case 'ARB':
       isWin = true;
       tokenType = "TOKEN3";
       tokenAddress = TOKEN_CONFIG.TOKEN3.address || "";
@@ -115,14 +115,14 @@ export function performSpin(): SpinResult {
       isWin = true;
       tokenType = "TOKEN2";
       tokenAddress = TOKEN_CONFIG.TOKEN2.address || "";
-      rewardAmount = "4000000000000000000"; // 2x TOKEN2 = 4 tokens
+      rewardAmount = "4000000000000000000"; // 2x BOOP = 4 tokens
       break;
       
     case 'JACKPOT':
       isWin = true;
       tokenType = "TOKEN1";
       tokenAddress = TOKEN_CONFIG.TOKEN1.address || "";
-      rewardAmount = "10000000000000000000"; // 10x TOKEN1 = 10 tokens
+      rewardAmount = "10000000000000000000"; // 10x AIDOGE = 10 tokens
       break;
       
     default: // BUST

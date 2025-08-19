@@ -23,9 +23,6 @@ const WHEEL_SEGMENTS = [
 
 // Map server segment names to display names
 const SEGMENT_MAPPING: { [key: string]: string } = {
-  'IARB': 'AIDOGE',
-  'ABET': 'ARB', 
-  'JUICE': 'BOOP',
   'AIDOGE': 'AIDOGE',
   'ARB': 'ARB',
   'BOOP': 'BOOP',
