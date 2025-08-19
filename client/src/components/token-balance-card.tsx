@@ -129,8 +129,8 @@ export function TokenBalanceCard({ userId }: TokenBalanceCardProps) {
       bgColor: "bg-blue-400/10",
     },
     {
-      symbol: "CATCH",
-      name: "Catch", 
+      symbol: "ARB",
+      name: "Arbitrum", 
       amount: balances?.token3 || "0",
       icon: Award,
       color: "text-purple-400",

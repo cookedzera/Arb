@@ -141,8 +141,8 @@ export default function TokenCollection() {
       bgColor: "bg-blue-400/10",
     },
     {
-      symbol: "CATCH",
-      name: "Catch",
+      symbol: "ARB",
+      name: "Arbitrum",
       amount: balances?.token3 || "0",
       icon: Award,
       color: "text-purple-400",
@@ -201,7 +201,7 @@ export default function TokenCollection() {
             const recentClaim = claims?.find(claim => 
               (token.symbol === "AIDOGE" && BigInt(claim.token1Amount || "0") > 0) ||
               (token.symbol === "BOOP" && BigInt(claim.token2Amount || "0") > 0) ||
-              (token.symbol === "CATCH" && BigInt(claim.token3Amount || "0") > 0)
+              (token.symbol === "ARB" && BigInt(claim.token3Amount || "0") > 0)
             );
             
             return (

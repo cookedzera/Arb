@@ -161,15 +161,15 @@ export function registerSpinRoutes(app: Express) {
       // Reset accumulated amount and update claimed amount
       const updateData: any = {};
       switch (tokenType) {
-        case 'AIDOGE':
+        case 'TOKEN1':
           updateData.accumulatedToken1 = "0";
           updateData.claimedToken1 = (BigInt(user.claimedToken1 || "0") + BigInt(accumulatedAmount)).toString();
           break;
-        case 'BOOP':
+        case 'TOKEN2':
           updateData.accumulatedToken2 = "0";
           updateData.claimedToken2 = (BigInt(user.claimedToken2 || "0") + BigInt(accumulatedAmount)).toString();
           break;
-        case 'BOBOTRUM':
+        case 'TOKEN3':
           updateData.accumulatedToken3 = "0";
           updateData.claimedToken3 = (BigInt(user.claimedToken3 || "0") + BigInt(accumulatedAmount)).toString();
           break;
@@ -181,9 +181,9 @@ export function registerSpinRoutes(app: Express) {
       // Record the claim
       await storage.addTokenClaim({
         userId,
-        token1Amount: tokenType === 'AIDOGE' ? accumulatedAmount : "0",
-        token2Amount: tokenType === 'BOOP' ? accumulatedAmount : "0",
-        token3Amount: tokenType === 'BOBOTRUM' ? accumulatedAmount : "0",
+        token1Amount: tokenType === 'TOKEN1' ? accumulatedAmount : "0",
+        token2Amount: tokenType === 'TOKEN2' ? accumulatedAmount : "0",
+        token3Amount: tokenType === 'TOKEN3' ? accumulatedAmount : "0",
         totalValueUSD: "0", // Calculate later if needed
         transactionHash: txHash,
         status: "confirmed"
@@ -273,7 +273,7 @@ export function registerSpinRoutes(app: Express) {
         amounts: {
           AIDOGE: token1Amount,
           BOOP: token2Amount,
-          BOBOTRUM: token3Amount
+          ARB: token3Amount
         }
       });
       
@@ -318,6 +318,6 @@ async function getUserAccumulatedRewards(userId: string) {
   return {
     AIDOGE: user.accumulatedToken1 || "0",
     BOOP: user.accumulatedToken2 || "0", 
-    BOBOTRUM: user.accumulatedToken3 || "0"
+    ARB: user.accumulatedToken3 || "0"
   };
 }

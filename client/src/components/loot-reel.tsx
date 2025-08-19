@@ -29,7 +29,7 @@ const memeTokens = [
   },
   {
     id: '0xbc4c97fb9befaa8b41448e1dfcc5236da543217f',
-    name: 'CATCH',
+    name: 'ARB',
     image: catchLogo,
 
     color: '#45B7D1',
