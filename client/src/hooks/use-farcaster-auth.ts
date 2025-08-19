@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { getFarcasterUser } from '@/services/farcaster';
 
 interface FarcasterUser {
   fid: number;
@@ -24,15 +25,29 @@ interface FarcasterAuth {
 export function useFarcasterAuth(): FarcasterAuth {
   const { isConnected, address } = useAccount();
   const [user, setUser] = useState<FarcasterUser | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // This hook now primarily tracks Wagmi connection state
-  // The actual user data fetching is handled by the FarcasterConnect component
   const authenticate = async () => {
-    // This is now handled by the FarcasterConnect component
-    // when the wallet is connected through Wagmi
-    return Promise.resolve();
+    setIsLoading(true);
+    try {
+      const farcasterUser = await getFarcasterUser();
+      if (farcasterUser) {
+        setUser(farcasterUser);
+        setIsAuthenticated(true);
+        console.log('Farcaster user authenticated:', farcasterUser);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        console.log('No Farcaster user found');
+      }
+    } catch (error) {
+      console.error('Farcaster auth error:', error);
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const signOut = () => {
@@ -41,32 +56,15 @@ export function useFarcasterAuth(): FarcasterAuth {
     localStorage.removeItem('farcaster_user');
   };
 
-  // Update authentication state based on wallet connection
+  // Initialize Farcaster authentication
   useEffect(() => {
-    if (!isConnected) {
-      setUser(null);
-      setIsAuthenticated(false);
-      return;
-    }
-
-    // Check for stored user data when wallet is connected
-    const storedUser = localStorage.getItem('farcaster_user');
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-        setIsAuthenticated(true);
-      } catch (parseError) {
-        console.error('Failed to parse stored user data:', parseError);
-        localStorage.removeItem('farcaster_user');
-      }
-    }
-  }, [isConnected]);
+    authenticate();
+  }, []);
 
   return {
     user,
     isLoading,
-    isAuthenticated: isAuthenticated && isConnected,
+    isAuthenticated,
     walletConnected: isConnected,
     walletAddress: address,
     authenticate,

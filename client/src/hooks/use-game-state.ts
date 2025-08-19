@@ -11,11 +11,20 @@ export function useGameState() {
 
   // Initialize user
   const initUserMutation = useMutation({
-    mutationFn: async (userData: { username: string; walletAddress?: string; farcasterFid?: number }) => {
+    mutationFn: async (userData: { 
+      username: string; 
+      walletAddress?: string; 
+      farcasterFid?: number;
+      farcasterUsername?: string;
+      farcasterDisplayName?: string;
+      farcasterPfpUrl?: string;
+    }) => {
+      console.log('Creating user with data:', userData);
       const response = await apiRequest("POST", "/api/user", userData);
       return response.json() as Promise<User>;
     },
     onSuccess: (user) => {
+      console.log('User created successfully:', user);
       setUserId(user.id);
       localStorage.setItem("arbcasino_user_id", user.id);
     }
@@ -32,6 +41,9 @@ export function useGameState() {
   useEffect(() => {
     // Wait for Farcaster auth to complete
     if (farcasterLoading) return;
+
+    // Force refresh for testing - clear localStorage to test auth
+    // localStorage.removeItem("arbcasino_user_id");
 
     const storedUserId = localStorage.getItem("arbcasino_user_id");
     
@@ -58,13 +70,22 @@ export function useGameState() {
         ? farcasterUser.custody
         : `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
       
+      console.log('Initializing user with Farcaster data:', {
+        isFarcasterAuth,
+        farcasterUser,
+        username
+      });
+      
       initUserMutation.mutate({
         username,
         walletAddress,
-        farcasterFid: isFarcasterAuth && farcasterUser ? farcasterUser.fid : undefined
+        farcasterFid: isFarcasterAuth && farcasterUser ? farcasterUser.fid : undefined,
+        farcasterUsername: isFarcasterAuth && farcasterUser ? farcasterUser.username : undefined,
+        farcasterDisplayName: isFarcasterAuth && farcasterUser ? farcasterUser.displayName : undefined,
+        farcasterPfpUrl: isFarcasterAuth && farcasterUser ? farcasterUser.pfpUrl : undefined,
       });
     }
-  }, [farcasterLoading, error, userId, initUserMutation.isPending]); // Simplified dependencies to prevent infinite loops
+  }, [farcasterLoading, error, userId, initUserMutation.isPending, isFarcasterAuth, farcasterUser]); // Include auth state in dependencies
 
   return {
     user,

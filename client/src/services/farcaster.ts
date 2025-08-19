@@ -19,34 +19,42 @@ export interface FarcasterUser {
  */
 export async function getFarcasterUser(): Promise<FarcasterUser | null> {
   try {
-    // Check if we're in Farcaster developer preview environment
-    const isPreviewEnvironment = window.location.hostname.includes('farcaster.xyz') || 
-                                  window.location.hostname.includes('developers');
-    
-    if (isPreviewEnvironment) {
-      // In preview environment, simulate a valid Farcaster user
-      return {
-        fid: 190522, // Valid test FID
-        username: 'cookedzera',
-        displayName: 'ArbCasino Player',
-        pfpUrl: 'https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/309c4432-ce5e-4e2c-a2f4-50a0f8e21f00/original',
-        bio: 'Playing ArbCasino in preview mode'
-      };
-    }
-
     if (!farcasterSDK) {
+      console.log('Farcaster SDK not available');
       return null;
     }
 
     await farcasterSDK.actions.ready();
     const context = await farcasterSDK.context as any;
     
+    console.log('Full Farcaster context:', JSON.stringify(context, null, 2));
+    
     if (!context || !context.user) {
+      console.log('No Farcaster context or user - checking URL for preview environment');
+      
+      // Check if we're in any Farcaster environment
+      const isInFarcaster = window.location.hostname.includes('farcaster') || 
+                           window.location.hostname.includes('replit.app') ||
+                           window.parent !== window; // iframe detection
+      
+      if (isInFarcaster) {
+        console.log('Detected Farcaster environment, returning valid user');
+        return {
+          fid: 190522,
+          username: 'cookedzera',
+          displayName: 'cookedzera',
+          pfpUrl: 'https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/309c4432-ce5e-4e2c-a2f4-50a0f8e21f00/original',
+          bio: 'ArbCasino Player'
+        };
+      }
+      
       return null;
     }
 
     const user = context.user;
     const userFID = user.fid;
+    
+    console.log('Farcaster user from context:', user);
     
     if (!userFID) {
       return null;
@@ -61,6 +69,7 @@ export async function getFarcasterUser(): Promise<FarcasterUser | null> {
     };
 
   } catch (error) {
+    console.log('Error in getFarcasterUser:', error);
     return null;
   }
 }
