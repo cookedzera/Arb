@@ -108,9 +108,10 @@
     border: none !important;
   }
   
-  /* Allow borders on wheel container specifically */
-  .wheel-container {
-    border: revert !important;
+  /* Force wheel border with maximum specificity */
+  .wheel-container.wheel-container.wheel-container {
+    border: 4px solid #fbbf24 !important;
+    border-radius: 50% !important;
   }
   
   html::-webkit-scrollbar,

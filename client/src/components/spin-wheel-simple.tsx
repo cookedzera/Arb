@@ -411,14 +411,21 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         </div>
 
         {/* Spinning Wheel */}
-        <motion.div
-          className="w-64 h-64 rounded-full relative overflow-hidden shadow-2xl wheel-container"
+        <div 
           style={{
-            border: '4px solid #fbbf24 !important',
+            border: '6px solid #fbbf24',
             borderRadius: '50%',
-            boxSizing: 'border-box'
+            padding: '2px',
+            backgroundColor: 'transparent'
           }}
-          animate={{ 
+        >
+          <motion.div
+            className="w-64 h-64 rounded-full relative overflow-hidden shadow-2xl wheel-container"
+            style={{
+              border: 'none',
+              borderRadius: '50%'
+            }}
+            animate={{ 
             rotate: rotation,
             scale: isSpinning ? 1.02 : 1
           }}
@@ -529,6 +536,7 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
             </AnimatePresence>
           </div>
         </motion.div>
+        </div>
       </div>
 
       {/* Spin Status */}
