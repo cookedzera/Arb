@@ -249,11 +249,9 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
       const targetRotation = -segmentCenterAngle;
       
       const spins = 4; // 4 full rotations for dramatic effect
-      // Calculate final rotation to ensure precise landing regardless of current position
-      // We want the final position to be exactly at targetRotation
-      const finalRotation = rotation + (spins * 360) + (targetRotation - (rotation % 360));
+      const finalRotation = rotation + (spins * 360) + targetRotation;
       
-      console.log(`🔄 Current rotation: ${rotation}°, Current position: ${rotation % 360}°, Target: ${targetRotation}°, Final: ${finalRotation}°`);
+      console.log(`🔄 Current rotation: ${rotation}°, Target: ${targetRotation}°, Final: ${finalRotation}°`);
       
       // Start the wheel animation and sound
       setRotation(finalRotation);
