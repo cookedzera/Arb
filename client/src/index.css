@@ -108,10 +108,9 @@
     border: none !important;
   }
   
-  /* Force wheel border with maximum specificity */
-  .wheel-container.wheel-container.wheel-container {
-    border: 4px solid #fbbf24 !important;
-    border-radius: 50% !important;
+  /* Remove any borders from wheel container itself */
+  .wheel-container {
+    border: none !important;
   }
   
   html::-webkit-scrollbar,

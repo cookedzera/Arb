@@ -413,9 +413,9 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         {/* Spinning Wheel */}
         <div 
           style={{
-            border: '6px solid #fbbf24',
+            border: '4px solid #fbbf24',
             borderRadius: '50%',
-            padding: '2px',
+            padding: '0px',
             backgroundColor: 'transparent'
           }}
         >
