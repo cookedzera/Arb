@@ -124,7 +124,7 @@ const RADIAL_STYLE = {
 
 export default function Home() {
   const queryClient = useQueryClient();
-  const { user, isLoading: userLoading, requiresAuthentication } = useGameState();
+  const { user, isLoading: userLoading } = useGameState();
   const { displayName, username, avatarUrl, loading: farcasterLoading } = useFarcaster();
   const [showSpinWheel, setShowSpinWheel] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -206,31 +206,6 @@ export default function Home() {
         {/* Loading spinner */}
         <div className="flex items-center justify-center min-h-screen">
           <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show authentication required screen
-  if (requiresAuthentication) {
-    return (
-      <div className="min-h-screen relative flex items-center justify-center" style={{
-        background: 'linear-gradient(135deg, #2c2c2e 0%, #1c1c1e 50%, #2c2c2e 100%)'
-      }}>
-        <FloatingParticles />
-        <div className="text-center p-8 max-w-md mx-auto bg-black/20 backdrop-blur-md rounded-2xl border border-white/10">
-          <h2 className="text-3xl font-bold text-white mb-4">Connect Wallet Required</h2>
-          <p className="text-gray-300 mb-6">
-            To play ArbCasino and earn real tokens, you need to connect your Farcaster account and wallet.
-          </p>
-          <div className="space-y-4">
-            <div className="text-blue-400 text-sm">
-              No more fake accounts - only real authenticated players allowed!
-            </div>
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-semibold transition-colors">
-              Connect with Farcaster
-            </button>
-          </div>
         </div>
       </div>
     );
