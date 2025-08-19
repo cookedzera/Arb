@@ -378,17 +378,32 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
     <div className="flex flex-col items-center space-y-6">
 
 
-      {/* Wheel Container */}
-      <div className="relative">
-        {/* Arrow Pointer - Points from outside TO the center circle border */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[50px] z-30">
+      {/* Wheel Container with Outer Ring */}
+      <div className="relative w-72 h-72 flex items-center justify-center">
+        {/* Outer Ring Border */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full z-10"
+             style={{
+               background: 'conic-gradient(from 0deg, #fbbf24, #f59e0b, #d97706, #f59e0b, #fbbf24)',
+               padding: '4px',
+               boxShadow: '0 0 20px rgba(251, 191, 36, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.3)'
+             }}>
+          <div className="w-full h-full rounded-full bg-transparent"></div>
+        </div>
+        
+        {/* Enhanced Arrow Pointer */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-40">
           <div className="relative">
-            {/* Main arrow body */}
-            <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[18px] border-l-transparent border-r-transparent border-b-yellow-400 drop-shadow-lg"></div>
-            {/* Arrow tip highlight */}
-            <div className="absolute top-[18px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-b-[4px] border-l-transparent border-r-transparent border-b-yellow-300"></div>
-            {/* Arrow shadow for depth */}
-            <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-b-[18px] border-l-transparent border-r-transparent border-b-yellow-600/50 -z-10"></div>
+            {/* Arrow shadow */}
+            <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[14px] border-r-[14px] border-b-[24px] border-l-transparent border-r-transparent border-b-black/30 blur-sm"></div>
+            {/* Main arrow body - larger and more prominent */}
+            <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-b-[22px] border-l-transparent border-r-transparent border-b-yellow-400 drop-shadow-2xl relative z-10"
+                 style={{
+                   filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 12px rgba(251, 191, 36, 0.6))'
+                 }}></div>
+            {/* Arrow highlight */}
+            <div className="absolute top-[22px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-r-[8px] border-b-[6px] border-l-transparent border-r-transparent border-b-yellow-200"></div>
+            {/* Inner glow */}
+            <div className="absolute top-[2px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-r-[8px] border-b-[16px] border-l-transparent border-r-transparent border-b-yellow-300"></div>
           </div>
         </div>
         
@@ -396,7 +411,13 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         
         {/* Spinning Wheel */}
         <motion.div
-          className="w-64 h-64 rounded-full relative overflow-hidden shadow-2xl border-4 border-yellow-400 wheel-container"
+          className="w-64 h-64 rounded-full relative overflow-hidden shadow-2xl border-2 border-yellow-400/80 wheel-container z-20"
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)'
+          }}
           animate={{ 
             rotate: rotation,
             scale: isSpinning ? 1.02 : 1
