@@ -48,21 +48,19 @@ export function useGameState() {
     }
     
     // Only create a new user if we don't have one and haven't already started the process
-    if (!storedUserId && !userId && !initUserMutation.isPending) {
-      // Create user with Farcaster data if available, otherwise use mock data
-      const username = isFarcasterAuth && farcasterUser 
-        ? (farcasterUser.username || farcasterUser.displayName || `FarcasterUser${farcasterUser.fid}`)
-        : `Player${Math.floor(Math.random() * 10000)}`;
-        
-      const walletAddress = isFarcasterAuth && farcasterUser?.custody
-        ? farcasterUser.custody
-        : `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+    // REQUIRE real authentication - no more fake users!
+    if (!storedUserId && !userId && !initUserMutation.isPending && isFarcasterAuth && farcasterUser) {
+      // Only create user with real Farcaster data
+      const username = farcasterUser.username || farcasterUser.displayName || `User${farcasterUser.fid}`;
+      const walletAddress = farcasterUser.custody;
       
-      initUserMutation.mutate({
-        username,
-        walletAddress,
-        farcasterFid: isFarcasterAuth && farcasterUser ? farcasterUser.fid : undefined
-      });
+      if (walletAddress) {
+        initUserMutation.mutate({
+          username,
+          walletAddress,
+          farcasterFid: farcasterUser.fid
+        });
+      }
     }
   }, [farcasterLoading, error, userId, initUserMutation.isPending]); // Simplified dependencies to prevent infinite loops
 
@@ -72,5 +70,6 @@ export function useGameState() {
     isFarcasterAuthenticated: isFarcasterAuth,
     isLoading: isLoading || initUserMutation.isPending || farcasterLoading,
     initUser: initUserMutation.mutate,
+    requiresAuthentication: !isFarcasterAuth || !farcasterUser, // New field to check auth status
   };
 }
