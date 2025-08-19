@@ -539,113 +539,100 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         </div>
       </div>
 
-      {/* Spin Status */}
-      <div className="text-center space-y-2">
-        <div className="text-lg font-bold text-white">
-          {hasSpinsRemaining 
-            ? `🆓 Free Spins: ${3 - userSpinsUsed} remaining`
-            : `⛽ Daily Limit Reached`
-          }
+      {/* Modern Spin Controls */}
+      <div className="w-full max-w-sm space-y-4">
+        {/* Spin Status - Compact */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/30 rounded-full">
+            <span className="text-blue-300 text-sm">🎰</span>
+            <span className="text-white font-medium text-sm">
+              {hasSpinsRemaining ? `${3 - userSpinsUsed} Free Spins Left` : 'Daily Limit Reached'}
+            </span>
+          </div>
+          {hasSpinsRemaining && (
+            <p className="text-gray-400 text-xs mt-1">No gas fees</p>
+          )}
         </div>
-        <p className="text-sm text-gray-300">
-          {hasSpinsRemaining 
-            ? "No gas fees - rewards accumulate until claimed"
-            : "Come back tomorrow for more spins!"
-          }
-        </p>
+
+        {/* Main Spin Button */}
+        <Button
+          onClick={handleSpin}
+          disabled={userSpinsUsed >= 3 || isSpinning || result !== null}
+          className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-base rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+          data-testid="button-spin"
+        >
+          {userSpinsUsed >= 3 ? 'Come Back Tomorrow' :
+           isSpinning ? '🌀 Spinning...' : 
+           result !== null ? 'Processing...' :
+           hasSpinsRemaining ? '🎰 FREE SPIN!' : 'No Spins Available'}
+        </Button>
       </div>
 
-      <Button
-        onClick={handleSpin}
-        disabled={userSpinsUsed >= 3 || isSpinning || result !== null}
-        className="w-48 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-lg rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        data-testid="button-spin"
-      >
-        {userSpinsUsed >= 3 ? 'Daily Limit Reached' :
-         isSpinning ? 'Spinning...' : 
-         result !== null ? 'Processing...' :
-         hasSpinsRemaining ? '🎰 FREE SPIN!' : 'No spins available'}
-      </Button>
-      
-
-      
-      {/* Spins Counter */}
-      <div className="text-center">
-        <p className="text-white/80 text-sm">
-          Total daily spins: {userSpinsUsed}/3 used
-        </p>
-        <p className="text-white/60 text-xs">
-          Server-side spins (no gas fees)
-        </p>
-      </div>
-
-      {/* Accumulated Rewards Display - Modern Compact Design */}
+      {/* Rewards Section - Ultra Modern Design */}
       {userAccumulated && (
         (userAccumulated.AIDOGE && parseFloat(userAccumulated.AIDOGE) > 0) ||
         (userAccumulated.BOOP && parseFloat(userAccumulated.BOOP) > 0) ||
         (userAccumulated.ARB && parseFloat(userAccumulated.ARB) > 0)
       ) && (
-        <div className="w-full max-w-md">
-          {/* Compact header */}
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 flex items-center justify-center">
-              <Gift className="w-4 h-4 text-white" />
+        <div className="w-full max-w-sm mt-6">
+          {/* Header - Clean & Minimal */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
+                <Gift className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-white font-medium text-sm">Rewards</span>
             </div>
-            <span className="text-white font-semibold text-sm">
-              Pending Rewards {userSpinsUsed >= 3 ? '(Ready to claim)' : `(${3-userSpinsUsed} spins left)`}
+            <span className="text-xs text-gray-400">
+              {userSpinsUsed >= 3 ? 'Ready' : `${3-userSpinsUsed} left`}
             </span>
           </div>
 
-          {/* Compact token grid */}
-          <div className="grid grid-cols-3 gap-2">
+          {/* Token Display - Single Row Grid */}
+          <div className="flex gap-2">
             {userAccumulated?.AIDOGE && parseFloat(userAccumulated.AIDOGE) > 0 && (
-              <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-2 text-center">
-                <div className="text-xs text-blue-300 font-medium mb-1">AIDOGE</div>
-                <div className="text-white text-sm font-bold font-mono">
+              <div className="flex-1 bg-blue-600/15 border border-blue-500/20 rounded-lg p-2 text-center">
+                <div className="text-xs text-blue-400 font-medium">AIDOGE</div>
+                <div className="text-white text-sm font-bold font-mono mt-1">
                   {parseFloat(userAccumulated.AIDOGE || "0").toFixed(0)}
                 </div>
               </div>
             )}
 
             {userAccumulated?.BOOP && parseFloat(userAccumulated.BOOP) > 0 && (
-              <div className="bg-green-600/20 border border-green-500/30 rounded-lg p-2 text-center">
-                <div className="text-xs text-green-300 font-medium mb-1">BOOP</div>
-                <div className="text-white text-sm font-bold font-mono">
+              <div className="flex-1 bg-green-600/15 border border-green-500/20 rounded-lg p-2 text-center">
+                <div className="text-xs text-green-400 font-medium">BOOP</div>
+                <div className="text-white text-sm font-bold font-mono mt-1">
                   {parseFloat(userAccumulated.BOOP || "0").toFixed(0)}
                 </div>
               </div>
             )}
 
             {userAccumulated?.ARB && parseFloat(userAccumulated.ARB) > 0 && (
-              <div className="bg-purple-600/20 border border-purple-500/30 rounded-lg p-2 text-center">
-                <div className="text-xs text-purple-300 font-medium mb-1">ARB</div>
-                <div className="text-white text-sm font-bold font-mono">
+              <div className="flex-1 bg-purple-600/15 border border-purple-500/20 rounded-lg p-2 text-center">
+                <div className="text-xs text-purple-400 font-medium">ARB</div>
+                <div className="text-white text-sm font-bold font-mono mt-1">
                   {parseFloat(userAccumulated.ARB || "0").toFixed(0)}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Claim All Button - Compact Design */}
-          {userSpinsUsed >= 3 && (
-            <div className="mt-3">
-              <Button 
-                className="w-full h-10 text-sm font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 transition-all duration-200"
-                onClick={handleBatchClaim}
-                data-testid="button-claim-all"
-              >
-                <Coins className="w-4 h-4 mr-2" />
-                Claim All
-              </Button>
-            </div>
-          )}
-          
-          {/* Pending spins message - Minimal design */}
-          {userSpinsUsed < 3 && (
-            <div className="text-center mt-2">
-              <p className="text-yellow-300 text-xs">
-                Complete {3 - userSpinsUsed} more spin{3 - userSpinsUsed !== 1 ? 's' : ''} to claim rewards
-              </p>
+          {/* Action Button */}
+          {userSpinsUsed >= 3 ? (
+            <Button 
+              className="w-full h-9 text-sm font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 transition-all duration-200 mt-3"
+              onClick={handleBatchClaim}
+              data-testid="button-claim-all"
+            >
+              <Coins className="w-4 h-4 mr-2" />
+              Claim All
+            </Button>
+          ) : (
+            <div className="text-center mt-3">
+              <span className="text-yellow-400 text-xs">
+                Complete {3 - userSpinsUsed} more spin{3 - userSpinsUsed !== 1 ? 's' : ''} to claim
+              </span>
             </div>
           )}
         </div>

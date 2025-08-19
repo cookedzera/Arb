@@ -15,6 +15,7 @@ Database preference: Supabase for external deployment, scalable for 200-400 user
 **WHEEL FIXES**: Fixed token naming consistency (IARB/JUICE/ABET → AIDOGE/BOOP/ARB), corrected multi-spin rotation calculations, and added visible arrow pointer inside wheel container for proper segment indication (August 19, 2025).
 **DATABASE RESOLUTION**: Fixed critical database connection issues by creating new PostgreSQL instance, resolved all React rendering errors, and restored original casino interface functionality (August 19, 2025).
 **BORDER FIX**: Resolved double border issue on spin wheel by using wrapper div approach with single 4px yellow border, removed aggressive CSS overrides that were preventing borders from showing (August 19, 2025).
+**UI REDESIGN**: Complete redesign of below-wheel section with modern compact layout, fixed spin counting logic, streamlined rewards display with cleaner grid and minimal styling (August 19, 2025).
 
 # System Architecture
 
