@@ -414,8 +414,9 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         <motion.div
           className="w-64 h-64 rounded-full relative overflow-hidden shadow-2xl wheel-container"
           style={{
-            border: '4px solid #fbbf24',
-            borderRadius: '50%'
+            border: '4px solid #fbbf24 !important',
+            borderRadius: '50%',
+            boxSizing: 'border-box'
           }}
           animate={{ 
             rotate: rotation,

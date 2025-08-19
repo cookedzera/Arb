@@ -93,7 +93,7 @@
   }
   
   /* Remove any default browser borders and ensure full width */
-  body, html, #root, * {
+  body, html, #root {
     border: none !important;
     outline: none !important;
   }
@@ -103,9 +103,14 @@
     position: relative;
   }
   
-  /* Override any container or tailwind border classes */
-  .rounded-xl, .rounded-2xl, .rounded-3xl, .rounded-full {
+  /* Override any container or tailwind border classes - except wheel */
+  .rounded-xl, .rounded-2xl, .rounded-3xl {
     border: none !important;
+  }
+  
+  /* Allow borders on wheel container specifically */
+  .wheel-container {
+    border: revert !important;
   }
   
   html::-webkit-scrollbar,
