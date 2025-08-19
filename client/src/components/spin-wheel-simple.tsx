@@ -243,15 +243,29 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
       const segmentCenterAngle = (segmentIndex * segmentAngle) + (segmentAngle / 2);
       console.log(`📐 Segment center angle: ${segmentCenterAngle}°`);
       
-      // To align the segment center with the top arrow (0°), we need to rotate the wheel
-      // so that the segment center ends up at 0° (top position)
-      // Since we want the segment center to be at top (0°), we rotate by negative of its angle
-      const targetRotation = -segmentCenterAngle;
+      // Calculate current effective position (where the wheel currently points)
+      const currentEffectivePosition = rotation % 360;
+      console.log(`🔄 Current effective position: ${currentEffectivePosition}°`);
+      
+      // To align the segment center with the top arrow (0°), we need to calculate
+      // the shortest path to the target position
+      let targetRotation = -segmentCenterAngle;
+      
+      // Adjust target rotation to be relative to current position
+      // We want to end up at targetRotation, starting from currentEffectivePosition
+      let rotationDifference = targetRotation - currentEffectivePosition;
+      
+      // Normalize to take the shortest path (avoid unnecessary full rotations)
+      if (rotationDifference > 180) {
+        rotationDifference -= 360;
+      } else if (rotationDifference < -180) {
+        rotationDifference += 360;
+      }
       
       const spins = 4; // 4 full rotations for dramatic effect
-      const finalRotation = rotation + (spins * 360) + targetRotation;
+      const finalRotation = rotation + (spins * 360) + rotationDifference;
       
-      console.log(`🔄 Current rotation: ${rotation}°, Target: ${targetRotation}°, Final: ${finalRotation}°`);
+      console.log(`🔄 Current rotation: ${rotation}°, Difference needed: ${rotationDifference}°, Final: ${finalRotation}°`);
       
       // Start the wheel animation and sound
       setRotation(finalRotation);
