@@ -414,11 +414,11 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
   const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
   return (
-    <div className="flex flex-col items-center space-y-6">
+    <div className="flex flex-col items-center space-y-4 max-h-full" style={{ maxHeight: '80vh' }}>
 
 
       {/* Wheel Container - Prevent overflow during spinning */}
-      <div className="relative overflow-hidden" style={{ width: '280px', height: '280px' }}>
+      <div className="relative overflow-hidden flex-shrink-0" style={{ width: '280px', height: '280px' }}>
 
         
 

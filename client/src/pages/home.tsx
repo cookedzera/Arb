@@ -849,7 +849,7 @@ export default function Home() {
       <AnimatePresence>
         {showSpinWheel && (
           <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto overscroll-contain"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -860,14 +860,14 @@ export default function Home() {
               willChange: 'scroll-position'
             }}
           >
-            <div className="min-h-full flex items-start justify-center p-2 pt-8 pb-20">
+            <div className="max-h-full w-full flex items-center justify-center p-4" style={{ overflow: 'hidden' }}>
               <motion.div
                 className="rounded-3xl max-w-md w-full relative flex flex-col will-change-transform"
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
                   backdropFilter: 'blur(20px)',
                   boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
-                  maxHeight: '90vh',
+                  maxHeight: '95vh',
                   transform: 'translateZ(0)', // Hardware acceleration
                   backfaceVisibility: 'hidden',
                   border: 'none',
@@ -912,7 +912,7 @@ export default function Home() {
 
                 {/* Scrollable Content Area */}
                 <div 
-                  className="flex-1 overflow-y-auto p-6 pt-2 overscroll-contain will-change-scroll"
+                  className="flex-1 p-6 pt-2 overflow-hidden"
                   style={{
                     transform: 'translateZ(0)', // Hardware acceleration for smooth scroll
                     WebkitOverflowScrolling: 'touch' // iOS smooth scrolling
