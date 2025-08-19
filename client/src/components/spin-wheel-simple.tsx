@@ -82,6 +82,25 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
   const { address, isConnected } = useAccount();
   const { toast } = useToast();
   const { isSpinning, triggerSpin, lastSpinResult, resetSpinResult } = useSimpleSpin();
+
+  // Prevent page scrollbars during spinning by managing body overflow
+  useEffect(() => {
+    if (isSpinning) {
+      // Prevent page scrolling during spin animation
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restore normal scrolling
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isSpinning]);
   
   // Audio context for wheel spinning sound
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -398,8 +417,8 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
     <div className="flex flex-col items-center space-y-6">
 
 
-      {/* Wheel Container */}
-      <div className="relative">
+      {/* Wheel Container - Prevent overflow during spinning */}
+      <div className="relative overflow-hidden" style={{ width: '280px', height: '280px' }}>
 
         
 
@@ -447,7 +466,7 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
             }}
             animate={{ 
             rotate: rotation,
-            scale: isSpinning ? 1.02 : 1
+            scale: isSpinning ? 1.01 : 1
           }}
           transition={{
             rotate: {
