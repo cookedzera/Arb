@@ -4,8 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { updateConfig } from "@/lib/config";
 import { useEffect } from "react";
 
-// Direct imports - using working version temporarily
-import HomeWorking from "@/pages/home-working";
+// Direct imports
+import Home from "@/pages/home";
 import Profile from "@/pages/profile";
 import TokenCollection from "@/pages/token-collection";
 import Admin from "@/pages/admin";
@@ -19,7 +19,7 @@ function Router() {
   return (
     <div className="page-transition gpu-accelerated">
       <Switch>
-        <Route path="/" component={HomeWorking} />
+        <Route path="/" component={Home} />
         <Route path="/tokens" component={TokenCollection} />
         <Route path="/profile" component={Profile} />
         <Route path="/leaderboard" component={Leaderboard} />
