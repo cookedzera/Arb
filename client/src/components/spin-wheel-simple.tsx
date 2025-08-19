@@ -384,16 +384,30 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         
 
         
-        {/* BIG VISIBLE ARROW */}
-        <div className="absolute" style={{ top: '-40px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
+        {/* ENHANCED ARROW POINTER */}
+        <div className="absolute" style={{ top: '-45px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
           <div style={{
             width: '0',
             height: '0', 
-            borderLeft: '25px solid transparent',
-            borderRight: '25px solid transparent',
-            borderTop: '40px solid #facc15',
-            filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))'
-          }}></div>
+            borderLeft: '30px solid transparent',
+            borderRight: '30px solid transparent',
+            borderTop: '45px solid #facc15',
+            filter: 'drop-shadow(0 6px 12px rgba(0, 0, 0, 0.9))',
+            position: 'relative'
+          }}>
+            {/* Inner arrow for better visibility */}
+            <div style={{
+              position: 'absolute',
+              top: '-42px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '0',
+              height: '0',
+              borderLeft: '20px solid transparent',
+              borderRight: '20px solid transparent',
+              borderTop: '30px solid #fbbf24'
+            }}></div>
+          </div>
         </div>
 
         {/* Spinning Wheel */}
