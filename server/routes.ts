@@ -15,10 +15,28 @@ import { registerSpinRoutes } from "./spin-routes";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register new spin and claim routes
   registerSpinRoutes(app);
-  // Get current user stats - optimized with parallel queries
+  // Get current user stats - handle temporary users without database queries
   app.get("/api/user/:id", async (req, res) => {
     try {
-      // Run queries in parallel for better performance
+      // Handle temporary users (fun-only mode) without database operations
+      if (req.params.id.startsWith('temp_')) {
+        console.log(`🎮 Returning fun-only user data for: ${req.params.id}`);
+        return res.json({
+          id: req.params.id,
+          username: `Player${req.params.id.slice(-4)}`,
+          walletAddress: null,
+          farcasterFid: 0,
+          farcasterUsername: null,
+          farcasterDisplayName: null,
+          farcasterPfpUrl: null,
+          spinsUsed: 0, // Always show 0 for fun users
+          totalWins: 0,
+          totalSpins: 0,
+          isTemporary: true
+        });
+      }
+      
+      // Run queries in parallel for real database users
       const [user, spinsToday] = await Promise.all([
         storage.getUser(req.params.id),
         storage.getUserSpinsToday(req.params.id)
@@ -240,10 +258,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user's accumulated token balances - optimized with parallel queries
+  // Get user's accumulated token balances - handle temporary users
   app.get("/api/user/:id/balances", async (req, res) => {
     try {
-      // Run balance and claim queries in parallel
+      // Handle temporary users (fun-only mode) - return zero balances
+      if (req.params.id.startsWith('temp_')) {
+        console.log(`🎮 Returning fun-only balances for: ${req.params.id}`);
+        return res.json({
+          token1: "0",
+          token2: "0", 
+          token3: "0",
+          canClaim: false,
+          hasMinimumBalance: false
+        });
+      }
+      
+      // Run balance and claim queries in parallel for database users
       const [balances, claimInfo] = await Promise.all([
         storage.getUserAccumulatedBalances(req.params.id),
         storage.canUserClaim(req.params.id)
