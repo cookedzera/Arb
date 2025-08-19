@@ -579,153 +579,73 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         </p>
       </div>
 
-      {/* Accumulated Rewards Display - Modern Casino UI */}
+      {/* Accumulated Rewards Display - Modern Compact Design */}
       {userAccumulated && (
         (userAccumulated.AIDOGE && parseFloat(userAccumulated.AIDOGE) > 0) ||
         (userAccumulated.BOOP && parseFloat(userAccumulated.BOOP) > 0) ||
         (userAccumulated.ARB && parseFloat(userAccumulated.ARB) > 0)
       ) && (
-        <div className="w-full max-w-md space-y-4">
-          {/* Modern header with gradient background */}
-          <div className="text-center p-4 rounded-2xl relative overflow-hidden"
-               style={{
-                 background: 'linear-gradient(135deg, rgba(139, 69, 19, 0.3) 0%, rgba(255, 215, 0, 0.1) 50%, rgba(139, 69, 19, 0.3) 100%)',
-                 border: '1px solid rgba(255, 215, 0, 0.3)',
-                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 215, 0, 0.2)'
-               }}>
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/5 to-transparent" />
-            <div className="relative">
-              <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2 mb-2">
-                <Gift className="w-6 h-6 text-yellow-400" />
-                <span className="bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
-                  Accumulated Rewards
-                </span>
-              </h3>
-              <p className="text-sm text-yellow-200/80">
-                {userSpinsUsed >= 3 ? "Your winnings are ready to claim!" : "Complete all spins to claim rewards!"}
-              </p>
+        <div className="w-full max-w-md">
+          {/* Compact header */}
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-500 to-amber-500 flex items-center justify-center">
+              <Gift className="w-4 h-4 text-white" />
             </div>
+            <span className="text-white font-semibold text-sm">
+              Pending Rewards {userSpinsUsed >= 3 ? '(Ready to claim)' : `(${3-userSpinsUsed} spins left)`}
+            </span>
           </div>
 
-          {/* Modern token cards with gradients */}
-          <div className="space-y-3">
+          {/* Compact token grid */}
+          <div className="grid grid-cols-3 gap-2">
             {userAccumulated?.AIDOGE && parseFloat(userAccumulated.AIDOGE) > 0 && (
-              <div 
-                className="relative p-4 rounded-xl overflow-hidden will-change-transform"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%)',
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  boxShadow: '0 4px 16px rgba(59, 130, 246, 0.1)',
-                  transform: 'translateZ(0)' // Hardware acceleration
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-transparent" />
-                <div className="relative flex items-center justify-center">
-                  <div className="flex items-center gap-3">
-                    <div className="px-3 py-1 bg-blue-600/80 backdrop-blur-sm rounded-full border border-blue-400/50">
-                      <span className="text-white font-bold text-sm">AIDOGE</span>
-                    </div>
-                    <span className="font-mono text-white text-lg font-bold">
-                      {parseFloat(userAccumulated.AIDOGE || "0").toFixed(2)}
-                    </span>
-                  </div>
+              <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-2 text-center">
+                <div className="text-xs text-blue-300 font-medium mb-1">AIDOGE</div>
+                <div className="text-white text-sm font-bold font-mono">
+                  {parseFloat(userAccumulated.AIDOGE || "0").toFixed(0)}
                 </div>
               </div>
             )}
 
             {userAccumulated?.BOOP && parseFloat(userAccumulated.BOOP) > 0 && (
-              <div 
-                className="relative p-4 rounded-xl overflow-hidden will-change-transform"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.1) 100%)',
-                  border: '1px solid rgba(34, 197, 94, 0.3)',
-                  boxShadow: '0 4px 16px rgba(34, 197, 94, 0.1)',
-                  transform: 'translateZ(0)' // Hardware acceleration
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-transparent" />
-                <div className="relative flex items-center justify-center">
-                  <div className="flex items-center gap-3">
-                    <div className="px-3 py-1 bg-green-600/80 backdrop-blur-sm rounded-full border border-green-400/50">
-                      <span className="text-white font-bold text-sm">BOOP</span>
-                    </div>
-                    <span className="font-mono text-white text-lg font-bold">
-                      {parseFloat(userAccumulated.BOOP || "0").toFixed(2)}
-                    </span>
-                  </div>
+              <div className="bg-green-600/20 border border-green-500/30 rounded-lg p-2 text-center">
+                <div className="text-xs text-green-300 font-medium mb-1">BOOP</div>
+                <div className="text-white text-sm font-bold font-mono">
+                  {parseFloat(userAccumulated.BOOP || "0").toFixed(0)}
                 </div>
               </div>
             )}
 
             {userAccumulated?.ARB && parseFloat(userAccumulated.ARB) > 0 && (
-              <div 
-                className="relative p-4 rounded-xl overflow-hidden will-change-transform"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(126, 34, 206, 0.1) 100%)',
-                  border: '1px solid rgba(147, 51, 234, 0.3)',
-                  boxShadow: '0 4px 16px rgba(147, 51, 234, 0.1)',
-                  transform: 'translateZ(0)' // Hardware acceleration
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-transparent" />
-                <div className="relative flex items-center justify-center">
-                  <div className="flex items-center gap-3">
-                    <div className="px-3 py-1 bg-purple-600/80 backdrop-blur-sm rounded-full border border-purple-400/50">
-                      <span className="text-white font-bold text-sm">ARB</span>
-                    </div>
-                    <span className="font-mono text-white text-lg font-bold">
-                      {parseFloat(userAccumulated.ARB || "0").toFixed(2)}
-                    </span>
-                  </div>
+              <div className="bg-purple-600/20 border border-purple-500/30 rounded-lg p-2 text-center">
+                <div className="text-xs text-purple-300 font-medium mb-1">ARB</div>
+                <div className="text-white text-sm font-bold font-mono">
+                  {parseFloat(userAccumulated.ARB || "0").toFixed(0)}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Claim All Button - Only show when all spins are used */}
+          {/* Claim All Button - Compact Design */}
           {userSpinsUsed >= 3 && (
-            <div className="pt-2">
+            <div className="mt-3">
               <Button 
-                className="w-full h-14 text-lg font-bold relative overflow-hidden group will-change-transform hover:scale-105 transition-transform duration-200" 
-                style={{
-                  background: 'linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%)',
-                  border: '1px solid rgba(16, 185, 129, 0.4)',
-                  boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                  transform: 'translateZ(0)' // Hardware acceleration
-                }}
+                className="w-full h-10 text-sm font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 transition-all duration-200"
                 onClick={handleBatchClaim}
                 data-testid="button-claim-all"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                <Coins className="w-6 h-6 mr-3" />
-                <span>Claim All Rewards</span>
+                <Coins className="w-4 h-4 mr-2" />
+                Claim All
               </Button>
-              <p className="text-xs text-gray-400 text-center mt-2">
-                One transaction to claim all your winnings
-              </p>
             </div>
           )}
           
-          {/* Pending spins message - Modern design */}
+          {/* Pending spins message - Minimal design */}
           {userSpinsUsed < 3 && (
-            <div 
-              className="text-center p-4 rounded-xl relative overflow-hidden will-change-transform"
-              style={{
-                background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)',
-                border: '1px solid rgba(251, 191, 36, 0.3)',
-                boxShadow: '0 4px 16px rgba(251, 191, 36, 0.1)',
-                transform: 'translateZ(0)' // Hardware acceleration
-              }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-transparent" />
-              <div className="relative">
-                <p className="text-yellow-200 text-sm font-bold mb-1">
-                  🎰 Complete {3 - userSpinsUsed} more spin{3 - userSpinsUsed !== 1 ? 's' : ''} to unlock claiming
-                </p>
-                <p className="text-yellow-300/80 text-xs">
-                  Save gas fees by claiming all rewards together
-                </p>
-              </div>
+            <div className="text-center mt-2">
+              <p className="text-yellow-300 text-xs">
+                Complete {3 - userSpinsUsed} more spin{3 - userSpinsUsed !== 1 ? 's' : ''} to claim rewards
+              </p>
             </div>
           )}
         </div>
