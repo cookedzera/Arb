@@ -384,6 +384,12 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         
 
         
+        {/* Arrow Pointer - Outside wheel container to avoid clipping */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-50 pointer-events-none">
+          <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[25px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-2xl"></div>
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[18px] border-l-transparent border-r-transparent border-t-yellow-300"></div>
+        </div>
+
         {/* Spinning Wheel */}
         <motion.div
           className="w-64 h-64 rounded-full relative overflow-hidden shadow-2xl border-4 border-yellow-400 wheel-container"
@@ -403,11 +409,6 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
             }
           }}
         >
-          {/* Fixed Arrow Pointer - INSIDE the wheel container */}
-          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
-            <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[25px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-2xl"></div>
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[18px] border-l-transparent border-r-transparent border-t-yellow-300"></div>
-          </div>
           {WHEEL_SEGMENTS.map((segment, index) => {
             const startAngle = index * segmentAngle;
             const endAngle = (index + 1) * segmentAngle;
