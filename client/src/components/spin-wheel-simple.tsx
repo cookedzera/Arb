@@ -380,17 +380,7 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
 
       {/* Wheel Container */}
       <div className="relative">
-        {/* Arrow Pointer - Points from top to wheel edge */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-30">
-          <div className="relative">
-            {/* Main arrow body */}
-            <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-lg"></div>
-            {/* Arrow highlight */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-r-[8px] border-t-[14px] border-l-transparent border-r-transparent border-t-yellow-300"></div>
-            {/* Arrow shadow for depth */}
-            <div className="absolute top-1 left-1/2 transform -translate-x-1/2 translate-x-0.5 w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-yellow-600/30"></div>
-          </div>
-        </div>
+
         
 
         
@@ -413,6 +403,11 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
             }
           }}
         >
+          {/* Fixed Arrow Pointer - INSIDE the wheel container */}
+          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+            <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[25px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-2xl"></div>
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[18px] border-l-transparent border-r-transparent border-t-yellow-300"></div>
+          </div>
           {WHEEL_SEGMENTS.map((segment, index) => {
             const startAngle = index * segmentAngle;
             const endAngle = (index + 1) * segmentAngle;
