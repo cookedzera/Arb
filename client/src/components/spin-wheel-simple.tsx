@@ -384,10 +384,16 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         
 
         
-        {/* Arrow Pointer - Outside wheel container to avoid clipping */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-50 pointer-events-none">
-          <div className="w-0 h-0 border-l-[15px] border-r-[15px] border-t-[25px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-2xl"></div>
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[18px] border-l-transparent border-r-transparent border-t-yellow-300"></div>
+        {/* BIG VISIBLE ARROW */}
+        <div className="absolute" style={{ top: '-40px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
+          <div style={{
+            width: '0',
+            height: '0', 
+            borderLeft: '25px solid transparent',
+            borderRight: '25px solid transparent',
+            borderTop: '40px solid #facc15',
+            filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))'
+          }}></div>
         </div>
 
         {/* Spinning Wheel */}
