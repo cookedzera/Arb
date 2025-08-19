@@ -4,8 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { updateConfig } from "@/lib/config";
 import { useEffect } from "react";
 
-// Direct imports - using simple home for testing
-import HomeSimple from "@/pages/home-simple";
+// Direct imports - using working version temporarily
+import HomeWorking from "@/pages/home-working";
 import Profile from "@/pages/profile";
 import TokenCollection from "@/pages/token-collection";
 import Admin from "@/pages/admin";
@@ -13,13 +13,13 @@ import NotFound from "@/pages/not-found";
 import Leaderboard from "@/pages/leaderboard";
 
 
-// No longer needed since we're not using lazy loading
+
 
 function Router() {
   return (
     <div className="page-transition gpu-accelerated">
       <Switch>
-        <Route path="/" component={HomeSimple} />
+        <Route path="/" component={HomeWorking} />
         <Route path="/tokens" component={TokenCollection} />
         <Route path="/profile" component={Profile} />
         <Route path="/leaderboard" component={Leaderboard} />
