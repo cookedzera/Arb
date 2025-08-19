@@ -35,10 +35,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create or get user by username
+  // Create or get user by username - FARCASTER ONLY
   app.post("/api/user", async (req, res) => {
     try {
       const { username, walletAddress, farcasterFid, farcasterUsername, farcasterDisplayName, farcasterPfpUrl } = req.body;
+      
+      // SECURITY: Only allow users with valid Farcaster FID (must be > 0)
+      if (!farcasterFid || farcasterFid <= 0) {
+        console.log(`🚫 Rejected non-Farcaster user attempt: ${username} (FID: ${farcasterFid})`);
+        return res.status(403).json({ 
+          error: "Farcaster access required", 
+          message: "This app is exclusive to Farcaster users. Please access through Farcaster."
+        });
+      }
       
       let user = await storage.getUserByUsername(username);
       if (!user) {
@@ -51,6 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           farcasterDisplayName, 
           farcasterPfpUrl
         });
+        console.log(`✅ Created new Farcaster user: ${username} (FID: ${farcasterFid})`);
       } else if (walletAddress && user.walletAddress !== walletAddress) {
         // Update wallet address if different
         await storage.updateUser(user.id, { walletAddress });
@@ -77,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } catch (farcasterError) {
           // Silently handle Farcaster enrichment errors
-          console.log(`ℹ️ Could not enrich user ${username} with Farcaster data:`, farcasterError.message);
+          console.log(`ℹ️ Could not enrich user ${username} with Farcaster data:`, (farcasterError as Error).message);
         }
       }
       
@@ -88,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Perform spin
+  // Perform spin - FARCASTER ONLY
   app.post("/api/spin", async (req, res) => {
     try {
       const { userId, userAddress } = req.body;
@@ -96,6 +106,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
+      }
+      
+      // SECURITY: Verify user has valid Farcaster FID
+      if (!user.farcasterFid || user.farcasterFid <= 0) {
+        console.log(`🚫 Spin blocked for non-Farcaster user: ${user.username}`);
+        return res.status(403).json({ 
+          error: "Farcaster access required", 
+          message: "Only Farcaster users can spin the wheel."
+        });
       }
 
       const spinsToday = await storage.getUserSpinsToday(userId);
