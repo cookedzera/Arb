@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAccount } from "wagmi";
+import { formatUnits } from "ethers";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +54,25 @@ interface SpinWheelSimpleProps {
     ARB: string;
   };
 }
+
+// Helper function to format token amounts from Wei to human-readable
+const formatTokenAmount = (amount: string, decimals = 18) => {
+  try {
+    const parsed = parseFloat(formatUnits(amount, decimals));
+    if (parsed >= 1000000) {
+      return `${(parsed / 1000000).toFixed(1)}M`;
+    } else if (parsed >= 1000) {
+      return `${(parsed / 1000).toFixed(1)}K`;
+    } else if (parsed >= 1) {
+      return `${parsed.toFixed(0)}`;
+    } else if (parsed > 0) {
+      return `${parsed.toFixed(2)}`;
+    }
+    return "0";
+  } catch {
+    return "0";
+  }
+};
 
 export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId, userAccumulated }: SpinWheelSimpleProps) {
   const [rotation, setRotation] = useState(0);
@@ -590,29 +610,29 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
 
           {/* Token Display - Single Row Grid */}
           <div className="flex gap-2">
-            {userAccumulated?.AIDOGE && parseFloat(userAccumulated.AIDOGE) > 0 && (
+            {userAccumulated?.AIDOGE && parseFloat(formatUnits(userAccumulated.AIDOGE, 18)) > 0 && (
               <div className="flex-1 bg-blue-600/15 border border-blue-500/20 rounded-lg p-2 text-center">
                 <div className="text-xs text-blue-400 font-medium">AIDOGE</div>
                 <div className="text-white text-sm font-bold font-mono mt-1">
-                  {parseFloat(userAccumulated.AIDOGE || "0").toFixed(0)}
+                  {formatTokenAmount(userAccumulated.AIDOGE)}
                 </div>
               </div>
             )}
 
-            {userAccumulated?.BOOP && parseFloat(userAccumulated.BOOP) > 0 && (
+            {userAccumulated?.BOOP && parseFloat(formatUnits(userAccumulated.BOOP, 18)) > 0 && (
               <div className="flex-1 bg-green-600/15 border border-green-500/20 rounded-lg p-2 text-center">
                 <div className="text-xs text-green-400 font-medium">BOOP</div>
                 <div className="text-white text-sm font-bold font-mono mt-1">
-                  {parseFloat(userAccumulated.BOOP || "0").toFixed(0)}
+                  {formatTokenAmount(userAccumulated.BOOP)}
                 </div>
               </div>
             )}
 
-            {userAccumulated?.ARB && parseFloat(userAccumulated.ARB) > 0 && (
+            {userAccumulated?.ARB && parseFloat(formatUnits(userAccumulated.ARB, 18)) > 0 && (
               <div className="flex-1 bg-purple-600/15 border border-purple-500/20 rounded-lg p-2 text-center">
                 <div className="text-xs text-purple-400 font-medium">ARB</div>
                 <div className="text-white text-sm font-bold font-mono mt-1">
-                  {parseFloat(userAccumulated.ARB || "0").toFixed(0)}
+                  {formatTokenAmount(userAccumulated.ARB)}
                 </div>
               </div>
             )}
