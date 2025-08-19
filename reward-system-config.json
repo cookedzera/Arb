@@ -1,0 +1,44 @@
+{
+  "contractAddress": "0x4be6dd3897fd6fbc8a619c69fa6f4bd94531d90a",
+  "chainId": 421614,
+  "network": "arbitrumSepolia",
+  "rewardSystem": {
+    "type": "pending_rewards",
+    "claimMethod": "individual",
+    "minClaimAmount": "100000000000000000"
+  },
+  "tokenMappings": {
+    "TOKEN1": {
+      "name": "IARB Token",
+      "symbol": "IARB",
+      "baseReward": "1000000000000000000",
+      "color": "#FF6B6B"
+    },
+    "TOKEN2": {
+      "name": "JUICE Token",
+      "symbol": "JUICE",
+      "baseReward": "2000000000000000000",
+      "color": "#4ECDC4"
+    },
+    "TOKEN3": {
+      "name": "ABET Token",
+      "symbol": "ABET",
+      "baseReward": "500000000000000000",
+      "color": "#45B7D1"
+    }
+  },
+  "wheelSegments": [
+    "IARB",
+    "BUST",
+    "JUICE",
+    "BONUS",
+    "ABET",
+    "BUST",
+    "IARB",
+    "JACKPOT"
+  ],
+  "multipliers": {
+    "BONUS": 2,
+    "JACKPOT": 10
+  }
+}

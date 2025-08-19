@@ -1,0 +1,17 @@
+{
+  "name": "ArbCasino Wheel of Fortune",
+  "short_name": "ArbCasino",
+  "description": "Spin the wheel and win tokens on Arbitrum",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0a21",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

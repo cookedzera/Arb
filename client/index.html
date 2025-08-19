@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+    
+    <!-- Farcaster Meta Tags -->
+    <meta property="fc:frame" content="vNext" />
+    <meta property="fc:frame:miniapp" content="true" />
+    
+    <!-- Farcaster Mini App SDK -->
+    <script src="https://unpkg.com/@farcaster/miniapp-sdk@latest/dist/index.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Polyfill for buffer to fix blockchain dependencies
+      if (typeof global === 'undefined') {
+        var global = globalThis;
+      }
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
+    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+  </body>
+</html>

@@ -1,0 +1,85 @@
+Complete Farcaster SDK Guide to Fetch FID
+🎯 3 METHODS TO GET USER FID
+
+METHOD 1: Auto FID from Context (EASIEST - NO AUTH REQUIRED)
+Official Docs:
+
+https://miniapps.farcaster.xyz/docs/sdk/context
+
+SDK Installation:
+html<script src="https://unpkg.com/@farcaster/miniapp-sdk@latest/dist/index.js"></script>
+Get FID Automatically:
+javascriptimport { sdk } from '@farcaster/miniapp-sdk';
+
+// Initialize SDK
+await sdk.init();
+
+// FID is automatically provided in context!
+const userFID = sdk.context.user.fid;
+const userName = sdk.context.user.displayName || sdk.context.user.username;
+
+console.log('User FID:', userFID);
+console.log('User Name:', userName);
+
+// Example output:
+// User FID: 6841  
+// User Name: Tony D'Addeo
+Complete User Object:
+typescriptsdk.context.user = {
+  fid: number;              // ✅ User's Farcaster ID
+  username?: string;        // ✅ @username (optional)
+  displayName?: string;     // ✅ Display name (optional)
+  pfpUrl?: string;         // ✅ Profile picture URL (optional)
+  bio?: string;            // ✅ User bio (optional)
+  location?: {             // ✅ Location (optional)
+    placeId: string;
+    description: string;
+  }
+}
+
+METHOD 2: Quick Auth (AUTHENTICATED FID)
+Official Docs:
+
+https://miniapps.farcaster.xyz/docs/sdk/quick-auth
+
+Get Authenticated FID:
+javascriptimport { sdk } from '@farcaster/miniapp-sdk';
+
+// Get authenticated session token
+const { token } = await sdk.quickAuth.getToken();
+
+// Make authenticated request to your backend
+const response = await sdk.quickAuth.fetch(`${YOUR_BACKEND}/me`);
+const user = await response.json();
+
+console.log('Authenticated FID:', user.fid);
+Backend Validation (Node.js/Hono):
+javascriptimport { createClient } from '@farcaster/quick-auth';
+
+const client = createClient();
+
+// Verify JWT and extract FID
+const payload = await client.verifyJwt({
+  token: bearerToken,
+  domain: 'your-domain.com'
+});
+
+const userFID = payload.sub; // FID is in the 'sub' field
+console.log('Verified FID:', userFID);
+
+METHOD 3: Sign In with Farcaster (SIWF)
+Official Docs:
+
+https://miniapps.farcaster.xyz/docs/sdk/actions/sign-in
+
+Manual Sign In:
+javascriptimport { sdk } from '@farcaster/miniapp-sdk';
+
+// Prompt user to sign in
+const signInResult = await sdk.actions.signIn();
+
+if (signInResult.isOk) {
+  const { fid, username, displayName, pfpUrl } = signInResult.value;
+  
+  console.log('Signed in FID:', fid);
+  console.log('User details:', { username, displayName, pfp
