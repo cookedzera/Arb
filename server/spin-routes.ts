@@ -18,7 +18,7 @@ const CLAIM_ABI = [
 
 export function registerSpinRoutes(app: Express) {
   
-  // Free server-side spinning (no blockchain)
+  // Free server-side spinning - DATABASE STORAGE ONLY FOR FARCASTER USERS
   app.post("/api/spin-free", async (req, res) => {
     try {
       const { userId, userAddress } = req.body;
@@ -27,10 +27,35 @@ export function registerSpinRoutes(app: Express) {
         return res.status(400).json({ error: "User ID required" });
       }
       
-      // Get user's current daily spin count
+      // Handle temporary users (fun-only mode)
+      if (userId.startsWith('temp_')) {
+        console.log(`🎮 Fun-only spin: ${userId}`);
+        const spinResult = performSpin();
+        return res.json({
+          ...spinResult,
+          spinsRemaining: 3, // Always show 3 for temp users
+          isTemporary: true,
+          message: "Fun mode - results not saved"
+        });
+      }
+      
+      // Get user's current daily spin count for database users
       const user = await storage.getUserById(userId);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Only save to database for valid Farcaster users
+      const isValidFarcasterUser = user.farcasterFid && user.farcasterFid > 0;
+      if (!isValidFarcasterUser) {
+        console.log(`🎮 Fun-only spin for non-Farcaster user: ${user.username}`);
+        const spinResult = performSpin();
+        return res.json({
+          ...spinResult,
+          spinsRemaining: 3, // Always show 3 for fun-only
+          isTemporary: true,
+          message: "Fun mode - results not saved"
+        });
       }
       
       // Check daily limit (3 spins)

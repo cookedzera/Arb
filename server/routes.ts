@@ -35,17 +35,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create or get user by username - FARCASTER ONLY
+  // Create or get user by username - DATABASE STORAGE ONLY FOR FARCASTER USERS
   app.post("/api/user", async (req, res) => {
     try {
       const { username, walletAddress, farcasterFid, farcasterUsername, farcasterDisplayName, farcasterPfpUrl } = req.body;
       
-      // SECURITY: Only allow users with valid Farcaster FID (must be > 0)
-      if (!farcasterFid || farcasterFid <= 0) {
-        console.log(`🚫 Rejected non-Farcaster user attempt: ${username} (FID: ${farcasterFid})`);
-        return res.status(403).json({ 
-          error: "Farcaster access required", 
-          message: "This app is exclusive to Farcaster users. Please access through Farcaster."
+      // Allow all users to access the app, but only save Farcaster users to database
+      const isValidFarcasterUser = farcasterFid && farcasterFid > 0;
+      
+      if (!isValidFarcasterUser) {
+        console.log(`🎮 Fun-only user (no database): ${username} (FID: ${farcasterFid})`);
+        // Return temporary user data for fun gameplay without database storage
+        return res.json({
+          id: `temp_${Date.now()}`,
+          username,
+          walletAddress,
+          farcasterFid: 0,
+          farcasterUsername: null,
+          farcasterDisplayName: null,
+          farcasterPfpUrl: null,
+          spinsUsed: 0,
+          totalWins: 0,
+          totalSpins: 0,
+          isTemporary: true // Flag to indicate this is not stored
         });
       }
       
@@ -98,22 +110,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Perform spin - FARCASTER ONLY
+  // Perform spin - FARCASTER DATABASE STORAGE ONLY
   app.post("/api/spin", async (req, res) => {
     try {
       const { userId, userAddress } = req.body;
+      
+      // Check if this is a temporary user (fun-only, no database)
+      if (userId.startsWith('temp_')) {
+        console.log(`🎮 Fun-only spin (no database storage): ${userId}`);
+        return res.status(200).json({ 
+          message: "Fun mode spin - results not saved",
+          canSpin: true,
+          isTemporary: true
+        });
+      }
       
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
       
-      // SECURITY: Verify user has valid Farcaster FID
+      // Only Farcaster users with valid FID get database storage
       if (!user.farcasterFid || user.farcasterFid <= 0) {
-        console.log(`🚫 Spin blocked for non-Farcaster user: ${user.username}`);
-        return res.status(403).json({ 
-          error: "Farcaster access required", 
-          message: "Only Farcaster users can spin the wheel."
+        console.log(`🎮 Converting to fun-only mode for user: ${user.username}`);
+        return res.status(200).json({ 
+          message: "Fun mode - results not saved to database",
+          canSpin: true,
+          isTemporary: true
         });
       }
 

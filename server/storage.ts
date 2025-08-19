@@ -275,6 +275,7 @@ export class MemStorage implements IStorage {
         claimedToken3: "0",
         lastClaimDate: null,
         lastSpinDate: new Date(),
+        isTemporary: false,
         createdAt: new Date(),
       };
       this.users.set(id, fullUser);
@@ -351,6 +352,7 @@ export class MemStorage implements IStorage {
       claimedToken3: "0",
       lastSpinDate: null,
       lastClaimDate: null,
+      isTemporary: insertUser.isTemporary || false,
       createdAt: new Date(),
     };
     this.users.set(id, user);

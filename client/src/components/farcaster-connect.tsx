@@ -49,20 +49,20 @@ export function FarcasterConnect() {
             setUser(userData)
             localStorage.setItem('farcaster_user', JSON.stringify(userData))
           } else if (response.status === 404) {
-            // No Farcaster profile found - create wallet-only user
-            console.log(`❌ No Farcaster profile found for ${address}`)
-            const walletOnlyUser = {
+            // No Farcaster profile found - create fun-only user
+            console.log(`🎮 No Farcaster profile found for ${address} - enabling fun mode`)
+            const funOnlyUser = {
               fid: 0,
-              username: `wallet-${address.slice(-4)}`,
-              displayName: `Wallet User`,
-              bio: 'Wallet connected - no Farcaster profile detected',
+              username: `Player${address.slice(-4)}`,
+              displayName: `Fun Player`,
+              bio: 'Playing for fun - Connect with Farcaster to save progress!',
               pfpUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${address}`,
               custody: address,
               verifications: [address],
-              isWalletOnly: true
+              isFunOnly: true
             }
-            setUser(walletOnlyUser)
-            localStorage.setItem('farcaster_user', JSON.stringify(walletOnlyUser))
+            setUser(funOnlyUser)
+            localStorage.setItem('farcaster_user', JSON.stringify(funOnlyUser))
           } else {
             throw new Error(`API responded with ${response.status}`)
           }
@@ -71,13 +71,13 @@ export function FarcasterConnect() {
           // Create fallback user data when API fails
           const fallbackUser = {
             fid: 0,
-            username: `wallet-${address.slice(-4)}`,
-            displayName: `Wallet User`,
-            bio: 'Wallet connected - Farcaster lookup temporarily unavailable',
+            username: `Player${address.slice(-4)}`,
+            displayName: `Fun Player`,
+            bio: 'Playing for fun - Connect with Farcaster to save progress!',
             pfpUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${address}`,
             custody: address,
             verifications: [address],
-            isWalletOnly: true
+            isFunOnly: true
           }
           setUser(fallbackUser)
           localStorage.setItem('farcaster_user', JSON.stringify(fallbackUser))

@@ -429,6 +429,24 @@ export default function Home() {
               @{username}
             </p>
           )}
+          
+          {/* Fun-only mode indicator - check for temporary users */}
+          {(user?.isTemporary || user?.id?.startsWith('temp_')) && (
+            <motion.div 
+              className="mt-3 px-3 py-1.5 rounded-full text-xs font-medium inline-flex items-center space-x-1"
+              style={{
+                background: 'rgba(255, 165, 0, 0.15)',
+                border: '1px solid rgba(255, 165, 0, 0.3)',
+                color: '#ffa500'
+              }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <span>🎮</span>
+              <span>Fun Mode - Results Not Saved</span>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Main Action Cards - Compact */}
