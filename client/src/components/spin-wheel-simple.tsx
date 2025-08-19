@@ -380,15 +380,15 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
 
       {/* Wheel Container */}
       <div className="relative">
-        {/* Arrow Pointer - Points from outside TO the center circle border */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[50px] z-30">
+        {/* Arrow Pointer - Points from top to wheel edge */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-30">
           <div className="relative">
             {/* Main arrow body */}
-            <div className="w-0 h-0 border-l-[10px] border-r-[10px] border-b-[18px] border-l-transparent border-r-transparent border-b-yellow-400 drop-shadow-lg"></div>
-            {/* Arrow tip highlight */}
-            <div className="absolute top-[18px] left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-b-[4px] border-l-transparent border-r-transparent border-b-yellow-300"></div>
+            <div className="w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-yellow-400 drop-shadow-lg"></div>
+            {/* Arrow highlight */}
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[8px] border-r-[8px] border-t-[14px] border-l-transparent border-r-transparent border-t-yellow-300"></div>
             {/* Arrow shadow for depth */}
-            <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] border-r-[10px] border-b-[18px] border-l-transparent border-r-transparent border-b-yellow-600/50 -z-10"></div>
+            <div className="absolute top-1 left-1/2 transform -translate-x-1/2 translate-x-0.5 w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-yellow-600/30"></div>
           </div>
         </div>
         
