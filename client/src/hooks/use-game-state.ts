@@ -43,7 +43,7 @@ export function useGameState() {
     if (farcasterLoading) return;
 
     // Force refresh for testing - clear localStorage to test auth
-    // localStorage.removeItem("arbcasino_user_id");
+    localStorage.removeItem("arbcasino_user_id");
 
     const storedUserId = localStorage.getItem("arbcasino_user_id");
     
