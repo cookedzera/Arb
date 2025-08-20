@@ -42,10 +42,15 @@ export function useGameState() {
     // Wait for Farcaster auth to complete
     if (farcasterLoading) return;
 
-    // Force refresh for testing - clear localStorage to test auth
-    localStorage.removeItem("arbcasino_user_id");
-
     const storedUserId = localStorage.getItem("arbcasino_user_id");
+    
+    // Clear invalid stored user IDs that start with "temp_" when we have Farcaster auth
+    if (storedUserId && storedUserId.startsWith("temp_") && isFarcasterAuth) {
+      console.log('Clearing temporary user ID for Farcaster user');
+      localStorage.removeItem("arbcasino_user_id");
+      setUserId(null);
+      return;
+    }
     
     // If we have a stored user ID and no error, use it
     if (storedUserId && !error && !userId) {
