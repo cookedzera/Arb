@@ -14,7 +14,7 @@ import { AudioManager } from "@/lib/audio-manager";
 import aidogeLogo from "@assets/aidoge_1755435810322.png";
 import boopLogo from "@assets/boop_1755435810327.png";
 import arbLogo from "@assets/arb-logo.png";
-import arbspinLogo from "@assets/generated_images/ARBSPIN_wheel_logo_exact_match_4e06ced9.png";
+import arbspinLogo from "@assets/image_1755684462291.png";
 
 // Typewriter animation component for alternating text
 const TypewriterText = memo(() => {
