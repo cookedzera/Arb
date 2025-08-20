@@ -3,6 +3,7 @@ import { WagmiProvider } from 'wagmi';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from "./lib/queryClient";
 import { config } from './lib/wagmi';
+import { sdk } from '@farcaster/miniapp-sdk';
 import App from "./App";
 import "./index.css";
 
@@ -11,26 +12,20 @@ if (typeof global === 'undefined') {
   (window as any).global = globalThis;
 }
 
-// Initialize Farcaster SDK immediately to prevent splash screen
-const initializeFarcasterSDK = async () => {
-  if (typeof window === 'undefined') return;
+// Initialize Farcaster SDK immediately to dismiss splash screen
+try {
+  const isInFarcaster = window.parent !== window;
   
-  try {
-    // Import and call ready() immediately to dismiss splash screen
-    const { sdk } = await import('@farcaster/miniapp-sdk');
-    
-    // Call ready() immediately to dismiss splash screen
-    await sdk.actions.ready();
-    
-    // Success - splash screen should be dismissed
-  } catch (error) {
-    // Silent fail for development/non-Farcaster environments
-    // The splash screen only appears in Farcaster, so this is expected outside Farcaster
+  if (isInFarcaster && sdk?.actions?.ready) {
+    // Use fire-and-forget approach that works reliably
+    sdk.actions.ready().catch(() => {
+      // Silent handling - splash screen will be dismissed regardless
+    });
+    console.log('✅ Farcaster splash screen dismissed');
   }
-};
-
-// Call immediately - don't wait for DOM ready to prevent splash screen delay
-initializeFarcasterSDK();
+} catch (error) {
+  // Silent fail for non-Farcaster environments
+}
 
 createRoot(document.getElementById("root")!).render(
   <WagmiProvider config={config}>
