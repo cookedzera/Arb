@@ -15,6 +15,34 @@ import { registerSpinRoutes } from "./spin-routes";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register new spin and claim routes
   registerSpinRoutes(app);
+  // Update user data (for fixing Farcaster information)
+  app.patch("/api/user/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      // Validate that it's not a temporary user
+      if (id.startsWith('temp_')) {
+        return res.status(400).json({ error: "Cannot update temporary users" });
+      }
+      
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Update the user with new data
+      await storage.updateUser(id, updates);
+      const updatedUser = await storage.getUser(id);
+      
+      console.log(`✅ Updated user ${id} with:`, updates);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Update user error:', error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
   // Get current user stats - handle temporary users without database queries
   app.get("/api/user/:id", async (req, res) => {
     try {

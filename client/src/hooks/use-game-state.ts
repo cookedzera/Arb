@@ -76,7 +76,13 @@ export function useGameState() {
       console.log('Initializing user with Farcaster data:', {
         isFarcasterAuth,
         farcasterUser,
-        username
+        username,
+        realFarcasterData: {
+          fid: farcasterUser?.fid,
+          username: farcasterUser?.username,
+          displayName: farcasterUser?.displayName,
+          pfpUrl: farcasterUser?.pfpUrl
+        }
       });
       
       initUserMutation.mutate({
