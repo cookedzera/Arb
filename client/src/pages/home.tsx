@@ -397,19 +397,24 @@ export default function Home() {
             whileHover={{ scale: 1.05, y: -2 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-{avatarUrl && !avatarUrl.includes('309c4432-ce5e-4e2c-a2f4-50a0f8e21f00') ? (
+{avatarUrl ? (
               <img 
                 src={avatarUrl} 
                 alt="Profile" 
                 className="w-full h-full rounded-full object-cover"
                 onError={(e) => {
-                  // Hide failed image and show fallback
-                  e.currentTarget.style.display = 'none';
+                  // Show fallback on error
+                  const target = e.currentTarget as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
                 }}
               />
-            ) : (
-              displayName?.charAt(0) || username?.charAt(0) || 'P'
-            )}
+            ) : null}
+            {/* Fallback for when no avatar or error */}
+            <div className="flex items-center justify-center w-full h-full" style={{ display: avatarUrl ? 'none' : 'flex' }}>
+              {displayName?.charAt(0) || username?.charAt(0) || 'P'}
+            </div>
           </motion.div>
           <div className="mb-2">
             <motion.h1 
