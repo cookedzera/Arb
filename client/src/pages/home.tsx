@@ -14,6 +14,7 @@ import { AudioManager } from "@/lib/audio-manager";
 import aidogeLogo from "@assets/aidoge_1755435810322.png";
 import boopLogo from "@assets/boop_1755435810327.png";
 import arbLogo from "@assets/arb-logo.png";
+import arbspinLogo from "@assets/arbspin-logo.png";
 
 // Typewriter animation component for alternating text
 const TypewriterText = memo(() => {
@@ -420,14 +421,21 @@ export default function Home() {
             )}
           </motion.div>
           <div className="mb-2">
-            <motion.h1 
-              className="text-2xl font-bold text-white mb-1"
+            <motion.div 
+              className="flex items-center justify-center mb-1"
               initial={{ opacity: 0.8 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2 }}
             >
-              ARB<TypewriterText />
-            </motion.h1>
+              <img 
+                src={arbspinLogo} 
+                alt="ARBSPIN Logo" 
+                className="w-16 h-16 object-contain mr-2"
+              />
+              <h1 className="text-2xl font-bold text-white">
+                <TypewriterText />
+              </h1>
+            </motion.div>
           </div>
           <h2 className="text-lg font-semibold text-white">
             {farcasterLoading ? (
