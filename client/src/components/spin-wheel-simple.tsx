@@ -416,56 +416,42 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
   return (
     <div className="flex flex-col items-center space-y-4 max-h-full" style={{ maxHeight: '80vh' }}>
 
-
-      {/* Wheel Container - Prevent overflow during spinning */}
-      <div className="relative overflow-hidden flex-shrink-0" style={{ width: '280px', height: '280px' }}>
-
+      {/* Wheel Container - Centered */}
+      <div className="relative w-full flex justify-center">
         
-
-        
-        {/* ENHANCED ARROW POINTER - Fixed positioning */}
-        <div className="absolute" style={{ top: '-20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
+        {/* Arrow Pointer */}
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20">
           <div style={{
             width: '0',
             height: '0', 
-            borderLeft: '20px solid transparent',
-            borderRight: '20px solid transparent',
-            borderTop: '30px solid #ffffff',
-            filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7))',
-            position: 'relative'
+            borderLeft: '18px solid transparent',
+            borderRight: '18px solid transparent',
+            borderTop: '28px solid #ffffff',
+            filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7))'
           }}>
-            {/* Inner arrow for better contrast */}
             <div style={{
               position: 'absolute',
-              top: '-28px',
+              top: '-26px',
               left: '50%',
               transform: 'translateX(-50%)',
               width: '0',
               height: '0',
-              borderLeft: '15px solid transparent',
-              borderRight: '15px solid transparent',
-              borderTop: '22px solid #fbbf24'
+              borderLeft: '12px solid transparent',
+              borderRight: '12px solid transparent',
+              borderTop: '18px solid #fbbf24'
             }}></div>
           </div>
         </div>
 
-        {/* Spinning Wheel - Clean border */}
-        <div 
-          className="rounded-full"
+        {/* Spinning Wheel with Border */}
+        <motion.div
+          className="w-72 h-72 rounded-full relative overflow-hidden"
           style={{
             border: '4px solid #fbbf24',
-            padding: '0px',
             backgroundColor: 'transparent',
             boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)'
           }}
-        >
-          <motion.div
-            className="w-64 h-64 rounded-full relative overflow-hidden shadow-2xl wheel-container"
-            style={{
-              border: 'none',
-              borderRadius: '50%'
-            }}
-            animate={{ 
+          animate={{ 
             rotate: rotation,
             scale: isSpinning ? 1.01 : 1
           }}
@@ -576,7 +562,6 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
             </AnimatePresence>
           </div>
         </motion.div>
-        </div>
       </div>
 
       {/* Modern Spin Controls */}
