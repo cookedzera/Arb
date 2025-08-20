@@ -397,13 +397,13 @@ export default function Home() {
             whileHover={{ scale: 1.05, y: -2 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            {avatarUrl ? (
+{avatarUrl && !avatarUrl.includes('309c4432-ce5e-4e2c-a2f4-50a0f8e21f00') ? (
               <img 
                 src={avatarUrl} 
                 alt="Profile" 
                 className="w-full h-full rounded-full object-cover"
                 onError={(e) => {
-                  // Fallback to initial if avatar fails to load
+                  // Hide failed image and show fallback
                   e.currentTarget.style.display = 'none';
                 }}
               />

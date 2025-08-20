@@ -423,24 +423,12 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20">
           <div style={{
             width: '0',
-            height: '0', 
+            height: '0',
             borderLeft: '18px solid transparent',
             borderRight: '18px solid transparent',
-            borderTop: '28px solid #ffffff',
+            borderTop: '28px solid #fbbf24',
             filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7))'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-26px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '0',
-              height: '0',
-              borderLeft: '12px solid transparent',
-              borderRight: '12px solid transparent',
-              borderTop: '18px solid #fbbf24'
-            }}></div>
-          </div>
+          }}></div>
         </div>
 
         {/* Spinning Wheel with Border */}
