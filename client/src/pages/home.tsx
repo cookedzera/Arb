@@ -389,53 +389,25 @@ export default function Home() {
           transition={{ duration: 0.2 }}
         >
           <motion.div 
-            className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white text-lg font-bold"
-            style={{
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-              boxShadow: '0 8px 20px rgba(139, 92, 246, 0.3), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
-              backdropFilter: 'blur(20px)'
-            }}
+            className="w-16 h-16 mx-auto mb-2 flex items-center justify-center"
             whileHover={{ scale: 1.05, y: -2 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-{avatarUrl ? (
-              <img 
-                src={avatarUrl} 
-                alt="Profile" 
-                className="w-full h-full rounded-full object-cover"
-                onError={(e) => {
-                  // Hide failed image and show fallback
-                  e.currentTarget.style.display = 'none';
-                  if (e.currentTarget.parentElement) {
-                    e.currentTarget.parentElement.classList.add('show-fallback');
-                  }
-                }}
-              />
-            ) : (
-              displayName?.charAt(0) || username?.charAt(0) || 'P'
-            )}
-            {avatarUrl && (
-              <span className="hidden" style={{display: 'none'}}>
-                {displayName?.charAt(0) || username?.charAt(0) || 'P'}
-              </span>
-            )}
+            <img 
+              src={arbspinLogo} 
+              alt="ARBSPIN Logo" 
+              className="w-full h-full object-contain"
+            />
           </motion.div>
           <div className="mb-2">
-            <motion.div 
-              className="flex items-center justify-center mb-1"
+            <motion.h1 
+              className="text-2xl font-bold text-white mb-1"
               initial={{ opacity: 0.8 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2 }}
             >
-              <img 
-                src={arbspinLogo} 
-                alt="ARBSPIN Logo" 
-                className="w-16 h-16 object-contain mr-2"
-              />
-              <h1 className="text-2xl font-bold text-white">
-                <TypewriterText />
-              </h1>
-            </motion.div>
+              ARB<TypewriterText />
+            </motion.h1>
           </div>
           <h2 className="text-lg font-semibold text-white">
             {farcasterLoading ? (
