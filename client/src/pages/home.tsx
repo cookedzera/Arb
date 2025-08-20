@@ -17,6 +17,7 @@ import arbLogo from "@assets/arb-logo.png";
 import arbspinLogo from "@assets/image_1755684462291.png";
 import headingImage from "@assets/Adobe Express - file (1)_1755684640515.png";
 import newLogo from "@assets/Adobe Express - file (1)_1755685145766.png";
+import officialArbLogo from "@assets/Adobe Express - file_1755685469543.png";
 
 // Typewriter animation component for alternating text
 const TypewriterText = memo(() => {
@@ -201,7 +202,7 @@ export default function Home() {
   const tokenData = useMemo(() => [
     { name: 'AIDOGE', icon: aidogeLogo, amount: balances?.token1 || '0', time: '2h 14 min', emoji: '🐕' },
     { name: 'BOOP', icon: boopLogo, amount: balances?.token2 || '0', time: '5h 22 min', emoji: '🎭' },
-    { name: 'ARB', icon: arbLogo, amount: balances?.token3 || '0', time: '1h 8 min', emoji: '🔷' }
+    { name: 'ARB', icon: officialArbLogo, amount: balances?.token3 || '0', time: '1h 8 min', emoji: '🔷' }
   ], [balances?.token1, balances?.token2, balances?.token3]);
 
   // Show minimal loading state while preserving background
