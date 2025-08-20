@@ -81,8 +81,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let user = await storage.getUserByUsername(username);
       if (!user) {
-        // Create new user with Farcaster data if provided
-        const validPfpUrl = farcasterPfpUrl || null;
+        // Create new user with Farcaster data if provided (filter out invalid URLs)
+        const validPfpUrl = farcasterPfpUrl && !farcasterPfpUrl.includes('309c4432-ce5e-4e2c-a2f4-50a0f8e21f00') ? farcasterPfpUrl : null;
         user = await storage.createUser({ 
           username, 
           walletAddress,
@@ -107,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (farcasterUser.fid) updates.farcasterFid = farcasterUser.fid;
             if (farcasterUser.username) updates.farcasterUsername = farcasterUser.username;
             if (farcasterUser.displayName) updates.farcasterDisplayName = farcasterUser.displayName;
-            if (farcasterUser.pfpUrl) {
+            if (farcasterUser.pfpUrl && !farcasterUser.pfpUrl.includes('309c4432-ce5e-4e2c-a2f4-50a0f8e21f00')) {
               updates.farcasterPfpUrl = farcasterUser.pfpUrl;
             }
             if (farcasterUser.bio) updates.farcasterBio = farcasterUser.bio;

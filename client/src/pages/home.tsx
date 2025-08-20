@@ -397,7 +397,7 @@ export default function Home() {
             whileHover={{ scale: 1.05, y: -2 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-{avatarUrl ? (
+{avatarUrl && !avatarUrl.includes('309c4432-ce5e-4e2c-a2f4-50a0f8e21f00') ? (
               <img 
                 src={avatarUrl} 
                 alt="Profile" 
@@ -408,9 +408,7 @@ export default function Home() {
                 }}
               />
             ) : (
-              <div className="flex items-center justify-center w-full h-full">
-                {displayName?.charAt(0) || username?.charAt(0) || 'P'}
-              </div>
+              displayName?.charAt(0) || username?.charAt(0) || 'P'
             )}
           </motion.div>
           <div className="mb-2">
