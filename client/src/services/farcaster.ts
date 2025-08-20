@@ -43,7 +43,7 @@ export async function getFarcasterUser(): Promise<FarcasterUser | null> {
             username: farcasterUser.username,
             displayName: farcasterUser.displayName,
             pfpUrl: farcasterUser.pfpUrl,
-            bio: farcasterUser.bio
+            bio: (farcasterUser as any).bio || 'ArbCasino Player'
           };
         }
       } catch (contextError) {
