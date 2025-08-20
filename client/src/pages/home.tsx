@@ -395,7 +395,7 @@ export default function Home() {
             transition={{ type: "spring", stiffness: 300 }}
           >
             <motion.img 
-              src={headingImage} 
+              src={arbLogo} 
               alt="ARBSPIN Logo" 
               className="w-full h-full object-contain"
               animate={{ rotate: 360 }}
