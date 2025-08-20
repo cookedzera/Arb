@@ -16,6 +16,7 @@ import boopLogo from "@assets/boop_1755435810327.png";
 import arbLogo from "@assets/arb-logo.png";
 import arbspinLogo from "@assets/image_1755684462291.png";
 import headingImage from "@assets/Adobe Express - file (1)_1755684640515.png";
+import newLogo from "@assets/Adobe Express - file (1)_1755685145766.png";
 
 // Typewriter animation component for alternating text
 const TypewriterText = memo(() => {
@@ -395,7 +396,7 @@ export default function Home() {
             transition={{ type: "spring", stiffness: 300 }}
           >
             <motion.img 
-              src={arbLogo} 
+              src={newLogo} 
               alt="ARBSPIN Logo" 
               className="w-full h-full object-contain"
               animate={{ rotate: 360 }}
