@@ -124,8 +124,12 @@ const RADIAL_STYLE = {
 
 export default function Home() {
   const queryClient = useQueryClient();
-  const { user, isLoading: userLoading } = useGameState();
-  const { displayName, username, avatarUrl, loading: farcasterLoading } = useFarcaster();
+  const { user, farcasterUser, isFarcasterAuthenticated, isLoading: userLoading } = useGameState();
+  // Extract Farcaster data from user database record
+  const displayName = user?.farcasterDisplayName || user?.farcasterUsername || user?.username || 'Player';
+  const username = user?.farcasterUsername || user?.username || '';
+  const avatarUrl = user?.farcasterPfpUrl || '';
+  const farcasterLoading = userLoading;
   const [showSpinWheel, setShowSpinWheel] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [audioManager] = useState(() => AudioManager.getInstance());
