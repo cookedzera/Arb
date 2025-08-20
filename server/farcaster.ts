@@ -45,7 +45,23 @@ export async function verifyFarcasterToken(token: string, domain: string): Promi
     // 2. Neynar API
     // 3. Your own database cache
     
-    // For now, we'll return the basic verified data
+    // Try to fetch real user data from Hub API first
+    const realUserData = await fetchUserDataFromHub(parseInt(fid.toString()));
+    
+    if (realUserData.username || realUserData.displayName || realUserData.pfpUrl) {
+      // Return real Farcaster data
+      return {
+        fid: parseInt(fid.toString()),
+        username: realUserData.username || `fc-user-${fid}`,
+        displayName: realUserData.displayName || realUserData.username || `Farcaster User ${fid}`,
+        bio: realUserData.bio || 'Authenticated Farcaster user',
+        pfpUrl: realUserData.pfpUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${fid}`,
+        custody: (payload as any).custody || '',
+        verifications: (payload as any).verifications || []
+      };
+    }
+    
+    // Fallback to basic verified data if no real data available
     return {
       fid: parseInt(fid.toString()),
       username: `fc-user-${fid}`,

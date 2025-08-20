@@ -397,7 +397,7 @@ export default function Home() {
             whileHover={{ scale: 1.05, y: -2 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-{avatarUrl && !avatarUrl.includes('309c4432-ce5e-4e2c-a2f4-50a0f8e21f00') ? (
+{avatarUrl ? (
               <img 
                 src={avatarUrl} 
                 alt="Profile" 
@@ -405,10 +405,18 @@ export default function Home() {
                 onError={(e) => {
                   // Hide failed image and show fallback
                   e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.parentElement) {
+                    e.currentTarget.parentElement.classList.add('show-fallback');
+                  }
                 }}
               />
             ) : (
               displayName?.charAt(0) || username?.charAt(0) || 'P'
+            )}
+            {avatarUrl && (
+              <span className="hidden" style={{display: 'none'}}>
+                {displayName?.charAt(0) || username?.charAt(0) || 'P'}
+              </span>
             )}
           </motion.div>
           <div className="mb-2">

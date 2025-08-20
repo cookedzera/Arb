@@ -134,11 +134,18 @@ export default function Profile() {
               <img 
                 src={avatarUrl} 
                 alt="Profile" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover rounded-full"
+                onError={(e) => {
+                  // Hide failed image and show fallback
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
               />
-            ) : (
-              (!farcasterLoading && (displayName?.charAt(0) || username?.charAt(0))) || user?.username?.charAt(0) || 'P'
-            )}
+            ) : null}
+            <div className={`w-full h-full flex items-center justify-center text-xl font-bold ${!farcasterLoading && isFarcasterAuthenticated && avatarUrl ? 'hidden' : ''}`}>
+              {(!farcasterLoading && (displayName?.charAt(0) || username?.charAt(0))) || user?.username?.charAt(0) || 'P'}
+            </div>
             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center border-3 border-gray-900">
               <span className="text-white text-xs font-bold">{level}</span>
             </div>

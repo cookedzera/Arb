@@ -151,11 +151,22 @@ export function FarcasterConnect() {
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               {user.pfpUrl ? (
-                <img 
-                  src={user.pfpUrl} 
-                  alt="Profile" 
-                  className={`w-16 h-16 rounded-full border-2 ${isFarcasterUser ? 'border-purple-400' : 'border-gray-400'}`}
-                />
+                <div className="relative w-16 h-16">
+                  <img 
+                    src={user.pfpUrl} 
+                    alt="Profile" 
+                    className={`w-16 h-16 rounded-full border-2 object-cover ${isFarcasterUser ? 'border-purple-400' : 'border-gray-400'}`}
+                    onError={(e) => {
+                      // Hide failed image and show fallback
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div className={`hidden w-16 h-16 rounded-full bg-gradient-to-br ${isFarcasterUser ? 'from-purple-500 to-blue-500' : 'from-gray-500 to-gray-600'} items-center justify-center`}>
+                    <User className="w-8 h-8 text-white" />
+                  </div>
+                </div>
               ) : (
                 <div className={`w-16 h-16 rounded-full bg-gradient-to-br ${isFarcasterUser ? 'from-purple-500 to-blue-500' : 'from-gray-500 to-gray-600'} flex items-center justify-center`}>
                   <User className="w-8 h-8 text-white" />
