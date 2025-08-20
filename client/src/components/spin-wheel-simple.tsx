@@ -558,13 +558,10 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         <div className="text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/30 rounded-full">
             <svg className="w-4 h-4 text-blue-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
-              <path d="M12 2 L12 12 L22 12" stroke="currentColor" strokeWidth="1.5" fill="rgba(59, 130, 246, 0.2)"/>
-              <path d="M12 12 L22 12 L12 22" stroke="currentColor" strokeWidth="1.5" fill="rgba(59, 130, 246, 0.1)"/>
-              <path d="M12 12 L12 22 L2 12" stroke="currentColor" strokeWidth="1.5" fill="rgba(59, 130, 246, 0.2)"/>
-              <path d="M12 12 L2 12 L12 2" stroke="currentColor" strokeWidth="1.5" fill="rgba(59, 130, 246, 0.1)"/>
-              <circle cx="12" cy="12" r="2" fill="currentColor"/>
-              <polygon points="12,1 10,4 14,4" fill="currentColor"/>
+              <path d="M20 7H4L2 17H22L20 7Z" stroke="currentColor" strokeWidth="2" fill="rgba(59, 130, 246, 0.1)"/>
+              <path d="M4 7L6 2H18L20 7" stroke="currentColor" strokeWidth="2" fill="none"/>
+              <path d="M12 11V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M9 13H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
             <span className="text-white font-medium text-sm">
               {hasSpinsRemaining ? `${3 - userSpinsUsed} Free Spins Left` : 'Daily Limit Reached'}
@@ -597,13 +594,7 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
            hasSpinsRemaining ? (
              <span className="flex items-center gap-2">
                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
-                 <path d="M12 2 L12 12 L22 12" stroke="currentColor" strokeWidth="1.5" fill="rgba(255, 255, 255, 0.2)"/>
-                 <path d="M12 12 L22 12 L12 22" stroke="currentColor" strokeWidth="1.5" fill="rgba(255, 255, 255, 0.1)"/>
-                 <path d="M12 12 L12 22 L2 12" stroke="currentColor" strokeWidth="1.5" fill="rgba(255, 255, 255, 0.2)"/>
-                 <path d="M12 12 L2 12 L12 2" stroke="currentColor" strokeWidth="1.5" fill="rgba(255, 255, 255, 0.1)"/>
-                 <circle cx="12" cy="12" r="2" fill="currentColor"/>
-                 <polygon points="12,1 10,4 14,4" fill="currentColor"/>
+                 <polygon points="5,3 19,12 5,21" fill="currentColor"/>
                </svg>
                FREE SPIN!
              </span>
