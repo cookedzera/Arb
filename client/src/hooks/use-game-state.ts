@@ -2,12 +2,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { type User } from "@shared/schema";
 import { useEffect, useState } from "react";
-import { useFarcasterAuth } from "./use-farcaster-auth";
+import { useFarcaster } from "./use-farcaster";
 
 export function useGameState() {
   const [userId, setUserId] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  const { user: farcasterUser, isAuthenticated: isFarcasterAuth, isLoading: farcasterLoading } = useFarcasterAuth();
+  const { user: farcasterUser, isAuthenticated: isFarcasterAuth, loading: farcasterLoading } = useFarcaster();
 
   // Initialize user
   const initUserMutation = useMutation({
@@ -37,7 +37,7 @@ export function useGameState() {
     retry: false,
   });
 
-  // Initialize user on mount - optimized to prevent infinite loops
+  // Initialize user on mount - simplified to prevent infinite loops
   useEffect(() => {
     // Wait for Farcaster auth to complete
     if (farcasterLoading) return;
@@ -65,15 +65,13 @@ export function useGameState() {
     }
     
     // Only create a new user if we don't have one and haven't already started the process
-    if (!storedUserId && !userId && !initUserMutation.isPending) {
+    if (!storedUserId && !userId && !initUserMutation.isPending && !initUserMutation.isSuccess) {
       // Create user with Farcaster data if available, otherwise use mock data
       const username = isFarcasterAuth && farcasterUser 
         ? (farcasterUser.username || farcasterUser.displayName || `FarcasterUser${farcasterUser.fid}`)
         : `Player${Math.floor(Math.random() * 10000)}`;
         
-      const walletAddress = isFarcasterAuth && farcasterUser?.custody
-        ? farcasterUser.custody
-        : `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+      const walletAddress = `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
       
       console.log('Initializing user with Farcaster data:', {
         isFarcasterAuth,
@@ -90,13 +88,13 @@ export function useGameState() {
         farcasterPfpUrl: isFarcasterAuth && farcasterUser ? farcasterUser.pfpUrl : undefined,
       });
     }
-  }, [farcasterLoading, error, userId, initUserMutation.isPending, isFarcasterAuth, farcasterUser]); // Include auth state in dependencies
+  }, [farcasterLoading, error, userId, initUserMutation.isPending, initUserMutation.isSuccess]); // Simplified dependencies
 
   return {
     user,
     farcasterUser,
     isFarcasterAuthenticated: isFarcasterAuth,
-    isLoading: isLoading || initUserMutation.isPending || farcasterLoading,
+    isLoading: isLoading || initUserMutation.isPending,
     initUser: initUserMutation.mutate,
   };
 }
