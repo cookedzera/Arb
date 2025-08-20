@@ -19,12 +19,12 @@ export function useGameState() {
       farcasterDisplayName?: string;
       farcasterPfpUrl?: string;
     }) => {
-      console.log('Creating user with data:', userData);
+      // User creation in progress
       const response = await apiRequest("POST", "/api/user", userData);
       return response.json() as Promise<User>;
     },
     onSuccess: (user) => {
-      console.log('User created successfully:', user);
+      // User created successfully
       setUserId(user.id);
       localStorage.setItem("arbcasino_user_id", user.id);
     }
@@ -46,7 +46,7 @@ export function useGameState() {
     
     // Clear invalid stored user IDs that start with "temp_" when we have Farcaster auth
     if (storedUserId && storedUserId.startsWith("temp_") && isFarcasterAuth) {
-      console.log('Clearing temporary user ID for Farcaster user');
+      // Clearing temporary user ID for Farcaster user
       localStorage.removeItem("arbcasino_user_id");
       setUserId(null);
       return;
@@ -73,17 +73,7 @@ export function useGameState() {
         
       const walletAddress = `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
       
-      console.log('Initializing user with Farcaster data:', {
-        isFarcasterAuth,
-        farcasterUser,
-        username,
-        realFarcasterData: {
-          fid: farcasterUser?.fid,
-          username: farcasterUser?.username,
-          displayName: farcasterUser?.displayName,
-          pfpUrl: farcasterUser?.pfpUrl
-        }
-      });
+      // Initializing user with Farcaster data
       
       initUserMutation.mutate({
         username,
@@ -94,7 +84,7 @@ export function useGameState() {
         farcasterPfpUrl: isFarcasterAuth && farcasterUser ? farcasterUser.pfpUrl : undefined,
       });
     }
-  }, [farcasterLoading, error, userId, initUserMutation.isPending, initUserMutation.isSuccess]); // Simplified dependencies
+  }, [farcasterLoading, error, userId, initUserMutation.isPending, initUserMutation.isSuccess, isFarcasterAuth, farcasterUser]); // Fixed dependencies
 
   return {
     user,

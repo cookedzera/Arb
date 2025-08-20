@@ -13,9 +13,7 @@ import { formatUnits } from "viem";
 import { AudioManager } from "@/lib/audio-manager";
 import aidogeLogo from "@assets/aidoge_1755435810322.png";
 import boopLogo from "@assets/boop_1755435810327.png";
-import arbLogo from "@assets/arb-logo.png";
-import arbspinLogo from "@assets/image_1755684462291.png";
-import headingImage from "@assets/Adobe Express - file (1)_1755684640515.png";
+// Removed unused imports to optimize bundle size
 import newLogo from "@assets/Adobe Express - file (1)_1755685145766.png";
 import officialArbLogo from "@assets/Adobe Express - file_1755685469543.png";
 
@@ -26,7 +24,7 @@ const TypewriterText = memo(() => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [typingSpeed, setTypingSpeed] = useState(300);
   
-  const words = ["SPIN", "GAMES"];
+  const words = useMemo(() => ["SPIN", "GAMES"], []);
   
   useEffect(() => {
     const handleType = () => {

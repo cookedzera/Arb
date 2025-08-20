@@ -26,7 +26,7 @@ export class AudioManager {
     this.audio.loop = true;
     this.isInitialized = true;
     
-    console.log('AudioManager: Global audio instance initialized');
+    // AudioManager: Global audio instance initialized
     this.startPlayback();
   }
   
@@ -35,9 +35,9 @@ export class AudioManager {
     
     try {
       await this.audio.play();
-      console.log('AudioManager: Playback started');
+      // AudioManager: Playback started
     } catch (error) {
-      console.log('AudioManager: Auto-play blocked, waiting for user interaction');
+      // AudioManager: Auto-play blocked, waiting for user interaction
       this.setupUserInteractionHandler();
     }
   }
@@ -49,7 +49,7 @@ export class AudioManager {
       if (this.audio && this.audio.paused) {
         try {
           await this.audio.play();
-          console.log('AudioManager: Playback started after user interaction');
+          // AudioManager: Playback started after user interaction
         } catch (e) {
           console.error('AudioManager: Playback failed:', e);
         }
@@ -75,7 +75,7 @@ export class AudioManager {
     this.isMuted = !this.isMuted;
     this.audio.volume = this.isMuted ? 0 : this.volume;
     
-    console.log(`AudioManager: ${this.isMuted ? 'Muted' : 'Unmuted'}, volume: ${this.audio.volume}`);
+    // AudioManager: Toggle mute state
     return this.isMuted;
   }
   
@@ -89,7 +89,7 @@ export class AudioManager {
       this.audio.pause();
       this.audio.currentTime = 0;
       this.audio = null;
-      console.log('AudioManager: Audio destroyed');
+      // AudioManager: Audio destroyed
     }
     this.isInitialized = false;
   }
