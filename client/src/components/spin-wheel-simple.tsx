@@ -9,7 +9,7 @@ import { Coins, Gift } from "lucide-react";
 import { useSimpleSpin } from "@/hooks/use-simple-spin";
 import aidogeLogo from "@assets/aidoge_1755435810322.png";
 import boopLogo from "@assets/boop_1755435810327.png";
-import arbLogo from "@assets/arb-logo.png";
+import arbLogo from "@assets/Adobe Express - file_1755685469543.png";
 
 const WHEEL_SEGMENTS = [
   { name: 'AIDOGE', color: '#3B82F6', reward: '1' },
