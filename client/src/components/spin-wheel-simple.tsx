@@ -423,39 +423,40 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         
 
         
-        {/* ENHANCED ARROW POINTER */}
-        <div className="absolute" style={{ top: '-45px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999 }}>
+        {/* ENHANCED ARROW POINTER - Fixed positioning */}
+        <div className="absolute" style={{ top: '-20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
           <div style={{
             width: '0',
             height: '0', 
-            borderLeft: '30px solid transparent',
-            borderRight: '30px solid transparent',
-            borderTop: '45px solid #facc15',
-            filter: 'drop-shadow(0 6px 12px rgba(0, 0, 0, 0.9))',
+            borderLeft: '20px solid transparent',
+            borderRight: '20px solid transparent',
+            borderTop: '30px solid #ffffff',
+            filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7))',
             position: 'relative'
           }}>
-            {/* Inner arrow for better visibility */}
+            {/* Inner arrow for better contrast */}
             <div style={{
               position: 'absolute',
-              top: '-42px',
+              top: '-28px',
               left: '50%',
               transform: 'translateX(-50%)',
               width: '0',
               height: '0',
-              borderLeft: '20px solid transparent',
-              borderRight: '20px solid transparent',
-              borderTop: '30px solid #fbbf24'
+              borderLeft: '15px solid transparent',
+              borderRight: '15px solid transparent',
+              borderTop: '22px solid #fbbf24'
             }}></div>
           </div>
         </div>
 
-        {/* Spinning Wheel */}
+        {/* Spinning Wheel - Clean border */}
         <div 
+          className="rounded-full"
           style={{
             border: '4px solid #fbbf24',
-            borderRadius: '50%',
             padding: '0px',
-            backgroundColor: 'transparent'
+            backgroundColor: 'transparent',
+            boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)'
           }}
         >
           <motion.div
