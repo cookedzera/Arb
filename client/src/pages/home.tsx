@@ -865,7 +865,7 @@ export default function Home() {
             }}
           >
             <motion.div
-              className="absolute top-8 left-4 right-4 rounded-3xl max-w-md mx-auto relative flex flex-col will-change-transform"
+              className="absolute top-8 left-4 right-4 rounded-3xl max-w-md mx-auto relative flex flex-col will-change-transform overflow-hidden"
               style={{
                 background: 'rgba(255, 255, 255, 0.08)',
                 backdropFilter: 'blur(20px)',
@@ -917,10 +917,11 @@ export default function Home() {
 
                 {/* Scrollable Content Area */}
                 <div 
-                  className="flex-1 p-6 pt-2 overflow-hidden"
+                  className="flex-1 p-6 pt-2 overflow-y-auto overflow-x-hidden"
                   style={{
                     transform: 'translateZ(0)', // Hardware acceleration for smooth scroll
-                    WebkitOverflowScrolling: 'touch' // iOS smooth scrolling
+                    WebkitOverflowScrolling: 'touch', // iOS smooth scrolling
+                    maxHeight: 'calc(90vh - 100px)' // Account for header height
                   }}
                 >
                   <SpinWheelSimple 
