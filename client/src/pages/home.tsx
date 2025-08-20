@@ -393,10 +393,16 @@ export default function Home() {
             whileHover={{ scale: 1.05, y: -2 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <img 
+            <motion.img 
               src={arbspinLogo} 
               alt="ARBSPIN Logo" 
               className="w-full h-full object-contain"
+              animate={{ rotate: 360 }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: "linear"
+              }}
             />
           </motion.div>
           <div className="mb-2">
