@@ -403,18 +403,15 @@ export default function Home() {
                 alt="Profile" 
                 className="w-full h-full rounded-full object-cover"
                 onError={(e) => {
-                  // Show fallback on error
-                  const target = e.currentTarget as HTMLImageElement;
-                  target.style.display = 'none';
-                  const fallback = target.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = 'flex';
+                  // Hide failed image and show fallback
+                  e.currentTarget.style.display = 'none';
                 }}
               />
-            ) : null}
-            {/* Fallback for when no avatar or error */}
-            <div className="flex items-center justify-center w-full h-full" style={{ display: avatarUrl ? 'none' : 'flex' }}>
-              {displayName?.charAt(0) || username?.charAt(0) || 'P'}
-            </div>
+            ) : (
+              <div className="flex items-center justify-center w-full h-full">
+                {displayName?.charAt(0) || username?.charAt(0) || 'P'}
+              </div>
+            )}
           </motion.div>
           <div className="mb-2">
             <motion.h1 
