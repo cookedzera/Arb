@@ -11,30 +11,26 @@ if (typeof global === 'undefined') {
   (window as any).global = globalThis;
 }
 
-// Optimize Farcaster SDK loading - lazy load and error boundary
+// Initialize Farcaster SDK immediately to prevent splash screen
 const initializeFarcasterSDK = async () => {
   if (typeof window === 'undefined') return;
   
   try {
-    // Use dynamic import for better code splitting
+    // Import and call ready() immediately to dismiss splash screen
     const { sdk } = await import('@farcaster/miniapp-sdk');
+    
+    // Call ready() immediately to dismiss splash screen
     await sdk.actions.ready();
-    console.log('Farcaster SDK initialized successfully');
+    
+    // Success - splash screen should be dismissed
   } catch (error) {
-    // Silent fail for development mode
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Farcaster SDK initialization failed - running in dev mode');
-    }
+    // Silent fail for development/non-Farcaster environments
+    // The splash screen only appears in Farcaster, so this is expected outside Farcaster
   }
 };
 
-// Initialize after DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeFarcasterSDK);
-} else {
-  // DOM already loaded
-  initializeFarcasterSDK();
-}
+// Call immediately - don't wait for DOM ready to prevent splash screen delay
+initializeFarcasterSDK();
 
 createRoot(document.getElementById("root")!).render(
   <WagmiProvider config={config}>
