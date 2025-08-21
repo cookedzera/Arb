@@ -169,28 +169,56 @@ export default function Leaderboard() {
         <div className="max-w-md mx-auto space-y-6">
           {/* Header */}
           <motion.div 
-            className="text-center space-y-3 pt-8"
+            className="text-center space-y-4 pt-8 mb-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="flex items-center justify-center gap-3">
-              <motion.div
-                animate={{ 
-                  rotate: [0, 5, -5, 0],
-                  scale: [1, 1.05, 1]
+            <div className="relative rounded-2xl p-6 text-white overflow-hidden"
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
+                border: 'none',
+                outline: 'none'
+              }}
+            >
+              {/* Gradient overlay */}
+              <div 
+                className="absolute inset-0 rounded-2xl opacity-20"
+                style={{
+                  background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%)'
                 }}
-                transition={{ duration: 3, repeat: Infinity }}
-              >
-                <Trophy className="w-8 h-8 text-yellow-400" />
-              </motion.div>
-              <h1 className="text-2xl font-bold text-white font-pixel">
-                LEADERBOARD
-              </h1>
+              />
+              
+              {/* Top highlight */}
+              <div 
+                className="absolute top-0 left-0 right-0 h-px"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)'
+                }}
+              />
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <motion.div
+                    animate={{ 
+                      rotate: [0, 5, -5, 0],
+                      scale: [1, 1.05, 1]
+                    }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    <Trophy className="w-9 h-9 text-yellow-400" />
+                  </motion.div>
+                  <h1 className="text-3xl font-bold text-white">
+                    LEADERBOARD
+                  </h1>
+                </div>
+                <p className="text-white/70 text-sm font-medium">
+                  Top players on Arbitrum Sepolia
+                </p>
+              </div>
             </div>
-            <p className="text-gray-400 text-sm">
-              Top players on Arbitrum Sepolia
-            </p>
           </motion.div>
 
           {/* Simple Wins Leaderboard */}
@@ -257,37 +285,75 @@ function LeaderboardList({
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-gray-900/30 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 hover:border-gray-600/70 transition-all duration-300 hover:bg-gray-800/40"
+            className="relative overflow-hidden rounded-2xl p-5 text-white"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(20px)',
+              transform: `perspective(1000px) rotateX(${index % 2 === 0 ? '0.5deg' : '-0.5deg'}) rotateY(${index % 2 === 0 ? '-0.3deg' : '0.3deg'})`,
+              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
+              border: 'none',
+              outline: 'none'
+            }}
+            whileHover={{ 
+              scale: 1.02, 
+              y: -3,
+              transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
+              transition: { duration: 0.3 }
+            }}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  {getRankIcon(index + 1)}
-                </div>
-                <Avatar className="w-10 h-10 border-2 border-gray-600/50">
-                  <AvatarImage src={entry.farcasterPfpUrl} />
-                  <AvatarFallback className="bg-gradient-to-br from-gray-700 to-gray-800 text-white text-sm">
-                    {entry.farcasterUsername?.[0]?.toUpperCase() || entry.username[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="text-white font-medium text-sm">
-                    {entry.farcasterUsername || entry.username}
+            {/* Subtle gradient overlay for top 3 */}
+            {index < 3 && (
+              <div 
+                className="absolute inset-0 rounded-2xl opacity-30"
+                style={{
+                  background: index === 0 
+                    ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' 
+                    : index === 1 
+                    ? 'linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%)' 
+                    : 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)'
+                }}
+              />
+            )}
+            
+            {/* Top highlight */}
+            <div 
+              className="absolute top-0 left-0 right-0 h-px"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)'
+              }}
+            />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0">
+                    {getRankIcon(index + 1)}
                   </div>
-                  <div className="text-gray-400 text-xs">
-                    {formatAddress(entry.walletAddress)}
+                  <Avatar className="w-12 h-12 border-2 border-white/20 ring-2 ring-white/10">
+                    <AvatarImage src={entry.farcasterPfpUrl} />
+                    <AvatarFallback className="bg-gradient-to-br from-gray-700 to-gray-800 text-white font-medium">
+                      {entry.farcasterUsername?.[0]?.toUpperCase() || entry.username[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-white font-semibold text-base mb-1 truncate">
+                      {entry.farcasterUsername || entry.username}
+                    </div>
+                    <div className="text-white/60 text-xs font-mono">
+                      {formatAddress(entry.walletAddress)}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-white font-bold text-sm">
-                  {getCategoryValue(entry, category)}
-                </div>
-                {category !== 'rewards' && (
-                  <div className="text-gray-400 text-xs">
-                    {entry.totalSpins} spins
+                <div className="text-right">
+                  <div className="text-white font-bold text-lg mb-1">
+                    {getCategoryValue(entry, category)}
                   </div>
-                )}
+                  {category !== 'rewards' && (
+                    <div className="text-white/60 text-xs">
+                      {entry.totalSpins} total spins
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
