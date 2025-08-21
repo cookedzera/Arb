@@ -24,7 +24,12 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
   });
 
   // Get contract info  
-  const { data: contractInfo, isLoading: loadingContract } = useQuery({
+  const { data: contractInfo, isLoading: loadingContract } = useQuery<{
+    contractAddress?: string;
+    isConfigured?: boolean;
+    isPaused?: boolean;
+    tokens?: any[];
+  }>({
     queryKey: ['/api/claim/contract-info'],
     enabled: isOpen
   });
@@ -149,7 +154,7 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
     );
   }
 
-  const claimable = claimableData || { token1: '0', token2: '0', token3: '0' };
+  const claimable = claimableData || { token1: '0', token2: '0', token3: '0', totalClaimable: '0' };
   const tokenOptions = ['Token 1', 'Token 2', 'Token 3'];
   const amounts = [claimable.token1, claimable.token2, claimable.token3];
 

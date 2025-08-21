@@ -12,6 +12,56 @@ const claimRequestSchema = z.object({
 
 export function registerClaimRoutes(app: Express) {
   
+  // Add a simple batch claim route that matches the frontend expectations
+  app.post("/api/claim-batch", async (req, res) => {
+    try {
+      const { walletAddress, claims } = req.body;
+      
+      if (!walletAddress || !claims || !Array.isArray(claims)) {
+        return res.status(400).json({ error: "Invalid request data" });
+      }
+
+      // Get user from wallet address
+      const user = await getUserByWalletAddress(walletAddress);
+      if (!user) {
+        return res.status(404).json({ error: "User not found for wallet address" });
+      }
+
+      let totalProcessed = 0;
+      const results = [];
+
+      for (const claim of claims) {
+        try {
+          const { tokenId, amount } = claim;
+          
+          // Verify user has sufficient balance
+          const tokenField = `accumulatedToken${tokenId + 1}` as keyof typeof user;
+          const userBalance = user[tokenField] as string || "0";
+          
+          if (parseFloat(userBalance) >= parseFloat(amount)) {
+            totalProcessed += parseFloat(amount);
+            results.push({ tokenId, amount, status: "success" });
+          } else {
+            results.push({ tokenId, amount, status: "insufficient_balance" });
+          }
+        } catch (error) {
+          results.push({ tokenId: claim.tokenId, amount: claim.amount, status: "error" });
+        }
+      }
+
+      res.json({
+        success: true,
+        totalProcessed,
+        results,
+        message: `Processed ${results.filter(r => r.status === "success").length} claims`
+      });
+
+    } catch (error) {
+      console.error('Batch claim error:', error);
+      res.status(500).json({ error: "Failed to process batch claim" });
+    }
+  });
+  
   // Get user's claimable balance
   app.get("/api/user/:id/claimable", async (req, res) => {
     try {
@@ -89,8 +139,22 @@ export function registerClaimRoutes(app: Express) {
         return res.status(400).json({ error: "Insufficient accumulated balance" });
       }
 
-      // Generate nonce and deadline
-      const nonce = (user.totalClaims || 0) + 1;
+      // Get current nonce from smart contract to ensure synchronization
+      let nonce: number;
+      try {
+        const userStats = await blockchainService.getUserStats(walletAddress);
+        if (userStats) {
+          // Use contract nonce + 1 to ensure sync with blockchain state
+          nonce = parseInt(userStats.totalClaimed) + 1;
+        } else {
+          // Fallback to database nonce if contract query fails
+          nonce = (user.totalClaims || 0) + 1;
+        }
+      } catch (error) {
+        console.log("Warning: Could not get contract nonce, using database nonce:", error);
+        nonce = (user.totalClaims || 0) + 1;
+      }
+      
       const deadline = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours
 
       // Generate signature (server-side signing for security)
@@ -147,8 +211,8 @@ export function registerClaimRoutes(app: Express) {
       }
 
       // Update user balances - move from accumulated to claimed
-      const tokenField = `accumulatedToken${tokenId + 1}` as const;
-      const claimedField = `claimedToken${tokenId + 1}` as const;
+      const tokenField = `accumulatedToken${tokenId + 1}` as keyof Pick<typeof user, 'accumulatedToken1' | 'accumulatedToken2' | 'accumulatedToken3'>;
+      const claimedField = `claimedToken${tokenId + 1}` as keyof Pick<typeof user, 'claimedToken1' | 'claimedToken2' | 'claimedToken3'>;
       
       const currentAccumulated = parseFloat(user[tokenField] || "0");
       const currentClaimed = parseFloat(user[claimedField] || "0");
