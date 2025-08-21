@@ -490,8 +490,36 @@ export default function Home() {
             <div className="relative z-10">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <h2 className="text-lg font-bold mb-1">🎡 Spin a Wheel</h2>
-                <p className="text-teal-100 text-sm mb-2">💰 Win meme tokens daily</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <svg className="w-5 h-5 text-teal-200" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Modern casino wheel icon */}
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" className="opacity-80"/>
+                    <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.5" fill="rgba(255,255,255,0.1)" className="opacity-60"/>
+                    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                    {/* Wheel segments */}
+                    <path d="M12 2 L14 4 L12 6 L10 4 Z" fill="currentColor" className="opacity-70"/>
+                    <path d="M22 12 L20 14 L18 12 L20 10 Z" fill="currentColor" className="opacity-70"/>
+                    <path d="M12 22 L10 20 L12 18 L14 20 Z" fill="currentColor" className="opacity-70"/>
+                    <path d="M2 12 L4 10 L6 12 L4 14 Z" fill="currentColor" className="opacity-70"/>
+                    {/* Diagonal segments */}
+                    <path d="M18.36 5.64 L19.77 7.05 L18.36 8.46 L16.95 7.05 Z" fill="currentColor" className="opacity-50"/>
+                    <path d="M18.36 18.36 L16.95 16.95 L18.36 15.54 L19.77 16.95 Z" fill="currentColor" className="opacity-50"/>
+                    <path d="M5.64 18.36 L7.05 16.95 L8.46 18.36 L7.05 19.77 Z" fill="currentColor" className="opacity-50"/>
+                    <path d="M5.64 5.64 L7.05 7.05 L5.64 8.46 L4.23 7.05 Z" fill="currentColor" className="opacity-50"/>
+                  </svg>
+                  <h2 className="text-lg font-bold">Spin a Wheel</h2>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-4 h-4 text-teal-200" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Modern coins/token icon */}
+                    <circle cx="9" cy="8" r="6" stroke="currentColor" strokeWidth="2" fill="rgba(255,255,255,0.1)"/>
+                    <circle cx="15" cy="16" r="6" stroke="currentColor" strokeWidth="2" fill="rgba(255,255,255,0.1)"/>
+                    <path d="M6 8 L12 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M9 5 L9 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M15 13 L15 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <p className="text-teal-100 text-sm">Win meme tokens daily</p>
+                </div>
                 <div className="text-xs text-teal-100">
                   <CountdownTimer />
                 </div>

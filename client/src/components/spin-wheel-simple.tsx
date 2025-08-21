@@ -591,10 +591,18 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
           {userSpinsUsed >= 3 ? 'Come Back Tomorrow' :
            isSpinning ? (
              <span className="flex items-center gap-2">
-               <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="50" strokeDashoffset="50" fill="none">
-                   <animate attributeName="stroke-dashoffset" dur="1s" values="50;0" repeatCount="indefinite"/>
-                 </circle>
+               <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                 {/* Animated spinning wheel */}
+                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" className="opacity-60"/>
+                 <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.5" fill="rgba(255,255,255,0.1)" className="opacity-40"/>
+                 <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                 {/* Dynamic segments that rotate */}
+                 <g className="animate-pulse">
+                   <path d="M12 2 L14 4 L12 6 L10 4 Z" fill="currentColor" className="opacity-90"/>
+                   <path d="M22 12 L20 14 L18 12 L20 10 Z" fill="currentColor" className="opacity-70"/>
+                   <path d="M12 22 L10 20 L12 18 L14 20 Z" fill="currentColor" className="opacity-90"/>
+                   <path d="M2 12 L4 10 L6 12 L4 14 Z" fill="currentColor" className="opacity-70"/>
+                 </g>
                </svg>
                Spinning...
              </span>
@@ -602,8 +610,21 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
            result !== null ? 'Processing...' :
            hasSpinsRemaining ? (
              <span className="flex items-center gap-2">
-               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                 <polygon points="5,3 19,12 5,21" fill="currentColor"/>
+               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                 {/* Modern casino wheel icon */}
+                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" className="opacity-80"/>
+                 <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.5" fill="rgba(255,255,255,0.1)" className="opacity-60"/>
+                 <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                 {/* Wheel segments */}
+                 <path d="M12 2 L14 4 L12 6 L10 4 Z" fill="currentColor" className="opacity-70"/>
+                 <path d="M22 12 L20 14 L18 12 L20 10 Z" fill="currentColor" className="opacity-70"/>
+                 <path d="M12 22 L10 20 L12 18 L14 20 Z" fill="currentColor" className="opacity-70"/>
+                 <path d="M2 12 L4 10 L6 12 L4 14 Z" fill="currentColor" className="opacity-70"/>
+                 {/* Diagonal segments */}
+                 <path d="M18.36 5.64 L19.77 7.05 L18.36 8.46 L16.95 7.05 Z" fill="currentColor" className="opacity-50"/>
+                 <path d="M18.36 18.36 L16.95 16.95 L18.36 15.54 L19.77 16.95 Z" fill="currentColor" className="opacity-50"/>
+                 <path d="M5.64 18.36 L7.05 16.95 L8.46 18.36 L7.05 19.77 Z" fill="currentColor" className="opacity-50"/>
+                 <path d="M5.64 5.64 L7.05 7.05 L5.64 8.46 L4.23 7.05 Z" fill="currentColor" className="opacity-50"/>
                </svg>
                FREE SPIN!
              </span>
