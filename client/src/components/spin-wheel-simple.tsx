@@ -688,7 +688,7 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
               You landed on <span className="font-bold">{result.segment}</span>
               {result.isWin && (
                 <span className="block text-sm text-white/80 mt-1">
-                  Reward: {result.reward || result.rewardAmount} tokens
+                  Reward: {formatTokenAmount(result.reward || result.rewardAmount || "0")} tokens
                 </span>
               )}
             </p>
