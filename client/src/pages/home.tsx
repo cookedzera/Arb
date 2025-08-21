@@ -140,6 +140,20 @@ export default function Home() {
   useEffect(() => {
     audioManager.init();
     setIsMuted(audioManager.getMuted());
+    
+    // Additional Farcaster SDK ready call as component-level safeguard
+    const ensureFarcasterReady = async () => {
+      try {
+        const { sdk } = await import('@farcaster/miniapp-sdk');
+        sdk.actions.ready();
+        console.log('🔄 Component-level ready() call completed');
+      } catch (error) {
+        // Silent fail - expected outside Farcaster
+      }
+    };
+    
+    // Small delay to ensure DOM is fully loaded
+    setTimeout(ensureFarcasterReady, 300);
   }, [audioManager]);
 
   const toggleMute = useCallback(() => {
