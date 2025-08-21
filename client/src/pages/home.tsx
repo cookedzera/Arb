@@ -683,39 +683,13 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* Goal Progress */}
+        {/* Daily Spins Section */}
         <motion.div 
           className="mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-base font-bold text-white">🎯 Daily Spins</h3>
-            <span className="text-xs text-white/70">{user?.spinsUsed || 0}/3 used</span>
-          </div>
-          
-          {/* Progress Bar Instead of Days */}
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-white/60">Spins Used Today</span>
-              <span className="text-xs text-white/60">{typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0}/3</span>
-            </div>
-            <div className="flex space-x-1">
-              {Array.from({ length: 3 }, (_, index) => (
-                <div 
-                  key={index}
-                  className={`flex-1 h-2 rounded-full transition-all duration-300 ${
-                    index < (typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0) 
-                      ? 'bg-gradient-to-r from-green-500 to-blue-500' 
-                      : 'bg-gray-600'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Current Challenge */}
           <motion.div 
             className="rounded-xl p-5 text-white relative overflow-hidden"
             style={{
@@ -743,7 +717,7 @@ export default function Home() {
             />
             <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-sm">⚡ Free Spins Available</h4>
+              <h4 className="font-medium text-sm">🎯 Daily Spins ({user?.spinsUsed || 0}/3 used)</h4>
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Active</span>
             </div>
             <div className="flex items-center space-x-2 mb-1">
