@@ -743,7 +743,7 @@ export default function Home() {
             />
             <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-sm">⚡ Today's Free Spins</h4>
+              <h4 className="font-medium text-sm">⚡ Free Spins Available</h4>
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Active</span>
             </div>
             <div className="flex items-center space-x-2 mb-1">
@@ -757,8 +757,8 @@ export default function Home() {
             </div>
             <p className="text-xs text-white/80">
               {3 - (typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0) > 0 
-                ? `${3 - (typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0)} free spins left today!`
-                : 'All daily spins used - check back tomorrow!'
+                ? `${3 - (typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0)} spins remaining today! 🎮 Good luck!`
+                : 'All daily spins used - check back tomorrow for more!'
               }
             </p>
             </div>
