@@ -711,8 +711,8 @@ export default function Home() {
             <div 
               className="absolute inset-0 rounded-2xl"
               style={{
-                background: 'linear-gradient(135deg, #4ade80 0%, #22d3ee 100%)',
-                opacity: 0.8
+                background: 'linear-gradient(135deg, #2D374B 0%, #4A90E2 50%, #96BEDC 100%)',
+                opacity: 0.9
               }}
             />
             <div className="relative z-10">
