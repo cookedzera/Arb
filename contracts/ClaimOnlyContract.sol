@@ -359,7 +359,7 @@ contract ClaimOnlyContract is Ownable, Pausable, ReentrancyGuard {
     }
     
     /**
-     * @dev Recover signer from signature
+     * @dev Recover signer from signature (protected against malleability)
      */
     function _recoverSigner(bytes32 hash, bytes memory signature) 
         internal 
@@ -378,7 +378,23 @@ contract ClaimOnlyContract is Ownable, Pausable, ReentrancyGuard {
             v := byte(0, mload(add(signature, 96)))
         }
         
-        return ecrecover(hash, v, r, s);
+        // Prevent signature malleability
+        // Valid signature 's' value must be in lower half order
+        require(
+            uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
+            "Invalid signature 's' value"
+        );
+        
+        // Normalize v to 27 or 28
+        if (v < 27) {
+            v += 27;
+        }
+        require(v == 27 || v == 28, "Invalid signature 'v' value");
+        
+        address signer = ecrecover(hash, v, r, s);
+        require(signer != address(0), "Invalid signature");
+        
+        return signer;
     }
     
     // ========== FALLBACK ==========
