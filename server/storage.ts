@@ -27,6 +27,7 @@ export interface IStorage {
   addTokenClaim(claim: InsertTokenClaim): Promise<TokenClaim>; // Alias for createTokenClaim
   getUserClaims(userId: string): Promise<TokenClaim[]>;
   canUserClaim(userId: string): Promise<{ canClaim: boolean; totalValueUSD: string }>;
+  getAllUsers(): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -227,6 +228,10 @@ export class DatabaseStorage implements IStorage {
       canClaim: (token1ValueUSD + token2ValueUSD + token3ValueUSD) >= minClaimThreshold,
       totalValueUSD
     };
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
   }
 }
 

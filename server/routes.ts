@@ -14,8 +14,12 @@ import { registerShareRoutes } from "./share-routes";
 // Routes without blockchain dependencies - will be configured fresh
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Register new spin and claim routes
+  // Register new spin routes (server-based, gas-free)
   registerSpinRoutes(app);
+  
+  // Register claim routes (blockchain-based for token claiming)
+  const { registerClaimRoutes } = await import('./claim-routes');
+  registerClaimRoutes(app);
   
   // Register share routes for Farcaster
   registerShareRoutes(app);

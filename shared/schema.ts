@@ -25,6 +25,7 @@ export const users = pgTable("users", {
   claimedToken2: text("claimed_token2").default("0"),
   claimedToken3: text("claimed_token3").default("0"),
   lastClaimDate: timestamp("last_claim_date"),
+  totalClaims: integer("total_claims").default(0), // Track number of successful claims
   isTemporary: boolean("is_temporary").default(false), // For fun-only users not stored in DB
   createdAt: timestamp("created_at").default(sql`now()`),
 });

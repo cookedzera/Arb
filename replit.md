@@ -1,85 +1,153 @@
-# Overview
+# Spin-to-Claim Game Project
 
-ArbCasino is a web-based Wheel of Fortune game implemented as a Farcaster Mini App for the Arbitrum Sepolia testnet. Users can spin a virtual wheel daily to win IARB, JUICE, and ABET tokens. The application integrates smart contracts for real token rewards, tracks pending rewards, and provides a comprehensive claiming system. The vision is to offer a transparent and engaging crypto gaming experience with direct on-chain interaction.
+## Overview
+A dynamic web application that combines server-based gameplay with blockchain token claiming. Users spin a wheel to win tokens, which accumulate server-side and can be claimed via smart contracts on Arbitrum Sepolia.
 
-# User Preferences
+## Architecture Decision: Hybrid Server + Blockchain Model
 
-Preferred communication style: Simple, everyday language.
-Code preferences: Clean, production-ready code without testing/debug code.
-Project focus: Fully Replit-compatible without external dependencies like tsx.
-Navigation preferences: Fast, smooth transitions without loading animations between pages.
-UI preferences: Token collection display with real balances instead of accumulated rewards on profile.
-Gas fee preference: Users should pay their own gas fees for both spinning and claiming transactions, not the project wallet.
-Database preference: Supabase for external deployment, scalable for 200-400 users. **MIGRATED**: App successfully moved to Supabase database with permanent connection (August 18, 2025).
-**REPLIT MIGRATION**: Successfully migrated from Replit Agent to Replit environment with PostgreSQL database, fixed React compatibility issues, and verified full functionality (August 19, 2025).
-**WHEEL FIXES**: Fixed token naming consistency (IARB/JUICE/ABET → AIDOGE/BOOP/ARB), corrected multi-spin rotation calculations, and added visible arrow pointer inside wheel container for proper segment indication (August 19, 2025).
-**DATABASE RESOLUTION**: Fixed critical database connection issues by creating new PostgreSQL instance, resolved all React rendering errors, and restored original casino interface functionality (August 19, 2025).
-**BORDER FIX**: Resolved double border issue on spin wheel by using wrapper div approach with single 4px yellow border, removed aggressive CSS overrides that were preventing borders from showing (August 19, 2025).
-**UI REDESIGN**: Complete redesign of below-wheel section with modern compact layout, fixed spin counting logic, streamlined rewards display with cleaner grid and minimal styling (August 19, 2025).
-**USER AUTHENTICATION FIX**: Fixed critical issue where returning users were creating new database entries instead of being recognized. Implemented Farcaster FID-based user lookup as primary identifier, with username fallback for legacy users. Now properly maintains daily spin counts and user data across sessions (August 21, 2025).
+**Date**: January 21, 2025  
+**Decision**: Separate spinning (server-based) from claiming (blockchain-based)
 
-# System Architecture
+### Why This Architecture?
+- **Spinning**: Gas-free, instant, better UX - stays on server
+- **Claiming**: Secure token distribution - uses smart contracts
+- **Best of Both**: Fast gameplay + decentralized rewards
 
-## Frontend Architecture
-- **Framework**: React 18 with TypeScript using Vite.
-- **Routing**: Wouter.
-- **UI Framework**: Tailwind CSS with shadcn/ui components.
-- **Styling**: Casino-themed dark mode with neon effects and retro gaming aesthetics.
-- **Animations**: Framer Motion for slot machine spin animations and visual feedback.
-- **State Management**: TanStack Query (React Query) for server state management.
-- **Form Handling**: React Hook Form with Zod validation.
-- **UI/UX Decisions**: Smart center display for winning results, smooth navigation with Farcaster profile caching, and a typewriter brand animation in the header. Optimized for 390px width Farcaster Mini App standard with a mobile-first responsive design.
+## Key Technologies
+- **Frontend**: React, Tailwind CSS, TanStack Query
+- **Backend**: Express.js, Drizzle ORM, PostgreSQL
+- **Blockchain**: Solidity, Arbitrum Sepolia, Ethers.js
+- **Integration**: Farcaster SDK for user authentication
 
-## Backend Architecture
-- **Runtime**: Node.js with Express.js server.
-- **Language**: TypeScript with ES modules.
-- **API Design**: RESTful endpoints for user management, spinning mechanics, and leaderboard.
-- **Session Management**: In-memory storage with PostgreSQL migration.
-- **Error Handling**: Centralized error handling.
+## Project Structure
+
+```
+├── contracts/                    # Smart contracts
+│   ├── SpinToClaimContract.sol   # Main claim contract
+│   └── TestERC20.sol            # Test tokens
+├── scripts/                     # Deployment scripts
+│   └── deploy-claim-contract.js # Contract deployment
+├── server/                      # Backend services
+│   ├── blockchain.ts           # Contract integration
+│   ├── claim-routes.ts         # Claim API endpoints
+│   ├── spin-routes.ts          # Spinning logic (server-based)
+│   └── storage.ts              # Database operations
+├── client/src/                  # Frontend
+│   └── components/
+│       └── ClaimModal.tsx      # Claim interface
+└── shared/schema.ts            # Database schema
+```
+
+## Smart Contract Features
+
+### SpinToClaimContract.sol
+✅ **Security**: Pausable, emergency controls, reentrancy protection  
+✅ **Tokens**: Support for 10 token types, configurable rewards  
+✅ **Claims**: Signature verification, replay protection, treasury fees  
+✅ **Anti-Bot**: Rate limits, blacklist, transaction origin checks  
+
+### Deployment Status
+- **Network**: Arbitrum Sepolia (Chain ID: 421614)
+- **Status**: Ready for deployment
+- **Configuration**: Environment-based contract addresses
+
+## Recent Changes
+
+### January 21, 2025 - Claim Contract Implementation
+- ✅ Created secure SpinToClaimContract with emergency controls
+- ✅ Built comprehensive claim API endpoints
+- ✅ Integrated blockchain service with contract interactions
+- ✅ Added ClaimModal component for user interface
+- ✅ Updated database schema for claim tracking
+- ✅ Created deployment scripts and documentation
+
+## User Flow
+
+### Spinning (Server-Based)
+1. User spins wheel → Server processes instantly
+2. Win/loss determined server-side → No gas costs
+3. Tokens accumulate in user database account
+4. Fast, responsive gameplay experience
+
+### Claiming (Blockchain-Based)  
+1. User connects wallet → View accumulated tokens
+2. Select tokens to claim → Server generates signature
+3. Execute blockchain transaction → Tokens transferred
+4. Secure, verifiable token distribution
 
 ## Database Schema
-- **Database**: Supabase (PostgreSQL) with transaction pooler for optimal performance.
-- **ORM**: Drizzle ORM with PostgreSQL dialect.
-- **Tables**: `users` (player profiles, Farcaster data, spin counts, wallet addresses, token balances), `tokens` (configurations), `game_stats` (daily aggregated statistics), `spin_results` (individual spin outcomes), `token_claims` (token claim requests).
-- **Data Validation**: Zod schemas for type-safe operations.
-- **Connection**: Transaction pooler (port 6543) for concurrent user handling.
 
-## Game Logic
-- **Spin Mechanics**: Smart contract-based wheel spinning with 8 segments (IARB, JUICE, ABET, BONUS, JACKPOT, BUST).
-- **Rate Limiting**: 5 spins per user per day enforced by smart contract.
-- **Reward System**: Real token rewards with contract-managed pending balances and individual token claiming.
-- **Token Types**: IARB, JUICE, ABET with BONUS (2x) and JACKPOT (10x) multipliers.
-- **Claim System**: Users can claim accumulated rewards directly from smart contract to their wallet via a single "Claim All" button after all daily spins.
+### Users Table Extensions
+- `accumulatedToken1/2/3`: Server-tracked winnings
+- `claimedToken1/2/3`: Blockchain-verified claims  
+- `totalClaims`: Number of successful claim transactions
+- `lastClaimDate`: Most recent claim timestamp
 
-## Farcaster Integration
-- **Mini App SDK**: @farcaster/miniapp-sdk for native Farcaster functionality.
-- **Authentication**: Quick Auth with JWT verification.
-- **User Profiles**: Utilizes Farcaster user data (FID, username, display name, profile pictures) via Hub API integration.
-- **Backend Verification**: Server-side token validation.
+## API Endpoints
 
-# External Dependencies
+### Spin Routes (Existing)
+- `POST /api/spin` - Execute spin (server-side)
+- `GET /api/user/:id/balances` - Get accumulated tokens
 
-## Database
-- **Supabase**: Serverless PostgreSQL.
-- **Drizzle Kit**: Database migrations and schema management.
+### New Claim Routes
+- `GET /api/user/:id/claimable` - Get claimable balances
+- `POST /api/claim/signature` - Generate claim signature
+- `POST /api/claim/verify` - Verify successful claim
+- `GET /api/claim/contract-info` - Contract status and config
 
-## Security
-- **Arbitrum Sepolia**: Testnet for blockchain interactions.
+## Environment Setup
 
-## UI Components
-- **Radix UI**: Accessible, unstyled React components.
-- **Class Variance Authority**: Type-safe utility for component variants.
-- **Tailwind CSS**: Utility-first CSS framework.
+### Required Variables
+```bash
+PRIVATE_KEY=0x...                    # Contract deployer key
+CLAIM_SIGNER_PRIVATE_KEY=0x...       # Server claim signing key
+ARBISCAN_API_KEY=...                 # Contract verification
+SPIN_CLAIM_CONTRACT_ADDRESS=0x...    # Deployed contract address
+```
 
-## Development Tools
-- **ESBuild**: Fast TypeScript compilation.
-- **PostCSS**: CSS processing.
+## Security Measures
 
-## Animation Libraries
-- **Framer Motion**: Production-ready motion library.
+### Smart Contract
+- **Emergency pause**: Owner/operator can halt claiming
+- **Daily limits**: 10 spins per user per day  
+- **Signature verification**: Prevents unauthorized claims
+- **Reentrancy guards**: Protects against attacks
+- **Treasury fees**: 5% fee to contract treasury
 
-## Utility Libraries
-- **date-fns**: Date manipulation.
-- **clsx**: Conditional className utility.
-- **nanoid**: Secure random ID generation.
-- **wagmi**: For user wallet transactions and contract interactions.
+### Server-Side
+- **Claim authorization**: Server signs valid claims only
+- **Balance tracking**: Separate accumulated vs claimed balances
+- **Rate limiting**: Anti-spam and bot protection
+
+## Deployment Process
+
+1. **Deploy Contracts**: Use `scripts/deploy-claim-contract.js`
+2. **Configure Tokens**: Set min/max rewards per token type
+3. **Fund Contract**: Transfer reward tokens to contract
+4. **Unpause Contract**: Enable claiming functionality
+5. **Test Claims**: Verify end-to-end claim flow
+
+## Next Steps
+
+1. Deploy smart contracts to Arbitrum Sepolia testnet
+2. Configure test ERC20 tokens for rewards
+3. Test complete spin-to-claim flow
+4. Monitor contract performance and security
+5. Prepare for mainnet deployment after thorough testing
+
+## User Preferences
+
+- **Architecture**: Hybrid server+blockchain model preferred
+- **Spinning**: Must remain gas-free and fast (server-based)
+- **Security**: Comprehensive safety measures required
+- **UX**: Seamless integration between spinning and claiming
+
+## Development Status
+
+✅ **Complete**: Smart contract development  
+✅ **Complete**: Server-side claim integration  
+✅ **Complete**: Frontend claim interface  
+✅ **Complete**: Database schema updates  
+🔄 **In Progress**: Contract deployment and testing  
+⏳ **Pending**: End-to-end flow validation  
+⏳ **Pending**: Production deployment preparation
