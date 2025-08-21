@@ -739,156 +739,105 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Recent Tokens */}
+        {/* Token Collection */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="relative rounded-2xl p-4 text-white overflow-hidden"
+          style={{
+            background: 'rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
+            border: 'none',
+            outline: 'none'
+          }}
         >
-          <motion.div 
-            className="relative rounded-2xl p-5 text-white overflow-hidden"
+          {/* Top highlight */}
+          <div 
+            className="absolute top-0 left-0 right-0 h-px"
             style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(20px)',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
-              border: 'none',
-              outline: 'none'
+              background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)'
             }}
-          >
-            {/* Gradient overlay */}
-            <div 
-              className="absolute inset-0 rounded-2xl opacity-25"
-              style={{
-                background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ea580c 100%)'
-              }}
-            />
+          />
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-white">🪙 Token Collection</h3>
+              <span className="text-xs text-white/60">3 tokens</span>
+            </div>
             
-            {/* Top highlight */}
-            <div 
-              className="absolute top-0 left-0 right-0 h-px"
-              style={{
-                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)'
-              }}
-            />
-            
-            <div className="relative z-10">
-              <div className="mb-4">
-                <h3 className="text-lg font-bold text-white mb-1">🪙 Token Collection</h3>
-                <p className="text-white/70 text-xs">Your earned rewards</p>
-              </div>
-              
-              <div className="space-y-3">
+            <div className="space-y-2">
             {tokenData.map((token, index) => {
               const hasBalance = BigInt(token.amount) > 0;
               const formattedAmount = formatTokenAmount(token.amount);
               
-              // Define unique colors for each token
-              const getTokenGradient = (tokenName: string) => {
+              // Define unique accent colors for each token
+              const getTokenColor = (tokenName: string) => {
                 switch (tokenName) {
-                  case 'AIDOGE':
-                    return 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%)'; // Blue
-                  case 'BOOP':
-                    return 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)'; // Green
-                  case 'ARB':
-                    return 'linear-gradient(135deg, #2D374B 0%, #4A90E2 50%, #96BEDC 100%)'; // Arbitrum blue
-                  default:
-                    return 'linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%)'; // Default purple
+                  case 'AIDOGE': return '#3b82f6'; // Blue
+                  case 'BOOP': return '#10b981'; // Green  
+                  case 'ARB': return '#4A90E2'; // Arbitrum blue
+                  default: return '#6366f1'; // Purple
                 }
               };
               
               return (
                 <motion.div
                   key={index}
-                  className="rounded-xl p-4 relative overflow-hidden text-white"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                  }}
-                  whileHover={{ 
-                    scale: 1.01, 
-                    transition: { duration: 0.2 }
-                  }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  {/* Subtle gradient accent */}
-                  <div 
-                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
-                    style={{
-                      background: getTokenGradient(token.name)
-                    }}
-                  />
-                  
-                  <div className="flex items-center justify-between pl-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        {token.icon ? (
-                          <img src={token.icon} alt={token.name} className="w-10 h-10 rounded-xl border-2 border-white/20" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white font-bold text-base border-2 border-white/20">
-                            {token.name.charAt(0)}
-                          </div>
-                        )}
-                        <span className="absolute -top-1 -right-1 text-sm">{token.emoji}</span>
-                      </div>
-                      <div>
-                        <div className="font-bold text-white text-base">{token.name}</div>
-                        <div className="text-xs text-white/70 font-medium">🔒 {token.time}</div>
-                      </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="relative">
+                      {token.icon ? (
+                        <img src={token.icon} alt={token.name} className="w-8 h-8 rounded-lg" />
+                      ) : (
+                        <div 
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                          style={{ backgroundColor: getTokenColor(token.name) }}
+                        >
+                          {token.name.charAt(0)}
+                        </div>
+                      )}
+                      <span className="absolute -top-1 -right-1 text-xs">{token.emoji}</span>
                     </div>
-                    <div className={`font-bold text-lg ${hasBalance ? 'text-white' : 'text-white/50'}`}>
-                      +{formattedAmount}
+                    <div>
+                      <div className="font-semibold text-white text-sm">{token.name}</div>
+                      <div className="text-xs text-white/60">🔒 {token.time}</div>
                     </div>
                   </div>
-
-                  {/* Claim button for tokens with balance */}
-                  {hasBalance && (
-                    <motion.div 
-                      className="mt-2 pt-2 border-t border-white/10"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <Button
-                        onClick={() => {}}
-                        disabled={false}
-                        size="sm"
-                        className={`w-full h-8 text-xs bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border border-white/20 transition-all duration-200`}
-                      >
-                        Claim (Pay Gas)
-                      </Button>
-                    </motion.div>
-                  )}
+                  <div className={`font-bold text-sm ${hasBalance ? 'text-green-400' : 'text-white/50'}`}>
+                    +{formattedAmount}
+                  </div>
                 </motion.div>
+
               );
             })}
-              </div>
             </div>
-          </motion.div>
-
-          {/* Global Claim All Button */}
-          {balances && (Number(balances.token1) > 0 || Number(balances.token2) > 0 || Number(balances.token3) > 0) && (
-            <motion.div
-              className="mt-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <Button
-                onClick={() => {}}
-                disabled={false}
-                className="w-full h-10 text-sm bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all duration-200 rounded-xl"
-              >
-                Claim All Tokens (Pay Gas)
-              </Button>
-            </motion.div>
-          )}
-
-
+          </div>
         </motion.div>
+
+        {/* Global Claim All Button */}
+        {balances && (Number(balances.token1) > 0 || Number(balances.token2) > 0 || Number(balances.token3) > 0) && (
+          <motion.div
+            className="mt-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Button
+              onClick={() => {}}
+              disabled={false}
+              className="w-full h-10 text-sm bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all duration-200 rounded-xl"
+            >
+              Claim All Tokens (Pay Gas)
+            </Button>
+          </motion.div>
+        )}
+
       </div>
 
       {/* Navigation */}
