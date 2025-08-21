@@ -9,8 +9,8 @@
   "timestamp": "2025-08-21T11:40:00.000Z",
   "status": "needs-deployment",
   "rpcUsed": "https://sepolia-rollup.arbitrum.io/rpc",
-  "contractName": "SpinToClaimContract",
-  "contractSource": "contracts/SpinToClaimContract.sol",
+  "contractName": "ClaimOnlyContract",
+  "contractSource": "contracts/ClaimOnlyContract.sol",
   "tokenAddresses": {
     "TOKEN1": "0x09e18590e8f76b6cf471b3cd30676b46ef36f7cd",
     "TOKEN2": "0x13a7dedb7169a17be92b0c1d7faf17c7b3",
@@ -20,21 +20,23 @@
     "method": "manual-remix-deployment",
     "constructor": [
       "0x3b0287dDC6dD5a22862702dd2FB6E3Aa17429cB6",
+      "0xF539b9E0Be84F88368439aDb7aBeD0873e49414F",
       "0xF539b9E0Be84F88368439aDb7aBeD0873e49414F"
     ],
     "gasEstimate": "2500000",
-    "note": "Deploy SpinToClaimContract.sol with treasury and emergencyOperator addresses",
+    "note": "Deploy ClaimOnlyContract.sol - server handles spinning, contract only claims",
     "steps": [
-      "1. Open Remix IDE and import contracts/SpinToClaimContract.sol",
+      "1. Open Remix IDE and import contracts/ClaimOnlyContract.sol",
       "2. Install @openzeppelin dependencies by importing @openzeppelin/contracts",
       "3. Compile with Solidity 0.8.30",
       "4. Deploy to Arbitrum Sepolia with constructor parameters:",
       "   - _treasury: 0x3b0287dDC6dD5a22862702dd2FB6E3Aa17429cB6",
       "   - _emergencyOperator: 0xF539b9E0Be84F88368439aDb7aBeD0873e49414F",
+      "   - _claimSigner: 0xF539b9E0Be84F88368439aDb7aBeD0873e49414F",
       "5. Configure tokens using configureToken() for each token ID:",
-      "   - Token 0: AIDOGE (0x09e18590e8f76b6cf471b3cd30676b46ef36f7cd)",
-      "   - Token 1: BOOP (0x13a7dedb7169a17be92b0c1d7faf17c7b3)",
-      "   - Token 2: ARB (0x980b62da83eff3d4576c647993b0c1d7faf17c73)",
+      "   - Token 0: AIDOGE (0x09e18590e8f76b6cf471b3cd30676b46ef36f7cd, true)",
+      "   - Token 1: BOOP (0x13a7dedb7169a17be92b0c1d7faf17c7b3, true)",
+      "   - Token 2: ARB (0x980b62da83eff3d4576c647993b0c1d7faf17c73, true)",
       "6. Call unpause() to enable the contract",
       "7. Update contractAddress in this file with deployed address"
     ]
