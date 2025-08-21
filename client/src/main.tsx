@@ -16,55 +16,16 @@ const initializeFarcasterSDK = async () => {
   if (typeof window === 'undefined') return;
   
   try {
-    console.log('🔄 Initializing Farcaster SDK...');
-    
-    // Import Farcaster SDK
+    // Import and call ready() immediately to dismiss splash screen
     const { sdk } = await import('@farcaster/miniapp-sdk');
-    console.log('📱 SDK imported successfully');
     
-    // Call ready() with timeout to prevent hanging
-    const readyPromise = sdk.actions.ready();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('ready() timeout')), 3000)
-    );
+    // Call ready() immediately to dismiss splash screen
+    await sdk.actions.ready();
     
-    console.log('📱 Calling sdk.actions.ready()...');
-    await Promise.race([readyPromise, timeoutPromise]);
-    
-    console.log('✅ Farcaster SDK ready() completed - splash screen should be hidden');
-    
-    // Log additional context if available
-    if (sdk.context) {
-      console.log('📱 Farcaster context:', {
-        hasContext: true,
-        location: sdk.context.location || 'unknown'
-      });
-    }
-    
+    // Success - splash screen should be dismissed
   } catch (error) {
-    console.log('⚠️ Farcaster SDK error:', error.message);
-    
-    // Try multiple fallback approaches
-    try {
-      const { sdk } = await import('@farcaster/miniapp-sdk');
-      
-      // Try immediate ready() call
-      sdk.actions.ready();
-      console.log('🔄 Attempted immediate ready() call as fallback');
-      
-      // Also try after a brief delay
-      setTimeout(() => {
-        try {
-          sdk.actions.ready();
-          console.log('🔄 Attempted delayed ready() call');
-        } catch (e) {
-          console.log('⚠️ Delayed ready() failed:', e.message);
-        }
-      }, 100);
-      
-    } catch (fallbackError) {
-      console.log('ℹ️ Not running in Farcaster environment (expected)');
-    }
+    // Silent fail for development/non-Farcaster environments
+    // The splash screen only appears in Farcaster, so this is expected outside Farcaster
   }
 };
 
