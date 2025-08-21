@@ -79,9 +79,49 @@ function getRandomSegment(): string {
   return 'BUST'; // Fallback
 }
 
-// Process a single spin
-export function performSpin(): SpinResult {
-  const segment = getRandomSegment();
+// Generate beginner-friendly winning segment  
+function getBeginnerWinSegment(): string {
+  const beginnerSegments = [
+    { name: 'AIDOGE', weight: 40 }, // 0.5 tokens
+    { name: 'BOOP', weight: 30 },   // 0.5 tokens  
+    { name: 'ARB', weight: 25 },    // 0.25 tokens
+    { name: 'BONUS', weight: 5 },   // 1 token (rare treat)
+  ];
+  
+  const totalWeight = beginnerSegments.reduce((sum, segment) => sum + segment.weight, 0);
+  const random = Math.random() * totalWeight;
+  
+  let currentWeight = 0;
+  for (const segment of beginnerSegments) {
+    currentWeight += segment.weight;
+    if (random <= currentWeight) {
+      return segment.name;
+    }
+  }
+  
+  return 'AIDOGE'; // Fallback to win
+}
+
+// Process a single spin with optional beginner boost
+export function performSpin(isNewPlayer: boolean = false, spinsUsed: number = 0): SpinResult {
+  let segment: string;
+  
+  // Beginner's luck: new players get much better odds 
+  if (isNewPlayer) {
+    if (spinsUsed === 2) {
+      // On 3rd spin, guarantee a win to hook them
+      segment = getBeginnerWinSegment();
+    } else if (spinsUsed === 1) {
+      // On 2nd spin, 70% win chance 
+      segment = Math.random() < 0.7 ? getBeginnerWinSegment() : getRandomSegment();
+    } else {
+      // On 1st spin, 90% win chance to start strong
+      segment = Math.random() < 0.9 ? getBeginnerWinSegment() : getRandomSegment();
+    }
+  } else {
+    segment = getRandomSegment();
+  }
+  
   const randomSeed = Math.random().toString() + Date.now().toString();
   
   let isWin = false;

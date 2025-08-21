@@ -27,15 +27,19 @@ export function registerSpinRoutes(app: Express) {
         return res.status(400).json({ error: "User ID required" });
       }
       
-      // Handle temporary users (fun-only mode)
+      // Handle temporary users (fun-only mode) with consistent beginner luck
       if (userId.startsWith('temp_')) {
         console.log(`🎮 Fun-only spin: ${userId}`);
-        const spinResult = performSpin();
+        // Temp users get consistent beginner luck (70% win rate)
+        const isBeginnerWin = Math.random() < 0.7;
+        const spinResult = isBeginnerWin ? 
+          performSpin(true, 0) : // Use beginner logic for wins
+          performSpin(false, 0); // Use normal logic for occasional busts
         return res.json({
           ...spinResult,
           spinsRemaining: 3, // Always show 3 for temp users
           isTemporary: true,
-          message: "Fun mode - results not saved"
+          message: "Fun mode with beginner luck! 🍀"
         });
       }
       
@@ -49,12 +53,14 @@ export function registerSpinRoutes(app: Express) {
       const isValidFarcasterUser = user.farcasterFid && user.farcasterFid > 0;
       if (!isValidFarcasterUser) {
         console.log(`🎮 Fun-only spin for non-Farcaster user: ${user.username}`);
-        const spinResult = performSpin();
+        // Check if user is new (no spins recorded)
+        const isNewPlayer = !user.lastSpinDate;
+        const spinResult = performSpin(isNewPlayer, 0);
         return res.json({
           ...spinResult,
           spinsRemaining: 3, // Always show 3 for fun-only
           isTemporary: true,
-          message: "Fun mode - results not saved"
+          message: isNewPlayer ? "Fun mode with beginner luck! 🍀" : "Fun mode - results not saved"
         });
       }
       
@@ -79,8 +85,12 @@ export function registerSpinRoutes(app: Express) {
         });
       }
       
-      // Perform the spin (server-side randomness)
-      const spinResult = performSpin();
+      // Check if user is new (less than 3 total spins ever)
+      const totalSpinsEver = user.totalSpins || 0;
+      const isNewPlayer = totalSpinsEver < 3;
+      
+      // Perform the spin with beginner logic for new players
+      const spinResult = performSpin(isNewPlayer, currentSpinsUsed);
       
       // Save spin result to database
       const savedResult = await storage.addSpinResult({
@@ -119,15 +129,22 @@ export function registerSpinRoutes(app: Express) {
             break;
         }
         
-        await storage.updateUser(userId, updateData);
+        // Combine win data with spin count update
+        const finalUpdateData = {
+          ...updateData,
+          spinsUsed: currentSpinsUsed + 1,
+          totalSpins: (user.totalSpins || 0) + 1,
+          lastSpinDate: new Date()
+        };
+        await storage.updateUser(userId, finalUpdateData);
+      } else {
+        // No win - just update spin count
+        await storage.updateUser(userId, {
+          spinsUsed: currentSpinsUsed + 1,
+          totalSpins: (user.totalSpins || 0) + 1,
+          lastSpinDate: new Date()
+        });
       }
-      
-      // Update user's spin count
-      await storage.updateUser(userId, {
-        spinsUsed: currentSpinsUsed + 1,
-        totalSpins: (user.totalSpins || 0) + 1,
-        lastSpinDate: new Date()
-      });
       
       res.json({
         ...spinResult,
