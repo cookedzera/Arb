@@ -491,35 +491,35 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <svg className="w-5 h-5 text-teal-200" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" key="casino-wheel-v2">
-                    {/* Modern casino wheel icon - Updated */}
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" fill="none" className="opacity-90"/>
-                    <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.5" fill="rgba(255,255,255,0.15)" className="opacity-70"/>
-                    <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-                    {/* Enhanced wheel segments */}
-                    <path d="M12 2 L14.5 4.5 L12 7 L9.5 4.5 Z" fill="currentColor" className="opacity-80"/>
-                    <path d="M22 12 L19.5 14.5 L17 12 L19.5 9.5 Z" fill="currentColor" className="opacity-80"/>
-                    <path d="M12 22 L9.5 19.5 L12 17 L14.5 19.5 Z" fill="currentColor" className="opacity-80"/>
-                    <path d="M2 12 L4.5 9.5 L7 12 L4.5 14.5 Z" fill="currentColor" className="opacity-80"/>
-                    {/* Additional segments for more detail */}
-                    <path d="M18.36 5.64 L19.77 7.05 L18.36 8.46 L16.95 7.05 Z" fill="currentColor" className="opacity-60"/>
-                    <path d="M18.36 18.36 L16.95 16.95 L18.36 15.54 L19.77 16.95 Z" fill="currentColor" className="opacity-60"/>
-                    <path d="M5.64 18.36 L7.05 16.95 L8.46 18.36 L7.05 19.77 Z" fill="currentColor" className="opacity-60"/>
-                    <path d="M5.64 5.64 L7.05 7.05 L5.64 8.46 L4.23 7.05 Z" fill="currentColor" className="opacity-60"/>
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" key="casino-wheel-colorful">
+                    {/* Colorful casino wheel icon */}
+                    <circle cx="12" cy="12" r="10" stroke="#FFD700" strokeWidth="2.5" fill="none"/>
+                    <circle cx="12" cy="12" r="7" stroke="#FF6B35" strokeWidth="1.5" fill="rgba(255, 107, 53, 0.2)"/>
+                    <circle cx="12" cy="12" r="2.5" fill="#FFD700"/>
+                    {/* Colorful wheel segments */}
+                    <path d="M12 2 L14.5 4.5 L12 7 L9.5 4.5 Z" fill="#FF6B35"/>
+                    <path d="M22 12 L19.5 14.5 L17 12 L19.5 9.5 Z" fill="#4ECDC4"/>
+                    <path d="M12 22 L9.5 19.5 L12 17 L14.5 19.5 Z" fill="#45B7D1"/>
+                    <path d="M2 12 L4.5 9.5 L7 12 L4.5 14.5 Z" fill="#96CEB4"/>
+                    {/* Additional colorful segments */}
+                    <path d="M18.36 5.64 L19.77 7.05 L18.36 8.46 L16.95 7.05 Z" fill="#FFEAA7"/>
+                    <path d="M18.36 18.36 L16.95 16.95 L18.36 15.54 L19.77 16.95 Z" fill="#DDA0DD"/>
+                    <path d="M5.64 18.36 L7.05 16.95 L8.46 18.36 L7.05 19.77 Z" fill="#98D8C8"/>
+                    <path d="M5.64 5.64 L7.05 7.05 L5.64 8.46 L4.23 7.05 Z" fill="#F7DC6F"/>
                   </svg>
                   <h2 className="text-lg font-bold">Spin a Wheel</h2>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-4 h-4 text-teal-200" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" key="tokens-v2">
-                    {/* Enhanced tokens icon */}
-                    <circle cx="9" cy="8" r="6" stroke="currentColor" strokeWidth="2.5" fill="rgba(255,255,255,0.2)"/>
-                    <circle cx="15" cy="16" r="6" stroke="currentColor" strokeWidth="2.5" fill="rgba(255,255,255,0.2)"/>
-                    <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1" fill="rgba(255,255,255,0.1)"/>
-                    <circle cx="15" cy="16" r="3" stroke="currentColor" strokeWidth="1" fill="rgba(255,255,255,0.1)"/>
-                    <path d="M9 5 L9 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    <path d="M15 13 L15 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    <path d="M6 8 L12 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M12 16 L18 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" key="tokens-colorful">
+                    {/* Colorful tokens icon */}
+                    <circle cx="9" cy="8" r="6" stroke="#FFD700" strokeWidth="2.5" fill="rgba(255, 215, 0, 0.3)"/>
+                    <circle cx="15" cy="16" r="6" stroke="#FF6B35" strokeWidth="2.5" fill="rgba(255, 107, 53, 0.3)"/>
+                    <circle cx="9" cy="8" r="3" stroke="#FFA500" strokeWidth="1" fill="rgba(255, 165, 0, 0.4)"/>
+                    <circle cx="15" cy="16" r="3" stroke="#FF4500" strokeWidth="1" fill="rgba(255, 69, 0, 0.4)"/>
+                    <path d="M9 5 L9 11" stroke="#FFD700" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M15 13 L15 19" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M6 8 L12 8" stroke="#FFA500" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M12 16 L18 16" stroke="#FF4500" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
                   <p className="text-teal-100 text-sm">Win meme tokens daily</p>
                 </div>
