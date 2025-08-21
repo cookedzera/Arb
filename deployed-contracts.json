@@ -27,7 +27,7 @@
     "steps": [
       "1. Open Remix IDE and import contracts/SpinToClaimContract.sol",
       "2. Install @openzeppelin dependencies by importing @openzeppelin/contracts",
-      "3. Compile with Solidity 0.8.20+",
+      "3. Compile with Solidity 0.8.30",
       "4. Deploy to Arbitrum Sepolia with constructor parameters:",
       "   - _treasury: 0x3b0287dDC6dD5a22862702dd2FB6E3Aa17429cB6",
       "   - _emergencyOperator: 0xF539b9E0Be84F88368439aDb7aBeD0873e49414F",
