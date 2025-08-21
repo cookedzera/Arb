@@ -150,7 +150,7 @@ SPIN_CLAIM_CONTRACT_ADDRESS=0x...    # Deployed contract address
 
 ## Development Status
 
-✅ **Complete**: Smart contract development  
+✅ **Complete**: ClaimOnlyContract development (simplified, no randomness)
 ✅ **Complete**: Server-side claim integration  
 ✅ **Complete**: Frontend claim interface  
 ✅ **Complete**: Database schema updates  
@@ -159,5 +159,6 @@ SPIN_CLAIM_CONTRACT_ADDRESS=0x...    # Deployed contract address
 ✅ **Complete**: Database integration with Supabase and Farcaster
 ✅ **Complete**: Private key configuration for blockchain operations
 ✅ **Complete**: Contract address configuration and backend integration
-⏳ **Ready**: Manual contract deployment via Remix IDE (optional for production)
+✅ **Complete**: Architecture decision - ClaimOnlyContract (server spins, blockchain claims)
+⏳ **Ready**: ClaimOnlyContract deployment to Arbitrum Sepolia
 ⏳ **Ready**: Full end-to-end testing of spin-to-claim functionality

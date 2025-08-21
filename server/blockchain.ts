@@ -2,14 +2,12 @@ import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 
-// Contract ABIs - Updated for real SpinToClaimContract
-const SPIN_CLAIM_ABI = [
-  "function spin(uint256 tokenId) external returns (bool isWin, uint256 rewardAmount)",
+// Contract ABIs - ClaimOnlyContract (server handles spinning)
+const CLAIM_ONLY_ABI = [
   "function claimTokens(tuple(address user, uint256 tokenId, uint256 amount, uint256 nonce, uint256 deadline, bytes signature) claimRequest) external",
-  "function getUserStats(address user) external view returns (tuple(uint256 lastSpinBlock, uint256 totalSpins, uint256 totalWins, uint256 totalClaimed, bool isBlacklisted) userData)",
-  "function canSpin(address user, uint256 tokenId) external view returns (bool canSpinNow, string memory reason)",
-  "function getTokenConfig(uint256 tokenId) external view returns (address tokenAddress, uint256 minReward, uint256 maxReward, bool isActive, uint256 totalDistributed, uint256 reserveBalance)",
-  "function configureToken(uint256 tokenId, address tokenAddress, uint256 minReward, uint256 maxReward, bool isActive) external",
+  "function batchClaimTokens(tuple(address user, uint256 tokenId, uint256 amount, uint256 nonce, uint256 deadline, bytes signature)[] claimRequests) external",
+  "function getTokenConfig(uint256 tokenId) external view returns (address tokenAddress, uint256 totalDistributed, uint256 reserveBalance, bool isActive)",
+  "function configureToken(uint256 tokenId, address tokenAddress, bool isActive) external",
   "function pause() external",
   "function unpause() external",
   "function paused() external view returns (bool)",
@@ -17,8 +15,8 @@ const SPIN_CLAIM_ABI = [
   "function emergencyMode() external view returns (bool)",
   "function treasury() external view returns (address)",
   "function treasuryFeePercent() external view returns (uint256)",
-  "function getContractStats() external view returns (uint256 totalActiveTokens, bool isPaused, bool inEmergencyMode, address treasuryAddress, uint256 feePercent)",
-  "event SpinExecuted(address indexed user, uint256 indexed tokenId, uint256 amount, bool isWin, uint256 blockNumber)",
+  "function claimSigner() external view returns (address)",
+  "function getContractStats() external view returns (uint256 totalActiveTokens, bool isPaused, bool inEmergencyMode, address treasuryAddress, uint256 feePercent, address signerAddress)",
   "event TokensClaimed(address indexed user, uint256 indexed tokenId, uint256 amount, uint256 nonce)"
 ];
 
@@ -63,7 +61,7 @@ export class BlockchainService {
     if (this.config.contractAddress) {
       this.contract = new ethers.Contract(
         this.config.contractAddress,
-        SPIN_CLAIM_ABI,
+        CLAIM_ONLY_ABI,
         this.provider
       );
       console.log("✅ Smart contract connected:", this.config.contractAddress);
@@ -156,26 +154,7 @@ export class BlockchainService {
     }
   }
 
-  async getUserStats(userAddress: string) {
-    if (!this.contract) {
-      return null;
-    }
-
-    try {
-      const userData = await this.contract.getUserStats(userAddress);
-      
-      return {
-        lastSpinBlock: userData.lastSpinBlock.toString(),
-        totalSpins: userData.totalSpins.toString(),
-        totalWins: userData.totalWins.toString(),
-        totalClaimed: userData.totalClaimed.toString(),
-        isBlacklisted: userData.isBlacklisted
-      };
-    } catch (error) {
-      console.error("Error getting user stats:", error);
-      return null;
-    }
-  }
+  // getUserStats removed - ClaimOnlyContract doesn't track spin stats
 
   async getTokenConfig(tokenId: number) {
     if (!this.contract) {
@@ -183,16 +162,14 @@ export class BlockchainService {
     }
 
     try {
-      const [tokenAddress, minReward, maxReward, isActive, totalDistributed, reserveBalance] = 
+      const [tokenAddress, totalDistributed, reserveBalance, isActive] = 
         await this.contract.getTokenConfig(tokenId);
       
       return {
         tokenAddress,
-        minReward: minReward.toString(),
-        maxReward: maxReward.toString(),
-        isActive,
         totalDistributed: totalDistributed.toString(),
-        reserveBalance: reserveBalance.toString()
+        reserveBalance: reserveBalance.toString(),
+        isActive
       };
     } catch (error) {
       console.error("Error getting token config:", error);
@@ -267,7 +244,7 @@ export class BlockchainService {
     if (this.config.contractAddress) {
       this.contract = new ethers.Contract(
         this.config.contractAddress,
-        SPIN_CLAIM_ABI,
+        CLAIM_ONLY_ABI,
         this.provider
       );
     }
