@@ -1,0 +1,221 @@
+Check-effects-interaction:
+INTERNAL ERROR in module Check-effects-interaction: Cannot read properties of undefined (reading 'name')
+Pos: not available
+Inline assembly:
+The Contract uses inline assembly, this is only advised in rare cases. Additionally static analysis modules do not parse inline Assembly, this can lead to wrong analysis results.
+more
+Pos: 393:8:
+Block timestamp:
+Use of "block.timestamp": "block.timestamp" can be influenced by miners to a certain degree. That means that a miner can "choose" the block.timestamp, to a certain degree, to change the outcome of a transaction in the mined block.
+more
+Pos: 128:16:
+Block timestamp:
+Use of "block.timestamp": "block.timestamp" can be influenced by miners to a certain degree. That means that a miner can "choose" the block.timestamp, to a certain degree, to change the outcome of a transaction in the mined block.
+more
+Pos: 200:20:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.claimTokens is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 121:4:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.batchClaimTokens is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 185:4:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.configureToken is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 247:4:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.setClaimSigner is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 274:4:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.setTreasury is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 283:4:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.setEmergencyOperator is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 292:4:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.unpause is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 300:4:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.setEmergencyMode is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 307:4:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.getTokenConfig is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 322:4:
+Gas costs:
+Gas requirement of function ClaimOnlyContract.getContractStats is infinite: If the gas requirement of a function is higher than the block gas limit, it cannot be executed. Please avoid loops in your functions or actions that modify large areas of storage (this includes clearing or copying arrays in storage)
+Pos: 344:4:
+For loop over dynamic array:
+Loops that do not have a fixed number of iterations, for example, loops that depend on storage values, have to be used carefully. Due to the block gas limit, transactions can only consume a certain amount of gas. The number of iterations in a loop can grow beyond the block gas limit which can cause the complete contract to be stalled at a certain point. Additionally, using unbounded loops incurs in a lot of avoidable gas costs. Carefully test how many items at maximum you can pass to such functions to make it successful.
+more
+Pos: 196:8:
+For loop over dynamic array:
+Loops that do not have a fixed number of iterations, for example, loops that depend on storage values, have to be used carefully. Due to the block gas limit, transactions can only consume a certain amount of gas. The number of iterations in a loop can grow beyond the block gas limit which can cause the complete contract to be stalled at a certain point. Additionally, using unbounded loops incurs in a lot of avoidable gas costs. Carefully test how many items at maximum you can pass to such functions to make it successful.
+more
+Pos: 219:8:
+Constant/View/Pure functions:
+INTERNAL ERROR in module Constant/View/Pure functions: Cannot read properties of undefined (reading 'name')
+Pos: not available
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "tokens" and "tokenId". Note: Modifiers are currently not considered by this static analysis.
+Pos: 252:16:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "tokens" and "tokenId". Note: Modifiers are currently not considered by this static analysis.
+Pos: 255:37:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "tokens" and "tokenId". Note: Modifiers are currently not considered by this static analysis.
+Pos: 255:44:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "tokens" and "tokenId". Note: Modifiers are currently not considered by this static analysis.
+Pos: 268:29:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "wasActive" and "isActive". Note: Modifiers are currently not considered by this static analysis.
+Pos: 256:8:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "wasActive" and "isActive". Note: Modifiers are currently not considered by this static analysis.
+Pos: 259:26:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "wasActive" and "isActive". Note: Modifiers are currently not considered by this static analysis.
+Pos: 262:12:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "wasActive" and "isActive". Note: Modifiers are currently not considered by this static analysis.
+Pos: 262:25:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "wasActive" and "isActive". Note: Modifiers are currently not considered by this static analysis.
+Pos: 264:20:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "wasActive" and "isActive". Note: Modifiers are currently not considered by this static analysis.
+Pos: 264:32:
+Similar variable names:
+ClaimOnlyContract.configureToken(uint256,address,bool) : Variables have very similar names "wasActive" and "isActive". Note: Modifiers are currently not considered by this static analysis.
+Pos: 268:52:
+Similar variable names:
+ClaimOnlyContract.getTokenConfig(uint256) : Variables have very similar names "tokens" and "tokenId". Note: Modifiers are currently not considered by this static analysis.
+Pos: 332:37:
+Similar variable names:
+ClaimOnlyContract.getTokenConfig(uint256) : Variables have very similar names "tokens" and "tokenId". Note: Modifiers are currently not considered by this static analysis.
+Pos: 332:44:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 84:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 89:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 103:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 104:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 105:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 127:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 128:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 129:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 132:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 146:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 154:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 159:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 190:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 191:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 198:12:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 199:12:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 200:12:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 201:12:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 202:12:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 209:12:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 212:12:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 252:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 253:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 275:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 284:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 293:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 387:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 401:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 410:8:
+Guard conditions:
+Use "assert(x)" if you never ever want x to be false, not in any circumstance (apart from a bug in your code). Use "require(x)" if x can be false, due to e.g. invalid input or a failing external component.
+more
+Pos: 413:8:
+Data truncated:
+Division of integer values yields an integer value again. That means e.g. 10 / 100 = 0 instead of 0.1 since the result is an integer again. This does not hold for division of (only) literal values since those yield rational constants.
+Pos: 155:30:
+Data truncated:
+Division of integer values yields an integer value again. That means e.g. 10 / 100 = 0 instead of 0.1 since the result is an integer again. This does not hold for division of (only) literal values since those yield rational constants.
+Pos: 224:34:
