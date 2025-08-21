@@ -1,14 +1,12 @@
-// Blockchain service without hardcoded dependencies
-// This will be configured fresh when contracts are deployed
-
+// Simple blockchain service for configuration endpoints
 export class BlockchainService {
   constructor() {
-    console.log("🔧 Blockchain service ready for fresh configuration");
+    console.log("🔧 Blockchain service ready for server-based gaming");
   }
 
-  // Placeholder methods to be implemented when contracts are ready
+  // Configuration methods for frontend compatibility
   async getContractAddress(): Promise<string> {
-    return "";
+    return ""; // Server-based, no contract needed
   }
 
   async getTokenAddresses(): Promise<{ [key: string]: string }> {
@@ -16,11 +14,11 @@ export class BlockchainService {
       TOKEN1: "",
       TOKEN2: "",
       TOKEN3: ""
-    };
+    }; // Server-based, no tokens needed
   }
 
   async getChainId(): Promise<number> {
-    return 421614; // Arbitrum Sepolia
+    return 421614; // Arbitrum Sepolia for wallet connections
   }
 }
 

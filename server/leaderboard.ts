@@ -1,90 +1,16 @@
-import { ethers } from "ethers";
 import { db } from "./db";
 import { users, spinResults } from "@shared/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 
-// Contract event tracking for leaderboard
+// Server-based leaderboard service
 export class LeaderboardService {
-  private provider: ethers.JsonRpcProvider;
-  private contract: ethers.Contract | null = null;
-
   constructor() {
-    this.provider = new ethers.JsonRpcProvider("https://arb1.arbitrum.io/rpc");
+    // Server-based leaderboard using database only
   }
 
   async syncLeaderboardData() {
-    if (!process.env.WHEEL_GAME_ADDRESS) {
-      console.log("Contract address not set, skipping leaderboard sync");
-      return;
-    }
-
-    try {
-      // Initialize contract if not already done
-      if (!this.contract) {
-        const abi = [
-          "event SpinResult(address indexed player, string segment, bool isWin, address tokenAddress, uint256 rewardAmount)",
-          "event RewardsClaimed(address indexed player, address indexed token, uint256 amount)"
-        ];
-        this.contract = new ethers.Contract(process.env.WHEEL_GAME_ADDRESS, abi, this.provider);
-      }
-
-      // Get recent SpinResult events (last 1000 blocks)
-      const currentBlock = await this.provider.getBlockNumber();
-      const fromBlock = Math.max(0, currentBlock - 1000);
-
-      const spinEvents = await this.contract.queryFilter(
-        this.contract.filters.SpinResult(),
-        fromBlock,
-        currentBlock
-      );
-
-      // Process events and update database
-      for (const event of spinEvents) {
-        await this.processSpinEvent(event);
-      }
-
-      console.log(`Processed ${spinEvents.length} spin events for leaderboard`);
-    } catch (error) {
-      console.error("Error syncing leaderboard data:", error);
-    }
-  }
-
-  private async processSpinEvent(event: any) {
-    try {
-      const { player, segment, isWin, tokenAddress, rewardAmount } = event.args;
-      
-      // Find or create user by wallet address
-      let user = await db.select().from(users).where(eq(users.walletAddress, player.toLowerCase())).limit(1);
-      
-      if (user.length === 0) {
-        // Create new user if doesn't exist
-        [user[0]] = await db.insert(users).values({
-          username: `Player_${player.slice(-6)}`,
-          walletAddress: player.toLowerCase()
-        }).returning();
-      }
-
-      // Record spin result in database
-      await db.insert(spinResults).values({
-        userId: user[0].id,
-        symbols: [segment],
-        isWin: isWin,
-        rewardAmount: rewardAmount.toString(),
-        tokenAddress: isWin ? tokenAddress : null,
-        transactionHash: event.transactionHash
-      });
-
-      // Update user stats
-      await db.update(users)
-        .set({
-          totalSpins: sql`${users.totalSpins} + 1`,
-          totalWins: isWin ? sql`${users.totalWins} + 1` : users.totalWins,
-        })
-        .where(eq(users.id, user[0].id));
-
-    } catch (error) {
-      console.error("Error processing spin event:", error);
-    }
+    // Server-based spinning - no contract syncing needed
+    console.log("Server-based leaderboard - using database records only");
   }
 
   async getLeaderboard(category: 'wins' | 'spins' | 'rewards' = 'wins', limitCount = 10) {
