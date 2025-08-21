@@ -1,0 +1,19 @@
+{
+  "network": "arbitrum-sepolia",
+  "chainId": 421614,
+  "contractAddress": "0x8b37a0a29d7931a27b78a6de575df9d5f9f44d10",
+  "deployer": "0x3b0287dDC6dD5a22862702dd2FB6E3Aa17429cB6",
+  "claimSigner": "0xF539b9E0Be84F88368439aDb7aBeD0873e49414F",
+  "timestamp": "2025-08-21T10:56:54.062Z",
+  "status": "ready-for-manual-deployment",
+  "rpcUsed": "https://sepolia-rollup.arbitrum.io/rpc",
+  "contractSource": "\npragma solidity ^0.8.0;\n\ncontract SpinClaimV1 {\n    address public owner;\n    address public claimSigner; \n    bool public paused = true;\n    uint256 public totalClaims = 0;\n    \n    mapping(address => uint256) public userClaims;\n    \n    event ContractDeployed(address owner, address claimSigner);\n    event ClaimProcessed(address user, uint256 amount);\n    event PausedChanged(bool isPaused);\n    \n    constructor(address _claimSigner) {\n        owner = msg.sender;\n        claimSigner = _claimSigner;\n        emit ContractDeployed(owner, _claimSigner);\n    }\n    \n    modifier onlyOwner() {\n        require(msg.sender == owner, \"Not owner\");\n        _;\n    }\n    \n    function setPaused(bool _paused) external onlyOwner {\n        paused = _paused;\n        emit PausedChanged(_paused);\n    }\n    \n    function updateClaimSigner(address _signer) external onlyOwner {\n        claimSigner = _signer;\n    }\n    \n    function simulateClaim(address user, uint256 amount) external onlyOwner {\n        require(!paused, \"Contract paused\");\n        userClaims[user] += amount;\n        totalClaims += amount;\n        emit ClaimProcessed(user, amount);\n    }\n    \n    function getClaimBalance(address user) external view returns (uint256) {\n        return userClaims[user];\n    }\n    \n    function getContractInfo() external view returns (address, address, bool, uint256) {\n        return (owner, claimSigner, paused, totalClaims);\n    }\n}",
+  "deployment": {
+    "method": "manual-remix-deployment-recommended",
+    "constructor": [
+      "0xF539b9E0Be84F88368439aDb7aBeD0873e49414F"
+    ],
+    "gasEstimate": "200000",
+    "note": "Use Remix IDE with MetaMask for reliable deployment"
+  }
+}

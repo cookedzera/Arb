@@ -85,11 +85,24 @@ export class BlockchainService {
 
     try {
       if (fs.existsSync(configPath)) {
-        const fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        return { ...defaultConfig, ...fileConfig };
+        const deploymentData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        
+        // Map deployment data to config format
+        if (deploymentData.contractAddress) {
+          defaultConfig.contractAddress = deploymentData.contractAddress;
+          console.log("📄 Loaded contract address from deployment:", deploymentData.contractAddress);
+        }
+        
+        if (deploymentData.chainId) {
+          defaultConfig.chainId = deploymentData.chainId;
+        }
+        
+        if (deploymentData.rpcUsed) {
+          defaultConfig.rpcUrl = deploymentData.rpcUsed;
+        }
       }
     } catch (error) {
-      console.log("Using default configuration");
+      console.log("⚠️  Using default configuration:", error);
     }
     
     return defaultConfig;
