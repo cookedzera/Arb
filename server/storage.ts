@@ -7,6 +7,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserById(id: string): Promise<User | undefined>; // Alias for getUser
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByFarcasterFid(farcasterFid: number): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   getGameStats(): Promise<GameStats>;
@@ -40,6 +41,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async getUserByFarcasterFid(farcasterFid: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.farcasterFid, farcasterFid));
     return user || undefined;
   }
 
@@ -324,9 +330,19 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.getUser(id);
+  }
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
       (user) => user.username === username,
+    );
+  }
+
+  async getUserByFarcasterFid(farcasterFid: number): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.farcasterFid === farcasterFid,
     );
   }
 
@@ -396,10 +412,6 @@ export class MemStorage implements IStorage {
     };
     this.spinResults.set(id, spinResult);
     return spinResult;
-  }
-
-  async getUserById(id: string): Promise<User | undefined> {
-    return this.getUser(id);
   }
 
   async addSpinResult(result: InsertSpinResult): Promise<SpinResult> {

@@ -111,7 +111,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      let user = await storage.getUserByUsername(username);
+      // Look up user by Farcaster FID first (permanent identifier), then fallback to username
+      let user = await storage.getUserByFarcasterFid(farcasterFid);
+      if (!user) {
+        // Fallback to username lookup for users created before FID-based authentication
+        user = await storage.getUserByUsername(username);
+      }
+      
       if (!user) {
         // Create new user with Farcaster data if provided (filter out invalid URLs)
         const validPfpUrl = farcasterPfpUrl && !farcasterPfpUrl.includes('309c4432-ce5e-4e2c-a2f4-50a0f8e21f00') ? farcasterPfpUrl : null;
@@ -124,10 +130,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           farcasterPfpUrl: validPfpUrl
         });
         console.log(`✅ Created new Farcaster user: ${username} (FID: ${farcasterFid})`);
-      } else if (walletAddress && user.walletAddress !== walletAddress) {
-        // Update wallet address if different
-        await storage.updateUser(user.id, { walletAddress });
-        user.walletAddress = walletAddress;
+      } else {
+        // Update user data for returning users (username/display name might have changed)
+        const updates: any = {};
+        if (username && user.username !== username) updates.username = username;
+        if (farcasterUsername && user.farcasterUsername !== farcasterUsername) updates.farcasterUsername = farcasterUsername;
+        if (farcasterDisplayName && user.farcasterDisplayName !== farcasterDisplayName) updates.farcasterDisplayName = farcasterDisplayName;
+        if (walletAddress && user.walletAddress !== walletAddress) updates.walletAddress = walletAddress;
+        
+        // Update profile picture if provided and different
+        const validPfpUrl = farcasterPfpUrl && !farcasterPfpUrl.includes('309c4432-ce5e-4e2c-a2f4-50a0f8e21f00') ? farcasterPfpUrl : null;
+        if (validPfpUrl && user.farcasterPfpUrl !== validPfpUrl) updates.farcasterPfpUrl = validPfpUrl;
+        
+        if (Object.keys(updates).length > 0) {
+          await storage.updateUser(user.id, updates);
+          Object.assign(user, updates);
+          console.log(`✅ Updated returning user ${user.id} (FID: ${farcasterFid}) with:`, updates);
+        } else {
+          console.log(`✅ Returning user: ${username} (FID: ${farcasterFid})`);
+        }
       }
       
       // Try to enrich with Farcaster data if we have wallet address but missing Farcaster info

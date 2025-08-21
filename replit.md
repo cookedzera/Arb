@@ -16,6 +16,7 @@ Database preference: Supabase for external deployment, scalable for 200-400 user
 **DATABASE RESOLUTION**: Fixed critical database connection issues by creating new PostgreSQL instance, resolved all React rendering errors, and restored original casino interface functionality (August 19, 2025).
 **BORDER FIX**: Resolved double border issue on spin wheel by using wrapper div approach with single 4px yellow border, removed aggressive CSS overrides that were preventing borders from showing (August 19, 2025).
 **UI REDESIGN**: Complete redesign of below-wheel section with modern compact layout, fixed spin counting logic, streamlined rewards display with cleaner grid and minimal styling (August 19, 2025).
+**USER AUTHENTICATION FIX**: Fixed critical issue where returning users were creating new database entries instead of being recognized. Implemented Farcaster FID-based user lookup as primary identifier, with username fallback for legacy users. Now properly maintains daily spin counts and user data across sessions (August 21, 2025).
 
 # System Architecture
 
