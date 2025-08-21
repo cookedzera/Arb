@@ -30,13 +30,13 @@ export const TOKEN_CONFIG = {
 // Wheel segments with probabilities - 80% get max 2 tokens, 20% get 3+ tokens
 const WHEEL_SEGMENTS = [
   { name: 'AIDOGE', weight: 15 }, // 15% - 0.5 tokens
-  { name: 'BUST', weight: 35 },   // 35% - no win
+  { name: 'BUST', weight: 33 },   // 33% - no win (reduced to make room for jackpot)
   { name: 'BOOP', weight: 20 },   // 20% - 0.5 tokens  
   { name: 'BONUS', weight: 5 },   // 5% - 1 token (2x 0.5)
   { name: 'ARB', weight: 20 }, // 20% - 0.25 tokens
   { name: 'BUST', weight: 3 },   // 3% - no win
   { name: 'AIDOGE', weight: 1 },  // 1% - 0.5 tokens
-  { name: 'JACKPOT', weight: 1 }, // 1% - 2 tokens (rare big win)
+  { name: 'JACKPOT', weight: 3 }, // 3% - 2 tokens (better jackpot chances!)
 ];
 
 // Calculate winning probabilities based on user's daily spin count
