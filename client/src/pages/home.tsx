@@ -669,12 +669,12 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-base">🏆 Rewards</h3>
+                  <h3 className="font-bold text-base">🏆 Total Wins</h3>
                   <div className="flex items-center space-x-2 mt-1">
-                    <div className="w-12 h-1.5 bg-white/30 rounded-full">
-                      <div className="w-8 h-1.5 bg-white rounded-full"></div>
+                    <div className="text-lg font-bold text-white">
+                      {user?.totalWins || 0}
                     </div>
-                    <span className="text-xs text-white/80">{user?.totalWins || 0}/10</span>
+                    <span className="text-xs text-white/60">winning spins</span>
                   </div>
                 </div>
               </div>
@@ -691,14 +691,14 @@ export default function Home() {
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-base font-bold text-white">🎯 Goal Progress</h3>
-            <span className="text-xs text-white/70">{user?.spinsUsed || 0}/3 days</span>
+            <h3 className="text-base font-bold text-white">🎯 Daily Spins</h3>
+            <span className="text-xs text-white/70">{user?.spinsUsed || 0}/3 used</span>
           </div>
           
           {/* Progress Bar Instead of Days */}
           <div className="mb-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-white/60">Daily Progress</span>
+              <span className="text-xs text-white/60">Spins Used Today</span>
               <span className="text-xs text-white/60">{typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0}/3</span>
             </div>
             <div className="flex space-x-1">
@@ -743,7 +743,7 @@ export default function Home() {
             />
             <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-sm">⚡ Daily Spin Challenge</h4>
+              <h4 className="font-medium text-sm">⚡ Today's Free Spins</h4>
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Active</span>
             </div>
             <div className="flex items-center space-x-2 mb-1">
@@ -756,7 +756,10 @@ export default function Home() {
               <span className="text-xs font-medium">{(((typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0) / 3) * 100).toFixed(0)}%</span>
             </div>
             <p className="text-xs text-white/80">
-              {3 - (typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0)} spins remaining for today!
+              {3 - (typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0) > 0 
+                ? `${3 - (typeof user?.spinsUsed === 'string' ? parseInt(user.spinsUsed, 10) || 0 : user?.spinsUsed || 0)} free spins left today!`
+                : 'All daily spins used - check back tomorrow!'
+              }
             </p>
             </div>
           </motion.div>
