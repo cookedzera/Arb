@@ -142,14 +142,10 @@ export function registerClaimRoutes(app: Express) {
       // Get current nonce from smart contract to ensure synchronization
       let nonce: number;
       try {
-        const userStats = await blockchainService.getUserStats(walletAddress);
-        if (userStats) {
-          // Use contract nonce + 1 to ensure sync with blockchain state
-          nonce = parseInt(userStats.totalClaimed) + 1;
-        } else {
-          // Fallback to database nonce if contract query fails
-          nonce = (user.totalClaims || 0) + 1;
-        }
+        // Get user's current nonce from the contract
+        const contractNonce = await blockchainService.getUserNonce(walletAddress);
+        nonce = contractNonce + 1; // Next nonce to use
+        console.log(`📊 User ${walletAddress} current nonce: ${contractNonce}, using: ${nonce}`);
       } catch (error) {
         console.log("Warning: Could not get contract nonce, using database nonce:", error);
         nonce = (user.totalClaims || 0) + 1;

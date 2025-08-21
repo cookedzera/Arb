@@ -18,7 +18,12 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
   const queryClient = useQueryClient();
 
   // Get claimable balances
-  const { data: claimableData, isLoading: loadingBalances } = useQuery({
+  const { data: claimableData, isLoading: loadingBalances } = useQuery<{
+    token1: string;
+    token2: string;
+    token3: string;
+    totalClaimable: string;
+  }>({
     queryKey: ['/api/user', userId, 'claimable'],
     enabled: isOpen && !userId.startsWith('temp_')
   });

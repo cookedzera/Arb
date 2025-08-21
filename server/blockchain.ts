@@ -2,17 +2,22 @@ import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 
-// Contract ABIs
+// Contract ABIs - Updated for real SpinToClaimContract
 const SPIN_CLAIM_ABI = [
   "function spin(uint256 tokenId) external returns (bool isWin, uint256 rewardAmount)",
   "function claimTokens(tuple(address user, uint256 tokenId, uint256 amount, uint256 nonce, uint256 deadline, bytes signature) claimRequest) external",
-  "function getUserStats(address user) external view returns (uint256 totalSpins, uint256 totalWins, uint256 totalClaimed, uint256 lastSpinBlock, bool isBlacklisted, uint256 dailySpinsToday)",
+  "function getUserStats(address user) external view returns (tuple(uint256 lastSpinBlock, uint256 totalSpins, uint256 totalWins, uint256 totalClaimed, bool isBlacklisted) userData)",
   "function canSpin(address user, uint256 tokenId) external view returns (bool canSpinNow, string memory reason)",
-  "function getTokenConfig(uint256 tokenId) external view returns (address tokenAddress, uint256 minReward, uint256 maxReward, bool isActive, uint256 totalDistributed, uint256 contractBalance)",
+  "function getTokenConfig(uint256 tokenId) external view returns (address tokenAddress, uint256 minReward, uint256 maxReward, bool isActive, uint256 totalDistributed, uint256 reserveBalance)",
   "function configureToken(uint256 tokenId, address tokenAddress, uint256 minReward, uint256 maxReward, bool isActive) external",
   "function pause() external",
   "function unpause() external",
   "function paused() external view returns (bool)",
+  "function userNonces(address user) external view returns (uint256)",
+  "function emergencyMode() external view returns (bool)",
+  "function treasury() external view returns (address)",
+  "function treasuryFeePercent() external view returns (uint256)",
+  "function getContractStats() external view returns (uint256 totalActiveTokens, bool isPaused, bool inEmergencyMode, address treasuryAddress, uint256 feePercent)",
   "event SpinExecuted(address indexed user, uint256 indexed tokenId, uint256 amount, bool isWin, uint256 blockNumber)",
   "event TokensClaimed(address indexed user, uint256 indexed tokenId, uint256 amount, uint256 nonce)"
 ];
@@ -113,6 +118,21 @@ export class BlockchainService {
     return this.config.contractAddress;
   }
 
+  // Get user's current nonce from contract
+  async getUserNonce(userAddress: string): Promise<number> {
+    if (!this.contract) {
+      return 0;
+    }
+
+    try {
+      const nonce = await this.contract.userNonces(userAddress);
+      return parseInt(nonce.toString());
+    } catch (error) {
+      console.error("Error getting user nonce:", error);
+      return 0;
+    }
+  }
+
   async getTokenAddresses(): Promise<{ [key: string]: string }> {
     return this.config.tokenAddresses;
   }
@@ -142,16 +162,14 @@ export class BlockchainService {
     }
 
     try {
-      const [totalSpins, totalWins, totalClaimed, lastSpinBlock, isBlacklisted, dailySpinsToday] = 
-        await this.contract.getUserStats(userAddress);
+      const userData = await this.contract.getUserStats(userAddress);
       
       return {
-        totalSpins: totalSpins.toString(),
-        totalWins: totalWins.toString(),
-        totalClaimed: totalClaimed.toString(),
-        lastSpinBlock: lastSpinBlock.toString(),
-        isBlacklisted,
-        dailySpinsToday: dailySpinsToday.toString()
+        lastSpinBlock: userData.lastSpinBlock.toString(),
+        totalSpins: userData.totalSpins.toString(),
+        totalWins: userData.totalWins.toString(),
+        totalClaimed: userData.totalClaimed.toString(),
+        isBlacklisted: userData.isBlacklisted
       };
     } catch (error) {
       console.error("Error getting user stats:", error);
@@ -165,7 +183,7 @@ export class BlockchainService {
     }
 
     try {
-      const [tokenAddress, minReward, maxReward, isActive, totalDistributed, contractBalance] = 
+      const [tokenAddress, minReward, maxReward, isActive, totalDistributed, reserveBalance] = 
         await this.contract.getTokenConfig(tokenId);
       
       return {
@@ -174,7 +192,7 @@ export class BlockchainService {
         maxReward: maxReward.toString(),
         isActive,
         totalDistributed: totalDistributed.toString(),
-        contractBalance: contractBalance.toString()
+        reserveBalance: reserveBalance.toString()
       };
     } catch (error) {
       console.error("Error getting token config:", error);
