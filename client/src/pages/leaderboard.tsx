@@ -185,9 +185,9 @@ export default function Leaderboard() {
             >
               {/* Gradient overlay */}
               <div 
-                className="absolute inset-0 rounded-2xl opacity-20"
+                className="absolute inset-0 rounded-2xl opacity-30"
                 style={{
-                  background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%)'
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)'
                 }}
               />
               
@@ -301,19 +301,24 @@ function LeaderboardList({
               transition: { duration: 0.3 }
             }}
           >
-            {/* Subtle gradient overlay for top 3 */}
-            {index < 3 && (
-              <div 
-                className="absolute inset-0 rounded-2xl opacity-30"
-                style={{
-                  background: index === 0 
-                    ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' 
-                    : index === 1 
-                    ? 'linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%)' 
-                    : 'linear-gradient(135deg, #CD7F32 0%, #B8860B 100%)'
-                }}
-              />
-            )}
+            {/* Unique gradient overlay for each position */}
+            <div 
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: index === 0 
+                  ? 'linear-gradient(135deg, #2D374B 0%, #4A90E2 50%, #96BEDC 100%)' // Arbitrum blue for 1st
+                  : index === 1 
+                  ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)' // Purple for 2nd
+                  : index === 2
+                  ? 'linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)' // Green for 3rd
+                  : index === 3
+                  ? 'linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f87171 100%)' // Red for 4th
+                  : index === 4
+                  ? 'linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%)' // Orange for 5th
+                  : 'linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)', // Default indigo
+                opacity: 0.4
+              }}
+            />
             
             {/* Top highlight */}
             <div 
