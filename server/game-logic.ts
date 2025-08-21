@@ -8,35 +8,35 @@ export interface SpinResult {
   randomSeed: string;
 }
 
-// Token configurations matching the contract
+// Token configurations - reduced amounts for 80/20 distribution  
 export const TOKEN_CONFIG = {
   TOKEN1: {
     address: "",
     symbol: "AIDOGE", 
-    rewardAmount: "1000000000000000000" // 1 AIDOGE
+    rewardAmount: "500000000000000000" // 0.5 AIDOGE
   },
   TOKEN2: {
     address: "",
     symbol: "BOOP",
-    rewardAmount: "2000000000000000000" // 2 BOOP
+    rewardAmount: "500000000000000000" // 0.5 BOOP
   },
   TOKEN3: {
     address: "",
     symbol: "ARB",
-    rewardAmount: "500000000000000000" // 0.5 ARB
+    rewardAmount: "250000000000000000" // 0.25 ARB
   }
 } as const;
 
-// Wheel segments with probabilities - reduced BUST for more wins
+// Wheel segments with probabilities - 80% get max 2 tokens, 20% get 3+ tokens
 const WHEEL_SEGMENTS = [
-  { name: 'AIDOGE', weight: 20 }, // 20%
-  { name: 'BUST', weight: 15 },   // 15% (reduced from 25%)
-  { name: 'BOOP', weight: 18 },   // 18% (increased)
-  { name: 'BONUS', weight: 12 },   // 12% (2x BOOP, increased)
-  { name: 'ARB', weight: 20 }, // 20% (increased)
-  { name: 'BUST', weight: 10 },   // 10% (reduced from 20%)
-  { name: 'AIDOGE', weight: 3 },  // 3%
-  { name: 'JACKPOT', weight: 2 }, // 2% (10x AIDOGE)
+  { name: 'AIDOGE', weight: 15 }, // 15% - 0.5 tokens
+  { name: 'BUST', weight: 35 },   // 35% - no win
+  { name: 'BOOP', weight: 20 },   // 20% - 0.5 tokens  
+  { name: 'BONUS', weight: 5 },   // 5% - 1 token (2x 0.5)
+  { name: 'ARB', weight: 20 }, // 20% - 0.25 tokens
+  { name: 'BUST', weight: 3 },   // 3% - no win
+  { name: 'AIDOGE', weight: 1 },  // 1% - 0.5 tokens
+  { name: 'JACKPOT', weight: 1 }, // 1% - 2 tokens (rare big win)
 ];
 
 // Calculate winning probabilities based on user's daily spin count
@@ -115,14 +115,14 @@ export function performSpin(): SpinResult {
       isWin = true;
       tokenType = "TOKEN2";
       tokenAddress = TOKEN_CONFIG.TOKEN2.address || "";
-      rewardAmount = "4000000000000000000"; // 2x BOOP = 4 tokens
+      rewardAmount = "1000000000000000000"; // 2x 0.5 BOOP = 1 token
       break;
       
     case 'JACKPOT':
       isWin = true;
       tokenType = "TOKEN1";
       tokenAddress = TOKEN_CONFIG.TOKEN1.address || "";
-      rewardAmount = "10000000000000000000"; // 10x AIDOGE = 10 tokens
+      rewardAmount = "2000000000000000000"; // 4x 0.5 AIDOGE = 2 tokens
       break;
       
     default: // BUST
