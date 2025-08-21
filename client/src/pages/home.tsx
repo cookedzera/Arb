@@ -746,7 +746,7 @@ export default function Home() {
           transition={{ delay: 0.4 }}
         >
           <motion.div 
-            className="relative rounded-2xl p-4 mb-4 text-white overflow-hidden"
+            className="relative rounded-2xl p-5 text-white overflow-hidden"
             style={{
               background: 'rgba(255, 255, 255, 0.08)',
               backdropFilter: 'blur(20px)',
@@ -772,12 +772,12 @@ export default function Home() {
             />
             
             <div className="relative z-10">
-              <h3 className="text-lg font-bold text-white mb-1">🪙 Token Collection</h3>
-              <p className="text-white/70 text-xs">Your earned rewards</p>
-            </div>
-          </motion.div>
-          
-          <div className="space-y-3">
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-white mb-1">🪙 Token Collection</h3>
+                <p className="text-white/70 text-xs">Your earned rewards</p>
+              </div>
+              
+              <div className="space-y-3">
             {tokenData.map((token, index) => {
               const hasBalance = BigInt(token.amount) > 0;
               const formattedAmount = formatTokenAmount(token.amount);
@@ -799,63 +799,48 @@ export default function Home() {
               return (
                 <motion.div
                   key={index}
-                  className="rounded-2xl p-4 relative overflow-hidden text-white"
+                  className="rounded-xl p-4 relative overflow-hidden text-white"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    backdropFilter: 'blur(20px)',
-                    transform: `perspective(1000px) rotateX(${index % 2 === 0 ? '0.5deg' : '-0.5deg'}) rotateY(${index % 2 === 0 ? '-0.3deg' : '0.3deg'})`,
-                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
-                    border: 'none',
-                    outline: 'none'
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                   }}
                   whileHover={{ 
-                    scale: 1.02, 
-                    y: -3,
-                    transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg)',
-                    transition: { duration: 0.3 }
+                    scale: 1.01, 
+                    transition: { duration: 0.2 }
                   }}
                   transition={{ type: "spring", stiffness: 300 }}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                  exit={{ opacity: 0, y: -10 }}
                 >
-                  {/* Unique gradient overlay for each token */}
+                  {/* Subtle gradient accent */}
                   <div 
-                    className="absolute inset-0 rounded-2xl opacity-35"
+                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
                     style={{
                       background: getTokenGradient(token.name)
                     }}
                   />
                   
-                  {/* Top highlight */}
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-px"
-                    style={{
-                      background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)'
-                    }}
-                  />
-                  
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="relative">
-                          {token.icon ? (
-                            <img src={token.icon} alt={token.name} className="w-10 h-10 rounded-xl border-2 border-white/20" />
-                          ) : (
-                            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white font-bold text-base border-2 border-white/20">
-                              {token.name.charAt(0)}
-                            </div>
-                          )}
-                          <span className="absolute -top-1 -right-1 text-sm">{token.emoji}</span>
-                        </div>
-                        <div>
-                          <div className="font-bold text-white text-base">{token.name}</div>
-                          <div className="text-xs text-white/70 font-medium">🔒 {token.time}</div>
-                        </div>
+                  <div className="flex items-center justify-between pl-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        {token.icon ? (
+                          <img src={token.icon} alt={token.name} className="w-10 h-10 rounded-xl border-2 border-white/20" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white font-bold text-base border-2 border-white/20">
+                            {token.name.charAt(0)}
+                          </div>
+                        )}
+                        <span className="absolute -top-1 -right-1 text-sm">{token.emoji}</span>
                       </div>
-                      <div className={`font-bold text-lg ${hasBalance ? 'text-white' : 'text-white/50'}`}>
-                        +{formattedAmount}
+                      <div>
+                        <div className="font-bold text-white text-base">{token.name}</div>
+                        <div className="text-xs text-white/70 font-medium">🔒 {token.time}</div>
                       </div>
+                    </div>
+                    <div className={`font-bold text-lg ${hasBalance ? 'text-white' : 'text-white/50'}`}>
+                      +{formattedAmount}
                     </div>
                   </div>
 
@@ -880,7 +865,9 @@ export default function Home() {
                 </motion.div>
               );
             })}
-          </div>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Global Claim All Button */}
           {balances && (Number(balances.token1) > 0 || Number(balances.token2) > 0 || Number(balances.token3) > 0) && (
