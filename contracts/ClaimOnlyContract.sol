@@ -128,8 +128,8 @@ contract ClaimOnlyContract is Ownable, Pausable, ReentrancyGuard {
         require(block.timestamp <= claimRequest.deadline, "Claim expired");
         require(claimRequest.amount > 0, "Invalid amount");
         
-        // Verify nonce (prevents replay attacks)
-        require(claimRequest.nonce > userNonces[msg.sender], "Invalid nonce");
+        // Verify nonce (prevents replay attacks) - must be exactly next nonce
+        require(claimRequest.nonce == userNonces[msg.sender] + 1, "Invalid nonce");
         
         // Verify signature
         bytes32 messageHash = keccak256(
@@ -150,7 +150,8 @@ contract ClaimOnlyContract is Ownable, Pausable, ReentrancyGuard {
         
         TokenConfig storage tokenConfig = tokens[claimRequest.tokenId];
         
-        // Calculate treasury fee
+        // Calculate treasury fee (prevent zero-amount claims after fee)
+        require(claimRequest.amount >= 100, "Amount too small for fee calculation");
         uint256 treasuryFee = (claimRequest.amount * treasuryFeePercent) / 100;
         uint256 userAmount = claimRequest.amount - treasuryFee;
         
@@ -189,13 +190,16 @@ contract ClaimOnlyContract is Ownable, Pausable, ReentrancyGuard {
         require(claimRequests.length > 0, "Empty claims");
         require(claimRequests.length <= 10, "Too many claims");
         
+        uint256 currentNonce = userNonces[msg.sender];
+        
+        // Pre-validate all claims to prevent partial failures
         for (uint i = 0; i < claimRequests.length; i++) {
             ClaimRequest calldata req = claimRequests[i];
             require(req.user == msg.sender, "Invalid claimer");
             require(tokens[req.tokenId].isActive, "Token not active");
             require(block.timestamp <= req.deadline, "Claim expired");
-            require(req.amount > 0, "Invalid amount");
-            require(req.nonce > userNonces[msg.sender], "Invalid nonce");
+            require(req.amount >= 100, "Amount too small for fee calculation");
+            require(req.nonce == currentNonce + i + 1, "Invalid nonce sequence");
             
             // Verify signature for each claim
             bytes32 messageHash = keccak256(
@@ -204,19 +208,21 @@ contract ClaimOnlyContract is Ownable, Pausable, ReentrancyGuard {
             bytes32 ethSignedMessageHash = messageHash.toEthSignedMessageHash();
             require(_verifySignature(ethSignedMessageHash, req.signature), "Invalid signature");
             
-            // Update nonce
-            userNonces[msg.sender] = req.nonce;
-            
+            TokenConfig storage tokenConfig = tokens[req.tokenId];
+            require(
+                tokenConfig.token.balanceOf(address(this)) >= req.amount,
+                "Insufficient contract balance"
+            );
+        }
+        
+        // Execute all claims after validation
+        for (uint i = 0; i < claimRequests.length; i++) {
+            ClaimRequest calldata req = claimRequests[i];
             TokenConfig storage tokenConfig = tokens[req.tokenId];
             
             // Calculate treasury fee
             uint256 treasuryFee = (req.amount * treasuryFeePercent) / 100;
             uint256 userAmount = req.amount - treasuryFee;
-            
-            require(
-                tokenConfig.token.balanceOf(address(this)) >= req.amount,
-                "Insufficient contract balance"
-            );
             
             // Transfer tokens
             if (treasuryFee > 0) {
@@ -228,6 +234,9 @@ contract ClaimOnlyContract is Ownable, Pausable, ReentrancyGuard {
             
             emit TokensClaimed(req.user, req.tokenId, req.amount, req.nonce);
         }
+        
+        // Update nonce once at the end
+        userNonces[msg.sender] = currentNonce + claimRequests.length;
     }
 
     // ========== ADMIN FUNCTIONS ==========
@@ -286,12 +295,21 @@ contract ClaimOnlyContract is Ownable, Pausable, ReentrancyGuard {
     }
     
     /**
+     * @dev Owner can unpause in normal operation
+     */
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+    
+    /**
      * @dev Toggle emergency mode
      */
     function setEmergencyMode(bool _enabled) external onlyEmergencyOperator {
         emergencyMode = _enabled;
         if (_enabled) {
             _pause();
+        } else {
+            _unpause();
         }
         emit EmergencyModeToggled(_enabled, msg.sender);
     }
