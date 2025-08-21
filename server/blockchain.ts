@@ -70,13 +70,13 @@ export class BlockchainService {
   private loadConfig(): ContractConfig {
     const configPath = path.join(process.cwd(), "deployed-contracts.json");
     
-    // Default configuration for Arbitrum Sepolia
+    // Default configuration for Arbitrum Sepolia with token addresses
     const defaultConfig: ContractConfig = {
       contractAddress: process.env.SPIN_CLAIM_CONTRACT_ADDRESS || "",
       tokenAddresses: {
-        TOKEN1: process.env.TOKEN1_ADDRESS || "",
-        TOKEN2: process.env.TOKEN2_ADDRESS || "",
-        TOKEN3: process.env.TOKEN3_ADDRESS || ""
+        TOKEN1: "0x09e18590e8f76b6cf471b3cd30676b46ef36f7cd", // AIDOGE on Arbitrum Sepolia
+        TOKEN2: "0x13a7dedb7169a17be92b0c1d7faf17c7b3", // BOOP on Arbitrum Sepolia
+        TOKEN3: "0x980b62da83eff3d4576c647993b0c1d7faf17c73" // ARB on Arbitrum Sepolia
       },
       chainId: 421614,
       rpcUrl: "https://421614.rpc.thirdweb.com",

@@ -104,6 +104,8 @@ export function TokenBalanceCard({ userId }: TokenBalanceCardProps) {
         return `+${(parsed / 1000).toFixed(1)}K`;
       } else if (parsed >= 1) {
         return `+${parsed.toFixed(0)}`;
+      } else if (parsed > 0) {
+        return `+${parsed.toFixed(2)}`;
       }
       return "+0";
     } catch {

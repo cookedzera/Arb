@@ -11,17 +11,17 @@ export interface SpinResult {
 // Token configurations - reduced amounts for 80/20 distribution  
 export const TOKEN_CONFIG = {
   TOKEN1: {
-    address: "",
+    address: "0x09e18590e8f76b6cf471b3cd30676b46ef36f7cd", // AIDOGE on Arbitrum Sepolia
     symbol: "AIDOGE", 
     rewardAmount: "500000000000000000" // 0.5 AIDOGE
   },
   TOKEN2: {
-    address: "",
+    address: "0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3", // BOOP on Arbitrum Sepolia  
     symbol: "BOOP",
     rewardAmount: "500000000000000000" // 0.5 BOOP
   },
   TOKEN3: {
-    address: "",
+    address: "0x980b62da83eff3d4576c647993b0c1d7faf17c73", // ARB on Arbitrum Sepolia
     symbol: "ARB",
     rewardAmount: "250000000000000000" // 0.25 ARB
   }
