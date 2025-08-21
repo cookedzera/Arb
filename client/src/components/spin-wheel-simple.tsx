@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Coins, Gift } from "lucide-react";
 import { useSimpleSpin } from "@/hooks/use-simple-spin";
+import JackpotCelebration from "./jackpot-celebration";
 import aidogeLogo from "@assets/aidoge_1755435810322.png";
 import boopLogo from "@assets/boop_1755435810327.png";
 import arbLogo from "@assets/Adobe Express - file_1755685469543.png";
@@ -78,6 +79,7 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<SpinResult | null>(null);
   const [sessionSpinsUsed, setSessionSpinsUsed] = useState(userSpinsUsed);
+  const [showJackpotCelebration, setShowJackpotCelebration] = useState(false);
   
   const { address, isConnected } = useAccount();
   const { toast } = useToast();
@@ -319,6 +321,13 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
           reward: lastSpinResult.rewardAmount || '0',
           tokenType: lastSpinResult.tokenType
         };
+        
+        // 🎰 TRIGGER EPIC JACKPOT CELEBRATION! 🎰
+        if (displaySegmentName === 'JACKPOT') {
+          setTimeout(() => {
+            setShowJackpotCelebration(true);
+          }, 1000); // Small delay after result shows
+        }
         
         setResult(finalResult);
         
@@ -695,6 +704,19 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 🎰 EPIC JACKPOT CELEBRATION 🎰 */}
+      <JackpotCelebration
+        isVisible={showJackpotCelebration}
+        rewardAmount={result?.reward || result?.rewardAmount || '0'}
+        onClose={() => setShowJackpotCelebration(false)}
+        onShare={() => {
+          toast({
+            title: "🎉 Epic Win Shared!",
+            description: "Your jackpot victory is ready to flex on Farcaster!",
+          });
+        }}
+      />
     </div>
   );
 }

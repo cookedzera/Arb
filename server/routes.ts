@@ -9,12 +9,16 @@ import { createFarcasterAuthMiddleware, verifyFarcasterToken, getUserByAddress }
 import { blockchainService } from "./blockchain";
 import { handleSpinResult } from "./spin-result-route";
 import { registerSpinRoutes } from "./spin-routes";
+import { registerShareRoutes } from "./share-routes";
 
 // Routes without blockchain dependencies - will be configured fresh
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register new spin and claim routes
   registerSpinRoutes(app);
+  
+  // Register share routes for Farcaster
+  registerShareRoutes(app);
   // Update user data (for fixing Farcaster information)
   app.patch("/api/user/:id", async (req, res) => {
     try {
