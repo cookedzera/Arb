@@ -107,6 +107,101 @@ export function registerClaimRoutes(app: Express) {
     }
   });
 
+  // Generate batch claim signatures for multiple tokens
+  app.post("/api/claim/batch-signature", async (req, res) => {
+    try {
+      const { claims, walletAddress } = req.body;
+      
+      if (!claims || !Array.isArray(claims) || !walletAddress) {
+        return res.status(400).json({ error: "Invalid request data" });
+      }
+
+      // Verify contract is configured
+      const contractAddress = await blockchainService.getContractAddress();
+      if (!contractAddress) {
+        return res.status(503).json({ error: "Claim contract not deployed yet" });
+      }
+
+      // Check if contract is paused
+      const isPaused = await blockchainService.isContractPaused();
+      if (isPaused) {
+        return res.status(503).json({ error: "Claim contract is currently paused" });
+      }
+
+      // Get user from wallet address
+      const user = await getUserByWalletAddress(walletAddress);
+      if (!user) {
+        return res.status(404).json({ error: "User not found for wallet address" });
+      }
+
+      // Get current nonce from smart contract to ensure synchronization
+      let baseNonce: number;
+      try {
+        const contractNonce = await blockchainService.getUserNonce(walletAddress);
+        baseNonce = contractNonce + 1; // Next nonce to use
+        console.log(`📊 User ${walletAddress} current nonce: ${contractNonce}, starting batch at: ${baseNonce}`);
+      } catch (error) {
+        console.log("Warning: Could not get contract nonce, using database nonce:", error);
+        baseNonce = (user.totalClaims || 0) + 1;
+      }
+
+      if (!process.env.CLAIM_SIGNER_PRIVATE_KEY) {
+        return res.status(500).json({ error: "Claim signing not configured" });
+      }
+
+      const signedClaims = [];
+      
+      // Generate signatures for each claim with sequential nonces
+      for (let i = 0; i < claims.length; i++) {
+        const { tokenId, amount } = claims[i];
+        
+        // Verify user has sufficient accumulated balance
+        const tokenField = `accumulatedToken${tokenId + 1}` as keyof typeof user;
+        const userBalance = user[tokenField] as string || "0";
+        
+        if (parseFloat(userBalance) < parseFloat(amount)) {
+          return res.status(400).json({ 
+            error: `Insufficient accumulated balance for token ${tokenId}`,
+            tokenId,
+            required: amount,
+            available: userBalance
+          });
+        }
+
+        const nonce = baseNonce + i; // Sequential nonce
+        const deadline = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours
+
+        const signature = await blockchainService.generateClaimSignature(
+          walletAddress,
+          tokenId,
+          amount,
+          nonce,
+          deadline,
+          process.env.CLAIM_SIGNER_PRIVATE_KEY
+        );
+
+        signedClaims.push({
+          user: walletAddress,
+          tokenId,
+          amount,
+          nonce,
+          deadline,
+          signature
+        });
+      }
+
+      // Return batch claim parameters
+      res.json({
+        claimRequests: signedClaims,
+        contractAddress
+      });
+
+    } catch (error) {
+      console.error('Generate batch claim signature error:', error);
+      res.status(500).json({ error: "Failed to generate batch claim signatures" });
+    }
+  });
+
   // Generate claim signature
   app.post("/api/claim/signature", async (req, res) => {
     try {

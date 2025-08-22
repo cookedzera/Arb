@@ -66,6 +66,29 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
     }
   });
 
+  // Generate batch signatures mutation
+  const generateBatchSignatures = useMutation({
+    mutationFn: async (data: { claims: Array<{ tokenId: number; amount: string }>; walletAddress: string }) => {
+      const response = await fetch('/api/claim/batch-signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Failed to generate claim signatures';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+      return response.json();
+    }
+  });
+
   // Handle Farcaster wallet connection
   const handleConnect = async () => {
     if (connectors[0]) {
@@ -73,7 +96,7 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
     }
   };
 
-  // Handle claiming all tokens
+  // Handle claiming all tokens using batch claim
   const handleClaimAll = async () => {
     setIsClaimingAll(true);
     
@@ -130,35 +153,54 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
     }
 
     try {
-      // Claim each token that has a balance > 0
-      const claimPromises = [];
+      // Prepare claims for tokens with balance > 0
+      const claims = [];
       
       if (parseFloat(claimableData!.token1) > 0) {
-        claimPromises.push(claimSingleToken(0, claimableData!.token1));
+        claims.push({ tokenId: 0, amount: claimableData!.token1 });
       }
       if (parseFloat(claimableData!.token2) > 0) {
-        claimPromises.push(claimSingleToken(1, claimableData!.token2));
+        claims.push({ tokenId: 1, amount: claimableData!.token2 });
       }
       if (parseFloat(claimableData!.token3) > 0) {
-        claimPromises.push(claimSingleToken(2, claimableData!.token3));
+        claims.push({ tokenId: 2, amount: claimableData!.token3 });
       }
 
       toast({
-        title: "Processing Claims",
-        description: `Claiming ${claimPromises.length} token types...`
+        title: "Preparing Claims",
+        description: `Generating signatures for ${claims.length} token types...`
       });
 
-      await Promise.all(claimPromises);
+      // Generate batch signatures with proper nonce sequence
+      const batchData = await generateBatchSignatures.mutateAsync({
+        claims,
+        walletAddress: address
+      });
 
+      // Execute batch claim transaction
       toast({
-        title: "All Tokens Claimed!",
-        description: "Successfully claimed all available tokens"
+        title: "Confirm Transaction",
+        description: "Please confirm the batch claim transaction in your wallet"
+      });
+
+      await writeContract({
+        address: contractInfo?.contractAddress as `0x${string}`,
+        abi: CLAIM_CONTRACT_ABI,
+        functionName: 'batchClaimTokens',
+        args: [batchData.claimRequests],
       });
 
     } catch (error: any) {
+      let errorMessage = error.message || "Failed to claim tokens";
+      
+      // Handle nonce error specifically
+      if (errorMessage.includes("nonce")) {
+        errorMessage = "Transaction nonce conflict. Please wait a moment and try again.";
+      }
+      
       toast({
-        title: "Claim Failed",
-        description: error.message || "Failed to claim tokens",
+        title: "Batch Claim Failed",
+        description: errorMessage,
         variant: "destructive"
       });
     }

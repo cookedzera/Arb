@@ -42,6 +42,27 @@ export const CLAIM_CONTRACT_ABI = [
   },
   {
     inputs: [
+      {
+        components: [
+          { internalType: "address", name: "user", type: "address" },
+          { internalType: "uint256", name: "tokenId", type: "uint256" },
+          { internalType: "uint256", name: "amount", type: "uint256" },
+          { internalType: "uint256", name: "nonce", type: "uint256" },
+          { internalType: "uint256", name: "deadline", type: "uint256" },
+          { internalType: "bytes", name: "signature", type: "bytes" }
+        ],
+        internalType: "struct ClaimOnlyContract.ClaimRequest[]",
+        name: "claimRequests",
+        type: "tuple[]"
+      }
+    ],
+    name: "batchClaimTokens",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function"
+  },
+  {
+    inputs: [
       { internalType: "uint256", name: "tokenId", type: "uint256" },
       { internalType: "address", name: "tokenAddress", type: "address" },
       { internalType: "bool", name: "isActive", type: "bool" }
