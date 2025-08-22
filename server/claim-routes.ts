@@ -348,9 +348,9 @@ export function registerClaimRoutes(app: Express) {
       
       const results = [];
       const tokenAddresses = [
-        "0x09E18590E8F76b6Cf471B3CD30676B46Ef36F7CD", // Token 0 
-        "0xaeA5bb4F5b5524dee0E3F931911c8F8df4576E19", // Token 1
-        "0x0E1CD6557D2BA59C61c75850E674C2AD73253952"  // Token 2
+        "0x287396E90c5febB4dC1EDbc0EEF8e5668cdb08D4", // Token 0 - User deployed test token
+        "0xaeA5bb4F5b5524dee0E3F931911c8F8df4576E19", // Token 1 - BOOP Test
+        "0x0E1CD6557D2BA59C61c75850E674C2AD73253952"  // Token 2 - BOBOTRUM Test
       ];
       
       for (let i = 0; i < tokenAddresses.length; i++) {

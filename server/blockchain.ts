@@ -77,7 +77,7 @@ export class BlockchainService {
     const defaultConfig: ContractConfig = {
       contractAddress: process.env.SPIN_CLAIM_CONTRACT_ADDRESS || "",
       tokenAddresses: {
-        TOKEN1: "0x09E18590E8F76b6Cf471B3CD30676B46Ef36F7CD", // AIDOGE on Arbitrum Sepolia
+        TOKEN1: "0x287396E90c5febB4dC1EDbc0EEF8e5668cdb08D4", // User deployed test token
         TOKEN2: "0xaeA5bb4F5b5524dee0E3F931911c8F8df4576E19", // BOOP Test on Arbitrum Sepolia
         TOKEN3: "0x0E1CD6557D2BA59C61c75850E674C2AD73253952" // BOBOTRUM Test on Arbitrum Sepolia
       },
