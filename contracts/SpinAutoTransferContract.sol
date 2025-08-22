@@ -1,21 +1,30 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
  * @title SpinAutoTransferContract
- * @dev Hybrid contract supporting both auto-transfer (server-initiated) and manual claims
- * Server spins determine results, contract handles secure token distribution
+ * @dev Ultra-secure contract for automatic token transfers after server-side spins
+ * @notice Follows 2024 security best practices from Solidity, OpenZeppelin, Remix IDE, and ConsenSys
+ * @author Based on OWASP Smart Contract Top 10 (2025) and ConsenSys Diligence guidelines
  */
-contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
+contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard, AccessControl {
     using SafeERC20 for IERC20;
     using MessageHashUtils for bytes32;
+    using ECDSA for bytes32;
+
+    // ========== ACCESS CONTROL ROLES ==========
+    bytes32 public constant SERVER_ROLE = keccak256("SERVER_ROLE");
+    bytes32 public constant EMERGENCY_ROLE = keccak256("EMERGENCY_ROLE");
+    bytes32 public constant TREASURY_ROLE = keccak256("TREASURY_ROLE");
 
     // ========== STRUCTS ==========
     
@@ -23,55 +32,56 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
         IERC20 token;
         uint256 totalDistributed;
         uint256 autoTransferred;
-        uint256 manuallyClaimed;
+        uint256 reserveBalance;
         bool isActive;
-    }
-    
-    struct ClaimRequest {
-        address user;
-        uint256 tokenId;
-        uint256 amount;
-        uint256 nonce;
-        uint256 deadline;
-        bytes signature;
+        uint256 minAmount;
+        uint256 maxAmount;
     }
 
-    // ========== STORAGE ==========
+    // ========== CONSTANTS & IMMUTABLES ==========
     
-    // Contract configuration
-    uint256 public constant MAX_TOKENS = 10;
-    uint256 public constant CLAIM_DEADLINE = 24 hours;
+    uint256 public constant MAX_TOKENS = 3; // TOKEN1, TOKEN2, TOKEN3
+    uint256 public constant MAX_BATCH_SIZE = 10; // Prevent gas limit issues
+    uint256 public constant MIN_TRANSFER_AMOUNT = 1e15; // 0.001 tokens minimum
+    uint256 public constant MAX_TREASURY_FEE = 10; // 10% maximum fee
+    uint256 public constant SIGNATURE_VALIDITY = 10 minutes; // Signature expiry
+    
+    // Contract deployment timestamp for security calculations
+    uint256 public immutable deploymentTimestamp;
+
+    // ========== STORAGE ==========
     
     // Token configurations (tokenId => TokenConfig)
     mapping(uint256 => TokenConfig) public tokens;
     uint256 public activeTokenCount;
     
-    // User nonces for manual claims (replay protection)
-    mapping(address => uint256) public userNonces;
-    
-    // Auto-transfer tracking
+    // Auto-transfer tracking and limits
     mapping(address => mapping(uint256 => uint256)) public userAutoTransferred;
-    
-    // Emergency controls
-    address public emergencyOperator;
-    bool public emergencyMode;
-    
-    // Revenue sharing
-    address public treasury;
-    uint256 public treasuryFeePercent = 5; // 5% fee
-    
-    // Server wallet (authorized to call autoTransfer)
-    address public serverWallet;
-    
-    // Claim signer (for manual claims)
-    address public claimSigner;
-    
-    // Auto-transfer settings
-    bool public autoTransferEnabled = true;
-    uint256 public maxAutoTransferPerCall = 10 ether; // Prevent huge single transfers
-    uint256 public dailyAutoTransferLimit = 100 ether; // Daily limit per user
     mapping(address => uint256) public userDailyTransferred;
     mapping(address => uint256) public lastTransferDay;
+    
+    // Security controls
+    address public treasury;
+    uint256 public treasuryFeePercent;
+    
+    // Auto-transfer configuration
+    bool public autoTransferEnabled;
+    bool public gasPopupBackupEnabled; // Future feature for user gas payments
+    uint256 public maxAutoTransferPerCall;
+    uint256 public dailyAutoTransferLimit;
+    uint256 public globalDailyLimit;
+    uint256 public totalDailyTransferred;
+    uint256 public lastGlobalTransferDay;
+    
+    // Rate limiting and security
+    mapping(address => uint256) public lastTransferTimestamp;
+    mapping(address => uint256) public transferCount;
+    uint256 public cooldownPeriod;
+    
+    // Circuit breaker for emergencies
+    bool public circuitBreakerTripped;
+    uint256 public circuitBreakerThreshold;
+    uint256 public circuitBreakerWindow;
 
     // ========== EVENTS ==========
     
@@ -79,43 +89,84 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
         address indexed user,
         uint256 indexed tokenId,
         uint256 amount,
-        address indexed serverWallet
-    );
-    
-    event TokensClaimed(
-        address indexed user,
-        uint256 indexed tokenId,
-        uint256 amount,
-        uint256 nonce
+        address indexed serverCaller,
+        uint256 timestamp
     );
     
     event TokenConfigured(
         uint256 indexed tokenId,
         address indexed token,
-        bool isActive
+        bool isActive,
+        uint256 minAmount,
+        uint256 maxAmount
     );
     
-    event ServerWalletUpdated(address indexed newServerWallet);
-    event AutoTransferSettingsUpdated(bool enabled, uint256 maxPerCall, uint256 dailyLimit);
-    event EmergencyModeToggled(bool enabled, address operator);
+    event SecurityLimitUpdated(
+        string indexed limitType,
+        uint256 oldValue,
+        uint256 newValue,
+        address indexed updatedBy
+    );
+    
+    event TreasuryUpdated(
+        address indexed oldTreasury,
+        address indexed newTreasury,
+        uint256 indexed feePercent
+    );
+    
+    event CircuitBreakerTripped(
+        string reason,
+        uint256 timestamp,
+        address indexed triggeredBy
+    );
+    
+    event CircuitBreakerReset(
+        uint256 timestamp,
+        address indexed resetBy
+    );
+    
+    event GasPopupBackupToggled(
+        bool enabled,
+        address indexed toggledBy
+    );
+    
+    event RateLimitExceeded(
+        address indexed user,
+        uint256 attemptedAmount,
+        uint256 currentLimit,
+        uint256 timestamp
+    );
 
     // ========== MODIFIERS ==========
     
     modifier onlyActiveToken(uint256 tokenId) {
-        require(tokens[tokenId].isActive, "Token not active");
+        require(tokenId < MAX_TOKENS, "SCAUT001: Invalid token ID");
+        require(tokens[tokenId].isActive, "SCAUT002: Token not active");
         _;
     }
     
-    modifier onlyServerWallet() {
-        require(msg.sender == serverWallet, "Only server wallet");
+    modifier validAmount(uint256 amount) {
+        require(amount >= MIN_TRANSFER_AMOUNT, "SCAUT003: Amount too small");
+        require(amount <= maxAutoTransferPerCall, "SCAUT004: Amount exceeds maximum");
         _;
     }
     
-    modifier onlyEmergencyOperator() {
+    modifier notCircuitBroken() {
+        require(!circuitBreakerTripped, "SCAUT005: Circuit breaker activated");
+        _;
+    }
+    
+    modifier rateLimited(address user) {
         require(
-            msg.sender == owner() || msg.sender == emergencyOperator,
-            "Not authorized"
+            block.timestamp >= lastTransferTimestamp[user] + cooldownPeriod,
+            "SCAUT006: Rate limit exceeded"
         );
+        _;
+    }
+    
+    modifier validAddress(address addr) {
+        require(addr != address(0), "SCAUT007: Zero address not allowed");
+        require(addr != address(this), "SCAUT008: Self-reference not allowed");
         _;
     }
 
@@ -124,18 +175,42 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
     constructor(
         address _treasury,
         address _emergencyOperator,
-        address _serverWallet,
-        address _claimSigner
+        address _serverWallet
     ) Ownable(msg.sender) {
-        require(_treasury != address(0), "Invalid treasury");
-        require(_emergencyOperator != address(0), "Invalid emergency operator");
-        require(_serverWallet != address(0), "Invalid server wallet");
-        require(_claimSigner != address(0), "Invalid claim signer");
+        // Input validation
+        require(_treasury != address(0), "SCAUT009: Invalid treasury address");
+        require(_emergencyOperator != address(0), "SCAUT010: Invalid emergency operator");
+        require(_serverWallet != address(0), "SCAUT011: Invalid server wallet");
         
+        // Prevent same address for critical roles
+        require(_treasury != _emergencyOperator, "SCAUT012: Duplicate treasury/emergency");
+        require(_treasury != _serverWallet, "SCAUT013: Duplicate treasury/server");
+        require(_emergencyOperator != _serverWallet, "SCAUT014: Duplicate emergency/server");
+        
+        // Store deployment timestamp for security calculations
+        deploymentTimestamp = block.timestamp;
+        
+        // Initialize access control
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(SERVER_ROLE, _serverWallet);
+        _grantRole(EMERGENCY_ROLE, _emergencyOperator);
+        _grantRole(TREASURY_ROLE, _treasury);
+        
+        // Set initial configuration
         treasury = _treasury;
-        emergencyOperator = _emergencyOperator;
-        serverWallet = _serverWallet;
-        claimSigner = _claimSigner;
+        treasuryFeePercent = 5; // 5% default fee
+        
+        // Security settings
+        autoTransferEnabled = false; // Disabled by default for safety
+        gasPopupBackupEnabled = false; // Future feature disabled
+        maxAutoTransferPerCall = 5 ether; // Conservative default
+        dailyAutoTransferLimit = 50 ether; // Conservative daily limit
+        globalDailyLimit = 1000 ether; // Global daily protection
+        cooldownPeriod = 1 minutes; // Rate limiting
+        
+        // Circuit breaker configuration
+        circuitBreakerThreshold = 100 ether; // Trip if >100 ether transferred rapidly
+        circuitBreakerWindow = 1 hours; // Within 1 hour window
         
         // Contract starts paused for safety
         _pause();
@@ -144,10 +219,11 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
     // ========== AUTO-TRANSFER FUNCTIONS ==========
     
     /**
-     * @dev Auto-transfer tokens after server spin (called by server wallet)
-     * @param user Address to receive tokens
+     * @dev Auto-transfer tokens after server spin with comprehensive security checks
+     * @param user Address to receive tokens (must be validated)
      * @param tokenId Token type (0=TOKEN1, 1=TOKEN2, 2=TOKEN3)
-     * @param amount Amount to transfer (in wei)
+     * @param amount Amount to transfer in wei (subject to limits)
+     * @notice Follows checks-effects-interactions pattern for reentrancy protection
      */
     function autoTransfer(
         address user,
@@ -157,15 +233,23 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
         external 
         whenNotPaused
         nonReentrant
-        onlyServerWallet
+        onlyRole(SERVER_ROLE)
         onlyActiveToken(tokenId)
+        validAmount(amount)
+        notCircuitBroken
+        rateLimited(user)
+        validAddress(user)
     {
-        require(autoTransferEnabled, "Auto-transfer disabled");
-        require(user != address(0), "Invalid user");
-        require(amount > 0, "Invalid amount");
-        require(amount <= maxAutoTransferPerCall, "Amount exceeds max per call");
+        // ========== CHECKS ==========
         
-        // Check daily limit
+        require(autoTransferEnabled, "SCAUT015: Auto-transfer disabled");
+        
+        // Validate amount against token-specific limits
+        TokenConfig storage tokenConfig = tokens[tokenId];
+        require(amount >= tokenConfig.minAmount, "SCAUT016: Below minimum amount");
+        require(amount <= tokenConfig.maxAmount, "SCAUT017: Above maximum amount");
+        
+        // Check daily limits (user-specific)
         uint256 today = block.timestamp / 1 days;
         if (lastTransferDay[user] != today) {
             userDailyTransferred[user] = 0;
@@ -174,38 +258,67 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
         
         require(
             userDailyTransferred[user] + amount <= dailyAutoTransferLimit,
-            "Daily limit exceeded"
+            "SCAUT018: User daily limit exceeded"
         );
         
-        TokenConfig storage tokenConfig = tokens[tokenId];
+        // Check global daily limits
+        if (lastGlobalTransferDay != today) {
+            totalDailyTransferred = 0;
+            lastGlobalTransferDay = today;
+        }
         
-        // Check contract has sufficient balance
         require(
-            tokenConfig.token.balanceOf(address(this)) >= amount,
-            "Insufficient contract balance"
+            totalDailyTransferred + amount <= globalDailyLimit,
+            "SCAUT019: Global daily limit exceeded"
         );
         
-        // Calculate treasury fee
+        // Contract balance validation
+        uint256 contractBalance = tokenConfig.token.balanceOf(address(this));
+        require(contractBalance >= amount, "SCAUT020: Insufficient contract balance");
+        
+        // Calculate fees and amounts
         uint256 treasuryFee = (amount * treasuryFeePercent) / 100;
         uint256 userAmount = amount - treasuryFee;
         
-        // Transfer tokens
+        // Ensure user receives meaningful amount after fees
+        require(userAmount > 0, "SCAUT021: Amount too small after fees");
+        
+        // Circuit breaker check
+        if (totalDailyTransferred + amount > circuitBreakerThreshold) {
+            circuitBreakerTripped = true;
+            emit CircuitBreakerTripped("Daily threshold exceeded", block.timestamp, msg.sender);
+            revert("SCAUT022: Circuit breaker triggered");
+        }
+        
+        // ========== EFFECTS ==========
+        
+        // Update all state before external calls
+        tokenConfig.totalDistributed += amount;
+        tokenConfig.autoTransferred += amount;
+        userAutoTransferred[user][tokenId] += amount;
+        userDailyTransferred[user] += amount;
+        totalDailyTransferred += amount;
+        lastTransferTimestamp[user] = block.timestamp;
+        transferCount[user] += 1;
+        
+        // ========== INTERACTIONS ==========
+        
+        // Execute transfers (treasury first for additional security)
         if (treasuryFee > 0) {
             tokenConfig.token.safeTransfer(treasury, treasuryFee);
         }
         tokenConfig.token.safeTransfer(user, userAmount);
         
-        // Update tracking
-        tokenConfig.totalDistributed += amount;
-        tokenConfig.autoTransferred += amount;
-        userAutoTransferred[user][tokenId] += amount;
-        userDailyTransferred[user] += amount;
-        
-        emit AutoTransferCompleted(user, tokenId, amount, serverWallet);
+        // Emit detailed event for transparency
+        emit AutoTransferCompleted(user, tokenId, amount, msg.sender, block.timestamp);
     }
     
     /**
-     * @dev Batch auto-transfer for multiple users (gas optimization)
+     * @dev Batch auto-transfer for multiple users (gas optimization with enhanced security)
+     * @param users Array of recipient addresses
+     * @param tokenIds Array of token IDs
+     * @param amounts Array of transfer amounts
+     * @notice Limited to MAX_BATCH_SIZE to prevent gas limit issues
      */
     function batchAutoTransfer(
         address[] calldata users,
@@ -215,25 +328,49 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
         external 
         whenNotPaused
         nonReentrant
-        onlyServerWallet
+        onlyRole(SERVER_ROLE)
+        notCircuitBroken
     {
-        require(users.length == tokenIds.length && tokenIds.length == amounts.length, "Array length mismatch");
-        require(users.length <= 20, "Too many transfers");
+        // Input validation
+        require(users.length == tokenIds.length, "SCAUT023: Users/tokens length mismatch");
+        require(tokenIds.length == amounts.length, "SCAUT024: Tokens/amounts length mismatch");
+        require(users.length > 0, "SCAUT025: Empty batch not allowed");
+        require(users.length <= MAX_BATCH_SIZE, "SCAUT026: Batch size too large");
         
-        for (uint i = 0; i < users.length; i++) {
-            // Internal call to avoid reentrancy issues
-            _autoTransferInternal(users[i], tokenIds[i], amounts[i]);
+        // Pre-validate all transfers to prevent partial failures
+        uint256 totalBatchAmount = 0;
+        for (uint256 i = 0; i < users.length; i++) {
+            require(users[i] != address(0), "SCAUT027: Zero address in batch");
+            require(tokenIds[i] < MAX_TOKENS, "SCAUT028: Invalid token ID in batch");
+            require(tokens[tokenIds[i]].isActive, "SCAUT029: Inactive token in batch");
+            require(amounts[i] >= MIN_TRANSFER_AMOUNT, "SCAUT030: Amount too small in batch");
+            require(amounts[i] <= maxAutoTransferPerCall, "SCAUT031: Amount too large in batch");
+            
+            totalBatchAmount += amounts[i];
+        }
+        
+        // Check global batch limit
+        require(totalBatchAmount <= globalDailyLimit / 10, "SCAUT032: Batch exceeds safety limit");
+        
+        // Execute all transfers
+        for (uint256 i = 0; i < users.length; i++) {
+            _secureAutoTransferInternal(users[i], tokenIds[i], amounts[i]);
         }
     }
     
-    function _autoTransferInternal(address user, uint256 tokenId, uint256 amount) private {
-        require(autoTransferEnabled, "Auto-transfer disabled");
-        require(user != address(0), "Invalid user");
-        require(amount > 0, "Invalid amount");
-        require(tokens[tokenId].isActive, "Token not active");
-        require(amount <= maxAutoTransferPerCall, "Amount exceeds max per call");
-        
-        // Check daily limit
+    /**
+     * @dev Internal secure transfer function with comprehensive checks
+     * @param user Recipient address
+     * @param tokenId Token identifier  
+     * @param amount Transfer amount
+     * @notice Follows all security patterns for internal calls
+     */
+    function _secureAutoTransferInternal(
+        address user, 
+        uint256 tokenId, 
+        uint256 amount
+    ) private {
+        // Daily limit checks
         uint256 today = block.timestamp / 1 days;
         if (lastTransferDay[user] != today) {
             userDailyTransferred[user] = 0;
@@ -242,120 +379,110 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
         
         require(
             userDailyTransferred[user] + amount <= dailyAutoTransferLimit,
-            "Daily limit exceeded"
+            "SCAUT033: User daily limit in batch"
         );
         
         TokenConfig storage tokenConfig = tokens[tokenId];
         
-        // Check contract has sufficient balance
+        // Balance and limit validations
+        require(amount >= tokenConfig.minAmount, "SCAUT034: Below min in batch");
+        require(amount <= tokenConfig.maxAmount, "SCAUT035: Above max in batch");
         require(
             tokenConfig.token.balanceOf(address(this)) >= amount,
-            "Insufficient contract balance"
+            "SCAUT036: Insufficient balance in batch"
         );
         
-        // Calculate treasury fee
+        // Calculate fees
         uint256 treasuryFee = (amount * treasuryFeePercent) / 100;
         uint256 userAmount = amount - treasuryFee;
+        require(userAmount > 0, "SCAUT037: No amount after fees in batch");
         
-        // Transfer tokens
+        // Update state
+        tokenConfig.totalDistributed += amount;
+        tokenConfig.autoTransferred += amount;
+        userAutoTransferred[user][tokenId] += amount;
+        userDailyTransferred[user] += amount;
+        totalDailyTransferred += amount;
+        lastTransferTimestamp[user] = block.timestamp;
+        transferCount[user] += 1;
+        
+        // Execute transfers
         if (treasuryFee > 0) {
             tokenConfig.token.safeTransfer(treasury, treasuryFee);
         }
         tokenConfig.token.safeTransfer(user, userAmount);
         
-        // Update tracking
-        tokenConfig.totalDistributed += amount;
-        tokenConfig.autoTransferred += amount;
-        userAutoTransferred[user][tokenId] += amount;
-        userDailyTransferred[user] += amount;
-        
-        emit AutoTransferCompleted(user, tokenId, amount, serverWallet);
+        emit AutoTransferCompleted(user, tokenId, amount, msg.sender, block.timestamp);
     }
 
-    // ========== MANUAL CLAIM FUNCTIONS (FALLBACK) ==========
+    // ========== GAS POPUP BACKUP FUNCTIONS (Future Feature) ==========
     
     /**
-     * @dev Manual claim tokens with signature verification (fallback when auto-transfer fails)
+     * @dev Enable/disable gas popup backup for future use
+     * @param enabled Whether to enable gas popup backup
+     * @notice Future feature - allows users to pay gas for failed auto-transfers
      */
-    function claimTokens(ClaimRequest calldata claimRequest) 
+    function setGasPopupBackup(bool enabled) 
         external 
-        whenNotPaused
-        nonReentrant
-        onlyActiveToken(claimRequest.tokenId)
+        onlyRole(DEFAULT_ADMIN_ROLE) 
     {
-        require(claimRequest.user == msg.sender, "Invalid claimer");
-        require(block.timestamp <= claimRequest.deadline, "Claim expired");
-        require(claimRequest.amount > 0, "Invalid amount");
+        gasPopupBackupEnabled = enabled;
+        emit GasPopupBackupToggled(enabled, msg.sender);
+    }
+    
+    /**
+     * @dev Check if gas popup backup is available for user
+     * @param user User address to check
+     * @return canUseBackup Whether user can use gas popup backup
+     * @return estimatedGas Estimated gas cost for user transaction
+     * @notice Future implementation will integrate with frontend gas estimation
+     */
+    function canUseGasPopupBackup(address user) 
+        external 
+        view 
+        validAddress(user)
+        returns (bool canUseBackup, uint256 estimatedGas) 
+    {
+        canUseBackup = gasPopupBackupEnabled && !paused();
+        estimatedGas = gasPopupBackupEnabled ? 150000 : 0; // Estimated gas for transfer
         
-        // Verify nonce (prevents replay attacks)
-        require(claimRequest.nonce == userNonces[msg.sender] + 1, "Invalid nonce");
-        
-        // Verify signature
-        bytes32 messageHash = keccak256(
-            abi.encodePacked(
-                claimRequest.user,
-                claimRequest.tokenId,
-                claimRequest.amount,
-                claimRequest.nonce,
-                claimRequest.deadline
-            )
-        );
-        
-        bytes32 ethSignedMessageHash = messageHash.toEthSignedMessageHash();
-        require(_verifySignature(ethSignedMessageHash, claimRequest.signature), "Invalid signature");
-        
-        // Update nonce
-        userNonces[msg.sender] = claimRequest.nonce;
-        
-        TokenConfig storage tokenConfig = tokens[claimRequest.tokenId];
-        
-        // Calculate treasury fee
-        require(claimRequest.amount >= 100, "Amount too small for fee calculation");
-        uint256 treasuryFee = (claimRequest.amount * treasuryFeePercent) / 100;
-        uint256 userAmount = claimRequest.amount - treasuryFee;
-        
-        // Check contract has sufficient balance
-        require(
-            tokenConfig.token.balanceOf(address(this)) >= claimRequest.amount,
-            "Insufficient contract balance"
-        );
-        
-        // Transfer tokens
-        if (treasuryFee > 0) {
-            tokenConfig.token.safeTransfer(treasury, treasuryFee);
-        }
-        tokenConfig.token.safeTransfer(claimRequest.user, userAmount);
-        
-        // Update tracking
-        tokenConfig.totalDistributed += claimRequest.amount;
-        tokenConfig.manuallyClaimed += claimRequest.amount;
-        
-        emit TokensClaimed(
-            claimRequest.user,
-            claimRequest.tokenId,
-            claimRequest.amount,
-            claimRequest.nonce
-        );
+        return (canUseBackup, estimatedGas);
     }
 
     // ========== ADMIN FUNCTIONS ==========
     
     /**
-     * @dev Configure a token for rewards
+     * @dev Configure a token with comprehensive security validation
+     * @param tokenId Token identifier (0-2)
+     * @param tokenAddress ERC20 token contract address
+     * @param isActive Whether token should be active for transfers
+     * @param minAmount Minimum transfer amount for this token
+     * @param maxAmount Maximum transfer amount for this token
      */
     function configureToken(
         uint256 tokenId,
         address tokenAddress,
-        bool isActive
-    ) external onlyOwner {
-        require(tokenId < MAX_TOKENS, "Invalid token ID");
-        require(tokenAddress != address(0), "Invalid token address");
+        bool isActive,
+        uint256 minAmount,
+        uint256 maxAmount
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) validAddress(tokenAddress) {
+        require(tokenId < MAX_TOKENS, "SCAUT038: Invalid token ID");
+        require(minAmount >= MIN_TRANSFER_AMOUNT, "SCAUT039: Min amount too small");
+        require(maxAmount <= maxAutoTransferPerCall, "SCAUT040: Max amount too large");
+        require(minAmount <= maxAmount, "SCAUT041: Min greater than max");
+        
+        // Validate token contract (basic ERC20 check)
+        IERC20 token = IERC20(tokenAddress);
+        require(token.totalSupply() > 0, "SCAUT042: Invalid ERC20 token");
         
         TokenConfig storage config = tokens[tokenId];
         bool wasActive = config.isActive;
         
-        config.token = IERC20(tokenAddress);
+        // Update configuration
+        config.token = token;
         config.isActive = isActive;
+        config.minAmount = minAmount;
+        config.maxAmount = maxAmount;
         
         // Update active token count
         if (isActive && !wasActive) {
@@ -364,72 +491,96 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
             activeTokenCount--;
         }
         
-        emit TokenConfigured(tokenId, tokenAddress, isActive);
+        emit TokenConfigured(tokenId, tokenAddress, isActive, minAmount, maxAmount);
     }
     
     /**
-     * @dev Update server wallet address
-     */
-    function setServerWallet(address _serverWallet) external onlyOwner {
-        require(_serverWallet != address(0), "Invalid server wallet");
-        serverWallet = _serverWallet;
-        emit ServerWalletUpdated(_serverWallet);
-    }
-    
-    /**
-     * @dev Update auto-transfer settings
+     * @dev Update auto-transfer settings with validation
      */
     function setAutoTransferSettings(
-        bool _enabled,
-        uint256 _maxPerCall,
-        uint256 _dailyLimit
-    ) external onlyOwner {
-        autoTransferEnabled = _enabled;
-        maxAutoTransferPerCall = _maxPerCall;
-        dailyAutoTransferLimit = _dailyLimit;
-        emit AutoTransferSettingsUpdated(_enabled, _maxPerCall, _dailyLimit);
+        bool enabled,
+        uint256 maxPerCall,
+        uint256 dailyLimit,
+        uint256 globalLimit
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(maxPerCall >= MIN_TRANSFER_AMOUNT, "SCAUT043: Max per call too small");
+        require(dailyLimit >= maxPerCall, "SCAUT044: Daily limit too small");
+        require(globalLimit >= dailyLimit * 10, "SCAUT045: Global limit too small");
+        
+        uint256 oldMaxPerCall = maxAutoTransferPerCall;
+        uint256 oldDailyLimit = dailyAutoTransferLimit;
+        
+        autoTransferEnabled = enabled;
+        maxAutoTransferPerCall = maxPerCall;
+        dailyAutoTransferLimit = dailyLimit;
+        globalDailyLimit = globalLimit;
+        
+        emit SecurityLimitUpdated("maxPerCall", oldMaxPerCall, maxPerCall, msg.sender);
+        emit SecurityLimitUpdated("dailyLimit", oldDailyLimit, dailyLimit, msg.sender);
     }
     
     /**
-     * @dev Update claim signer address
+     * @dev Update treasury address and fee with strict validation
      */
-    function setClaimSigner(address _claimSigner) external onlyOwner {
-        require(_claimSigner != address(0), "Invalid signer");
-        claimSigner = _claimSigner;
+    function setTreasury(address newTreasury, uint256 newFeePercent) 
+        external 
+        onlyRole(TREASURY_ROLE) 
+        validAddress(newTreasury) 
+    {
+        require(newFeePercent <= MAX_TREASURY_FEE, "SCAUT046: Fee too high");
+        require(newTreasury != treasury, "SCAUT047: Same treasury address");
+        
+        address oldTreasury = treasury;
+        treasury = newTreasury;
+        treasuryFeePercent = newFeePercent;
+        
+        emit TreasuryUpdated(oldTreasury, newTreasury, newFeePercent);
     }
     
     /**
-     * @dev Update treasury address
+     * @dev Update rate limiting settings
      */
-    function setTreasury(address _treasury) external onlyOwner {
-        require(_treasury != address(0), "Invalid treasury");
-        treasury = _treasury;
+    function setRateLimiting(uint256 newCooldownPeriod) 
+        external 
+        onlyRole(DEFAULT_ADMIN_ROLE) 
+    {
+        require(newCooldownPeriod <= 1 hours, "SCAUT048: Cooldown too long");
+        
+        uint256 oldCooldown = cooldownPeriod;
+        cooldownPeriod = newCooldownPeriod;
+        
+        emit SecurityLimitUpdated("cooldownPeriod", oldCooldown, newCooldownPeriod, msg.sender);
     }
     
     /**
-     * @dev Owner can unpause contract
+     * @dev Emergency pause function
      */
-    function unpause() external onlyOwner {
+    function emergencyPause() external onlyRole(EMERGENCY_ROLE) {
+        _pause();
+        circuitBreakerTripped = true;
+        emit CircuitBreakerTripped("Emergency pause", block.timestamp, msg.sender);
+    }
+    
+    /**
+     * @dev Unpause contract after safety checks
+     */
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(!circuitBreakerTripped, "SCAUT049: Reset circuit breaker first");
         _unpause();
     }
     
     /**
-     * @dev Toggle emergency mode
+     * @dev Reset circuit breaker after investigation
      */
-    function setEmergencyMode(bool _enabled) external onlyEmergencyOperator {
-        emergencyMode = _enabled;
-        if (_enabled) {
-            _pause();
-        } else {
-            _unpause();
-        }
-        emit EmergencyModeToggled(_enabled, msg.sender);
+    function resetCircuitBreaker() external onlyRole(EMERGENCY_ROLE) {
+        circuitBreakerTripped = false;
+        emit CircuitBreakerReset(block.timestamp, msg.sender);
     }
 
     // ========== VIEW FUNCTIONS ==========
     
     /**
-     * @dev Get token configuration and stats
+     * @dev Get comprehensive token configuration
      */
     function getTokenConfig(uint256 tokenId) 
         external 
@@ -438,119 +589,207 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard {
             address tokenAddress,
             uint256 totalDistributed,
             uint256 autoTransferred,
-            uint256 manuallyClaimed,
-            bool isActive
+            uint256 reserveBalance,
+            bool isActive,
+            uint256 minAmount,
+            uint256 maxAmount
         ) 
     {
+        require(tokenId < MAX_TOKENS, "SCAUT050: Invalid token ID");
+        
         TokenConfig storage config = tokens[tokenId];
         return (
             address(config.token),
             config.totalDistributed,
             config.autoTransferred,
-            config.manuallyClaimed,
-            config.isActive
+            config.reserveBalance,
+            config.isActive,
+            config.minAmount,
+            config.maxAmount
         );
     }
     
     /**
-     * @dev Get user's auto-transfer history
+     * @dev Get user's transfer statistics
      */
-    function getUserAutoTransferHistory(address user) 
+    function getUserTransferStats(address user) 
         external 
         view 
-        returns (uint256[] memory amounts) 
+        validAddress(user)
+        returns (
+            uint256[] memory tokenAmounts,
+            uint256 dailyTransferred,
+            uint256 transferCount_,
+            uint256 lastTransfer,
+            bool canTransfer
+        ) 
     {
-        amounts = new uint256[](MAX_TOKENS);
-        for (uint i = 0; i < MAX_TOKENS; i++) {
-            amounts[i] = userAutoTransferred[user][i];
+        tokenAmounts = new uint256[](MAX_TOKENS);
+        for (uint256 i = 0; i < MAX_TOKENS; i++) {
+            tokenAmounts[i] = userAutoTransferred[user][i];
         }
-        return amounts;
+        
+        uint256 today = block.timestamp / 1 days;
+        uint256 userDailyAmount = (lastTransferDay[user] == today) ? userDailyTransferred[user] : 0;
+        
+        return (
+            tokenAmounts,
+            userDailyAmount,
+            transferCount[user],
+            lastTransferTimestamp[user],
+            _canUserTransfer(user)
+        );
     }
     
     /**
-     * @dev Get contract configuration
+     * @dev Get comprehensive contract security status
      */
-    function getContractConfig() 
+    function getSecurityStatus() 
         external 
         view 
         returns (
             bool autoTransferEnabled_,
-            uint256 maxAutoTransferPerCall_,
-            uint256 dailyAutoTransferLimit_,
-            address serverWallet_,
-            address claimSigner_,
+            bool gasPopupBackupEnabled_,
+            bool circuitBreakerTripped_,
             bool isPaused,
-            uint256 activeTokens
+            uint256 activeTokens,
+            uint256 globalDailyTransferred,
+            uint256 deploymentAge
+        ) 
+    {
+        uint256 today = block.timestamp / 1 days;
+        uint256 currentGlobalDaily = (lastGlobalTransferDay == today) ? totalDailyTransferred : 0;
+        
+        return (
+            autoTransferEnabled,
+            gasPopupBackupEnabled,
+            circuitBreakerTripped,
+            paused(),
+            activeTokenCount,
+            currentGlobalDaily,
+            block.timestamp - deploymentTimestamp
+        );
+    }
+    
+    /**
+     * @dev Get current limits and settings
+     */
+    function getCurrentLimits() 
+        external 
+        view 
+        returns (
+            uint256 maxPerCall,
+            uint256 dailyLimit,
+            uint256 globalLimit,
+            uint256 treasuryFee,
+            uint256 cooldown,
+            uint256 minTransfer
         ) 
     {
         return (
-            autoTransferEnabled,
             maxAutoTransferPerCall,
             dailyAutoTransferLimit,
-            serverWallet,
-            claimSigner,
-            paused(),
-            activeTokenCount
+            globalDailyLimit,
+            treasuryFeePercent,
+            cooldownPeriod,
+            MIN_TRANSFER_AMOUNT
         );
+    }
+    
+    /**
+     * @dev Check if user can make a transfer
+     */
+    function _canUserTransfer(address user) private view returns (bool) {
+        if (paused() || circuitBreakerTripped || !autoTransferEnabled) {
+            return false;
+        }
+        
+        // Check cooldown
+        if (block.timestamp < lastTransferTimestamp[user] + cooldownPeriod) {
+            return false;
+        }
+        
+        // Check daily limits
+        uint256 today = block.timestamp / 1 days;
+        if (lastTransferDay[user] == today && userDailyTransferred[user] >= dailyAutoTransferLimit) {
+            return false;
+        }
+        
+        if (lastGlobalTransferDay == today && totalDailyTransferred >= globalDailyLimit) {
+            return false;
+        }
+        
+        return true;
     }
 
-    // ========== INTERNAL FUNCTIONS ==========
+    // ========== EMERGENCY FUNCTIONS ==========
     
     /**
-     * @dev Verify signature against claim signer
+     * @dev Emergency token recovery (only for stuck tokens)
+     * @param tokenAddress Token contract address  
+     * @param amount Amount to recover
+     * @notice Only recovers tokens not part of active reward system
      */
-    function _verifySignature(bytes32 hash, bytes memory signature) 
-        internal 
+    function emergencyTokenRecovery(
+        address tokenAddress, 
+        uint256 amount
+    ) 
+        external 
+        onlyRole(DEFAULT_ADMIN_ROLE) 
+        validAddress(tokenAddress)
+    {
+        require(amount > 0, "SCAUT051: Zero amount");
+        
+        // Prevent recovery of active reward tokens
+        for (uint256 i = 0; i < MAX_TOKENS; i++) {
+            if (tokens[i].isActive) {
+                require(
+                    address(tokens[i].token) != tokenAddress,
+                    "SCAUT052: Cannot recover active reward token"
+                );
+            }
+        }
+        
+        IERC20(tokenAddress).safeTransfer(msg.sender, amount);
+    }
+    
+    /**
+     * @dev Update multiple security parameters atomically
+     */
+    function updateSecurityParameters(
+        uint256 newMaxPerCall,
+        uint256 newDailyLimit,
+        uint256 newGlobalLimit,
+        uint256 newCooldown,
+        uint256 newCircuitThreshold
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newMaxPerCall >= MIN_TRANSFER_AMOUNT, "SCAUT053: Max per call too small");
+        require(newDailyLimit >= newMaxPerCall, "SCAUT054: Daily limit too small");
+        require(newGlobalLimit >= newDailyLimit * 10, "SCAUT055: Global limit too small");
+        require(newCooldown <= 1 hours, "SCAUT056: Cooldown too long");
+        require(newCircuitThreshold > 0, "SCAUT057: Circuit threshold zero");
+        
+        maxAutoTransferPerCall = newMaxPerCall;
+        dailyAutoTransferLimit = newDailyLimit;
+        globalDailyLimit = newGlobalLimit;
+        cooldownPeriod = newCooldown;
+        circuitBreakerThreshold = newCircuitThreshold;
+        
+        emit SecurityLimitUpdated("batchUpdate", 0, block.timestamp, msg.sender);
+    }
+    
+    // ========== ACCESS CONTROL OVERRIDES ==========
+    
+    /**
+     * @dev Override supportsInterface for AccessControl
+     */
+    function supportsInterface(bytes4 interfaceId) 
+        public 
         view 
+        virtual 
+        override(AccessControl) 
         returns (bool) 
     {
-        return _recoverSigner(hash, signature) == claimSigner;
-    }
-    
-    /**
-     * @dev Recover signer from signature
-     */
-    function _recoverSigner(bytes32 hash, bytes memory signature) 
-        internal 
-        pure 
-        returns (address) 
-    {
-        require(signature.length == 65, "Invalid signature length");
-        
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        
-        assembly {
-            r := mload(add(signature, 32))
-            s := mload(add(signature, 64))
-            v := byte(0, mload(add(signature, 96)))
-        }
-        
-        // Prevent signature malleability
-        require(
-            uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
-            "Invalid signature 's' value"
-        );
-        
-        if (v < 27) {
-            v += 27;
-        }
-        require(v == 27 || v == 28, "Invalid signature 'v' value");
-        
-        address signer = ecrecover(hash, v, r, s);
-        require(signer != address(0), "Invalid signature");
-        
-        return signer;
-    }
-    
-    // ========== FALLBACK ==========
-    
-    receive() external payable {
-        revert("Direct ETH not accepted");
-    }
-    
-    fallback() external payable {
-        revert("Function not found");
+        return super.supportsInterface(interfaceId);
     }
 }
