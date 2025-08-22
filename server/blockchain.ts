@@ -2,22 +2,39 @@ import { ethers } from "ethers";
 import fs from "fs";
 import path from "path";
 
-// Contract ABIs - ClaimOnlyContract (server handles spinning)
-const CLAIM_ONLY_ABI = [
-  "function claimTokens(tuple(address user, uint256 tokenId, uint256 amount, uint256 nonce, uint256 deadline, bytes signature) claimRequest) external",
-  "function batchClaimTokens(tuple(address user, uint256 tokenId, uint256 amount, uint256 nonce, uint256 deadline, bytes signature)[] claimRequests) external",
-  "function getTokenConfig(uint256 tokenId) external view returns (address tokenAddress, uint256 totalDistributed, uint256 reserveBalance, bool isActive)",
-  "function configureToken(uint256 tokenId, address tokenAddress, bool isActive) external",
-  "function pause() external",
+// Contract ABIs - Auto-Transfer Contract (server handles spinning + transfers)
+const AUTO_TRANSFER_ABI = [
+  // Auto-transfer functions
+  "function autoTransfer(address user, uint256 tokenId, uint256 amount) external",
+  "function batchAutoTransfer(address[] users, uint256[] tokenIds, uint256[] amounts) external",
+  
+  // Configuration functions
+  "function configureToken(uint256 tokenId, address tokenAddress, bool isActive, uint256 minAmount, uint256 maxAmount) external",
+  "function setAutoTransferSettings(bool enabled, uint256 maxPerCall, uint256 dailyLimit, uint256 globalLimit) external",
+  "function setTreasury(address newTreasury, uint256 newFeePercent) external",
+  "function setRateLimiting(uint256 newCooldownPeriod) external",
+  
+  // Emergency functions
+  "function emergencyPause() external",
   "function unpause() external",
+  "function resetCircuitBreaker() external",
+  
+  // View functions
+  "function getTokenConfig(uint256 tokenId) external view returns (address tokenAddress, uint256 totalDistributed, uint256 autoTransferred, uint256 reserveBalance, bool isActive, uint256 minAmount, uint256 maxAmount)",
+  "function getUserTransferStats(address user) external view returns (uint256[] tokenAmounts, uint256 dailyTransferred, uint256 transferCount, uint256 lastTransfer, bool canTransfer)",
+  "function getSecurityStatus() external view returns (bool autoTransferEnabled, bool gasPopupBackupEnabled, bool circuitBreakerTripped, bool isPaused, uint256 activeTokens, uint256 globalDailyTransferred, uint256 deploymentAge)",
+  "function getCurrentLimits() external view returns (uint256 maxPerCall, uint256 dailyLimit, uint256 globalLimit, uint256 treasuryFee, uint256 cooldown, uint256 minTransfer)",
+  "function canUseGasPopupBackup(address user) external view returns (bool canUseBackup, uint256 estimatedGas)",
   "function paused() external view returns (bool)",
-  "function userNonces(address user) external view returns (uint256)",
-  "function emergencyMode() external view returns (bool)",
+  "function autoTransferEnabled() external view returns (bool)",
   "function treasury() external view returns (address)",
   "function treasuryFeePercent() external view returns (uint256)",
-  "function claimSigner() external view returns (address)",
-  "function getContractStats() external view returns (uint256 totalActiveTokens, bool isPaused, bool inEmergencyMode, address treasuryAddress, uint256 feePercent, address signerAddress)",
-  "event TokensClaimed(address indexed user, uint256 indexed tokenId, uint256 amount, uint256 nonce)"
+  
+  // Events
+  "event AutoTransferCompleted(address indexed user, uint256 indexed tokenId, uint256 amount, address indexed serverCaller, uint256 timestamp)",
+  "event TokenConfigured(uint256 indexed tokenId, address indexed token, bool isActive, uint256 minAmount, uint256 maxAmount)",
+  "event SecurityLimitUpdated(string indexed limitType, uint256 oldValue, uint256 newValue, address indexed updatedBy)",
+  "event CircuitBreakerTripped(string reason, uint256 timestamp, address indexed triggeredBy)"
 ];
 
 const ERC20_ABI = [
@@ -61,21 +78,23 @@ export class BlockchainService {
     if (this.config.contractAddress) {
       this.contract = new ethers.Contract(
         this.config.contractAddress,
-        CLAIM_ONLY_ABI,
+        AUTO_TRANSFER_ABI,
         this.provider
       );
-      console.log("✅ Smart contract connected:", this.config.contractAddress);
+      console.log("✅ Auto-Transfer contract connected:", this.config.contractAddress);
     } else {
       console.log("⚠️  Contract address not configured - run deployment first");
     }
   }
 
   private loadConfig(): ContractConfig {
-    const configPath = path.join(process.cwd(), "deployed-contracts.json");
+    // Try loading from auto-transfer deployment first
+    const autoTransferPath = path.join(process.cwd(), "auto-transfer-deployment.json");
+    const fallbackPath = path.join(process.cwd(), "deployed-contracts.json");
     
     // Default configuration for Arbitrum Sepolia with token addresses
     const defaultConfig: ContractConfig = {
-      contractAddress: process.env.SPIN_CLAIM_CONTRACT_ADDRESS || "",
+      contractAddress: process.env.SPIN_AUTO_TRANSFER_CONTRACT_ADDRESS || process.env.SPIN_CLAIM_CONTRACT_ADDRESS || "",
       tokenAddresses: {
         TOKEN1: "0x287396E90c5febB4dC1EDbc0EEF8e5668cdb08D4", // User deployed test token
         TOKEN2: "0xaeA5bb4F5b5524dee0E3F931911c8F8df4576E19", // BOOP Test on Arbitrum Sepolia
@@ -87,13 +106,26 @@ export class BlockchainService {
     };
 
     try {
-      if (fs.existsSync(configPath)) {
-        const deploymentData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      // First try to load auto-transfer deployment
+      if (fs.existsSync(autoTransferPath)) {
+        const deploymentData = JSON.parse(fs.readFileSync(autoTransferPath, 'utf8'));
         
-        // Map deployment data to config format
         if (deploymentData.contractAddress) {
           defaultConfig.contractAddress = deploymentData.contractAddress;
-          console.log("📄 Loaded contract address from deployment:", deploymentData.contractAddress);
+          console.log("📄 Loaded AUTO-TRANSFER contract address:", deploymentData.contractAddress);
+        }
+        
+        if (deploymentData.chainId) {
+          defaultConfig.chainId = deploymentData.chainId;
+        }
+      }
+      // Fallback to old deployment file
+      else if (fs.existsSync(fallbackPath)) {
+        const deploymentData = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+        
+        if (deploymentData.contractAddress) {
+          defaultConfig.contractAddress = deploymentData.contractAddress;
+          console.log("📄 Loaded contract address from fallback deployment:", deploymentData.contractAddress);
         }
         
         if (deploymentData.chainId) {
@@ -116,7 +148,196 @@ export class BlockchainService {
     return this.config.contractAddress;
   }
 
-  // Get user's current nonce from contract
+  // Auto-transfer tokens to user after server spin (MAIN FUNCTION)
+  async autoTransferTokens(
+    userAddress: string, 
+    tokenType: string, 
+    amount: string
+  ): Promise<{ success: boolean; txHash?: string; error?: string }> {
+    if (!this.contract) {
+      return { success: false, error: "Contract not initialized" };
+    }
+
+    try {
+      console.log(`🚀 Initiating auto-transfer: ${amount} ${tokenType} to ${userAddress}`);
+      
+      // Map token type to ID
+      const tokenId = this.getTokenId(tokenType);
+      if (tokenId === -1) {
+        return { success: false, error: `Invalid token type: ${tokenType}` };
+      }
+      
+      // Get server wallet with private key
+      const serverWallet = this.getServerWallet();
+      if (!serverWallet) {
+        return { success: false, error: "Server wallet not configured" };
+      }
+      
+      // Connect contract with server wallet
+      const contractWithSigner = this.contract.connect(serverWallet);
+      
+      // Check if user can receive transfer
+      const canTransfer = await this.canUserReceiveTransfer(userAddress);
+      if (!canTransfer) {
+        return { success: false, error: "User rate limited or contract paused" };
+      }
+      
+      // Execute auto-transfer
+      console.log(`📡 Calling autoTransfer(${userAddress}, ${tokenId}, ${amount})`);
+      
+      const tx = await contractWithSigner.autoTransfer(
+        userAddress,
+        tokenId,
+        amount
+      );
+      
+      console.log("⏳ Transaction submitted:", tx.hash);
+      
+      // Wait for confirmation
+      const receipt = await tx.wait();
+      
+      if (receipt.status === 1) {
+        console.log("✅ Auto-transfer successful:", tx.hash);
+        return { success: true, txHash: tx.hash };
+      } else {
+        return { success: false, error: "Transaction failed" };
+      }
+      
+    } catch (error: any) {
+      console.error("❌ Auto-transfer failed:", error);
+      
+      // Parse error message for user-friendly response
+      let errorMessage = "Auto-transfer failed";
+      
+      if (error.reason) {
+        errorMessage = error.reason;
+      } else if (error.message) {
+        if (error.message.includes("daily limit")) {
+          errorMessage = "Daily transfer limit reached";
+        } else if (error.message.includes("rate limit")) {
+          errorMessage = "Transfer too frequent, please wait";
+        } else if (error.message.includes("paused")) {
+          errorMessage = "Contract is paused for maintenance";
+        } else if (error.message.includes("insufficient")) {
+          errorMessage = "Insufficient contract balance";
+        }
+      }
+      
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  // Batch auto-transfer for multiple users (gas optimization)
+  async batchAutoTransfer(
+    transfers: Array<{ userAddress: string; tokenType: string; amount: string }>
+  ): Promise<{ success: boolean; txHash?: string; error?: string }> {
+    if (!this.contract) {
+      return { success: false, error: "Contract not initialized" };
+    }
+
+    try {
+      console.log(`🚀 Initiating batch auto-transfer for ${transfers.length} users`);
+      
+      const users: string[] = [];
+      const tokenIds: number[] = [];
+      const amounts: string[] = [];
+      
+      // Prepare batch data
+      for (const transfer of transfers) {
+        const tokenId = this.getTokenId(transfer.tokenType);
+        if (tokenId === -1) {
+          return { success: false, error: `Invalid token type: ${transfer.tokenType}` };
+        }
+        
+        users.push(transfer.userAddress);
+        tokenIds.push(tokenId);
+        amounts.push(transfer.amount);
+      }
+      
+      // Get server wallet with private key
+      const serverWallet = this.getServerWallet();
+      if (!serverWallet) {
+        return { success: false, error: "Server wallet not configured" };
+      }
+      
+      // Connect contract with server wallet
+      const contractWithSigner = this.contract.connect(serverWallet);
+      
+      // Execute batch auto-transfer
+      console.log("📡 Calling batchAutoTransfer...");
+      
+      const tx = await contractWithSigner.batchAutoTransfer(
+        users,
+        tokenIds,
+        amounts
+      );
+      
+      console.log("⏳ Batch transaction submitted:", tx.hash);
+      
+      // Wait for confirmation
+      const receipt = await tx.wait();
+      
+      if (receipt.status === 1) {
+        console.log("✅ Batch auto-transfer successful:", tx.hash);
+        return { success: true, txHash: tx.hash };
+      } else {
+        return { success: false, error: "Batch transaction failed" };
+      }
+      
+    } catch (error: any) {
+      console.error("❌ Batch auto-transfer failed:", error);
+      return { success: false, error: error.reason || error.message || "Batch transfer failed" };
+    }
+  }
+
+  // Helper: Get server wallet from private key
+  private getServerWallet(): ethers.Wallet | null {
+    const privateKey = process.env.PRIVATE_KEY || process.env.CLAIM_SIGNER_PRIVATE_KEY;
+    
+    if (!privateKey) {
+      console.error("❌ Server private key not configured");
+      return null;
+    }
+    
+    try {
+      return new ethers.Wallet(privateKey, this.provider);
+    } catch (error) {
+      console.error("❌ Invalid server private key:", error);
+      return null;
+    }
+  }
+
+  // Helper: Map token type to contract ID
+  private getTokenId(tokenType: string): number {
+    const tokenMap: { [key: string]: number } = {
+      'TOKEN1': 0,  // AIDOGE
+      'TOKEN2': 1,  // BOOP
+      'TOKEN3': 2,  // BOBOTRUM
+      'AIDOGE': 0,
+      'BOOP': 1,
+      'BOBOTRUM': 2,
+      'ARB': 2      // Alias for BOBOTRUM
+    };
+    
+    return tokenMap[tokenType.toUpperCase()] ?? -1;
+  }
+
+  // Helper: Check if user can receive transfer
+  async canUserReceiveTransfer(userAddress: string): Promise<boolean> {
+    if (!this.contract) {
+      return false;
+    }
+
+    try {
+      const stats = await this.contract.getUserTransferStats(userAddress);
+      return stats[4]; // canTransfer boolean from getUserTransferStats
+    } catch (error) {
+      console.warn("⚠️  Could not check user transfer eligibility:", error);
+      return true; // Default to allowing transfer
+    }
+  }
+
+  // Get user's current nonce from contract (legacy method for compatibility)
   async getUserNonce(userAddress: string): Promise<number> {
     if (!this.contract) {
       return 0;

@@ -188,56 +188,48 @@ export function registerSpinRoutes(app: Express) {
 
 // Helper function removed - no more accumulated rewards with auto-transfer
 
-// Automatic transfer functionality
+// Secure automatic transfer using the new SpinAutoTransferContract
 async function performAutomaticTransfer(
   walletAddress: string,
   tokenType: string,
   amount: string
 ): Promise<{ success: boolean; txHash?: string; error?: string }> {
   try {
+    console.log(`🚀 Attempting secure auto-transfer: ${amount} ${tokenType} to ${walletAddress}`);
+    
     // Check if free gas is enabled
     const isFreeGasEnabled = await storage.isFreeGasEnabled();
     if (!isFreeGasEnabled) {
-      return { success: false, error: "Free gas is disabled - tokens added to claimable balance" };
+      console.log("⚠️  Free gas disabled - user tokens will be lost");
+      return { success: false, error: "Free gas is disabled - tokens not transferred" };
     }
 
-    // Get token configuration
-    let tokenId: number;
-    switch (tokenType) {
-      case 'TOKEN1': tokenId = 0; break;
-      case 'TOKEN2': tokenId = 1; break;
-      case 'TOKEN3': tokenId = 2; break;
-      default: return { success: false, error: "Invalid token type" };
-    }
-
-    // Get token config from blockchain service
+    // Use the new secure blockchain service auto-transfer function
     const { blockchainService } = await import('./blockchain');
-    const tokenConfig = await blockchainService.getTokenConfig(tokenId);
     
-    if (!tokenConfig || !tokenConfig.isActive) {
-      return { success: false, error: "Token not configured or inactive" };
-    }
-
-    // Create a simple transfer using the backend wallet
-    const provider = new ethers.JsonRpcProvider(process.env.ARBITRUM_SEPOLIA_RPC);
-    const wallet = new ethers.Wallet(process.env.PRIVATE_KEY || '', provider);
-    
-    // ERC20 contract interface
-    const tokenContract = new ethers.Contract(
-      tokenConfig.tokenAddress,
-      ["function transfer(address to, uint256 amount) external returns (bool)"],
-      wallet
+    // Call the secure auto-transfer contract with comprehensive security
+    const result = await blockchainService.autoTransferTokens(
+      walletAddress,
+      tokenType,
+      amount
     );
-
-    // Perform the transfer
-    const tx = await tokenContract.transfer(walletAddress, amount);
-    await tx.wait();
-
-    console.log(`✅ Auto-transfer successful: ${amount} ${tokenType} to ${walletAddress}`);
-    return { success: true, txHash: tx.hash };
+    
+    if (result.success) {
+      console.log(`✅ Secure auto-transfer successful: ${result.txHash}`);
+      console.log(`   Token: ${tokenType}, Amount: ${amount}, User: ${walletAddress}`);
+      return result;
+    } else {
+      console.log(`⚠️  Secure auto-transfer failed: ${result.error}`);
+      // With auto-transfer model, failed transfers mean user loses the reward
+      // This ensures system security and prevents accumulated reward exploits
+      return result;
+    }
     
   } catch (error) {
-    console.error(`❌ Auto-transfer failed:`, error);
-    return { success: false, error: (error as Error).message };
+    console.error(`❌ Auto-transfer system error:`, error);
+    return { 
+      success: false, 
+      error: "Auto-transfer system temporarily unavailable - reward lost" 
+    };
   }
 }
