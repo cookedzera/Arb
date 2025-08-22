@@ -12,10 +12,24 @@ const claimRequestSchema = z.object({
 
 export function registerClaimRoutes(app: Express) {
   
+  // Rate limiting for claim requests (prevent rapid-fire claims)
+  const claimRateLimit = new Map<string, number>();
+  
   // Add a simple batch claim route that matches the frontend expectations
   app.post("/api/claim-batch", async (req, res) => {
     try {
       const { walletAddress, claims } = req.body;
+      
+      // Rate limiting: prevent claims within 5 seconds of each other per wallet
+      const now = Date.now();
+      const lastClaim = claimRateLimit.get(walletAddress) || 0;
+      if (now - lastClaim < 5000) {
+        return res.status(429).json({ 
+          error: "Please wait before making another claim request",
+          retryAfter: Math.ceil((5000 - (now - lastClaim)) / 1000)
+        });
+      }
+      claimRateLimit.set(walletAddress, now);
       
       if (!walletAddress || !claims || !Array.isArray(claims)) {
         return res.status(400).json({ error: "Invalid request data" });
@@ -134,25 +148,44 @@ export function registerClaimRoutes(app: Express) {
         return res.status(404).json({ error: "User not found for wallet address" });
       }
 
-      // Get current nonce from smart contract with retry mechanism
-      let baseNonce: number;
-      try {
-        // Add small delay to prevent race conditions
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const contractNonce = await blockchainService.getUserNonce(walletAddress);
-        baseNonce = contractNonce + 1; // Next nonce to use
-        console.log(`📊 User ${walletAddress} current nonce: ${contractNonce}, starting batch at: ${baseNonce}`);
-        
-        // Double-check nonce hasn't changed (anti-race condition)
-        const recheckNonce = await blockchainService.getUserNonce(walletAddress);
-        if (recheckNonce !== contractNonce) {
-          console.log(`⚠️ Nonce changed during generation, updating: ${contractNonce} -> ${recheckNonce}`);
-          baseNonce = recheckNonce + 1;
+      // Get current nonce from smart contract with robust retry mechanism
+      let baseNonce: number = (user.totalClaims || 0) + 1; // Initialize with fallback value
+      const maxRetries = 3;
+      let retryCount = 0;
+      
+      while (retryCount < maxRetries) {
+        try {
+          // Add progressive delay to prevent race conditions
+          await new Promise(resolve => setTimeout(resolve, 200 + (retryCount * 100)));
+          
+          const contractNonce = await blockchainService.getUserNonce(walletAddress);
+          baseNonce = contractNonce + 1; // Next nonce to use
+          console.log(`📊 User ${walletAddress} current nonce: ${contractNonce}, starting batch at: ${baseNonce} (attempt ${retryCount + 1})`);
+          
+          // Triple-check nonce stability (prevent race conditions)
+          await new Promise(resolve => setTimeout(resolve, 50));
+          const recheckNonce = await blockchainService.getUserNonce(walletAddress);
+          
+          if (recheckNonce === contractNonce) {
+            // Nonce is stable, we can proceed
+            break;
+          } else {
+            console.log(`⚠️ Nonce changed during generation, retrying: ${contractNonce} -> ${recheckNonce}`);
+            retryCount++;
+            if (retryCount >= maxRetries) {
+              baseNonce = recheckNonce + 1;
+              console.log(`🔄 Using final nonce after retries: ${baseNonce}`);
+            }
+          }
+        } catch (error) {
+          console.log(`⚠️ Nonce fetch attempt ${retryCount + 1} failed:`, error);
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            console.log("Warning: Could not get contract nonce after retries, using database nonce");
+            baseNonce = (user.totalClaims || 0) + 1;
+            break;
+          }
         }
-      } catch (error) {
-        console.log("Warning: Could not get contract nonce, using database nonce:", error);
-        baseNonce = (user.totalClaims || 0) + 1;
       }
 
       if (!process.env.CLAIM_SIGNER_PRIVATE_KEY) {
@@ -330,15 +363,43 @@ export function registerClaimRoutes(app: Express) {
       }
 
       // Get current nonce from smart contract to ensure synchronization
-      let nonce: number;
-      try {
-        // Get user's current nonce from the contract
-        const contractNonce = await blockchainService.getUserNonce(walletAddress);
-        nonce = contractNonce + 1; // Next nonce to use
-        console.log(`📊 User ${walletAddress} current nonce: ${contractNonce}, using: ${nonce}`);
-      } catch (error) {
-        console.log("Warning: Could not get contract nonce, using database nonce:", error);
-        nonce = (user.totalClaims || 0) + 1;
+      let nonce: number = (user.totalClaims || 0) + 1; // Initialize with fallback value
+      const maxRetries = 3;
+      let retryCount = 0;
+      
+      while (retryCount < maxRetries) {
+        try {
+          // Add progressive delay to prevent race conditions
+          await new Promise(resolve => setTimeout(resolve, 150 + (retryCount * 75)));
+          
+          const contractNonce = await blockchainService.getUserNonce(walletAddress);
+          nonce = contractNonce + 1; // Next nonce to use
+          console.log(`📊 User ${walletAddress} current nonce: ${contractNonce}, using: ${nonce} (attempt ${retryCount + 1})`);
+          
+          // Verify nonce stability
+          await new Promise(resolve => setTimeout(resolve, 50));
+          const recheckNonce = await blockchainService.getUserNonce(walletAddress);
+          
+          if (recheckNonce === contractNonce) {
+            // Nonce is stable, proceed
+            break;
+          } else {
+            console.log(`⚠️ Nonce changed, retrying: ${contractNonce} -> ${recheckNonce}`);
+            retryCount++;
+            if (retryCount >= maxRetries) {
+              nonce = recheckNonce + 1;
+              console.log(`🔄 Using final nonce: ${nonce}`);
+            }
+          }
+        } catch (error) {
+          console.log(`⚠️ Nonce fetch attempt ${retryCount + 1} failed:`, error);
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            console.log("Warning: Could not get contract nonce after retries, using database nonce");
+            nonce = (user.totalClaims || 0) + 1;
+            break;
+          }
+        }
       }
       
       const deadline = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours
