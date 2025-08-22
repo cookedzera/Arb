@@ -201,6 +201,21 @@ export class BlockchainService {
     }
   }
 
+  // Check actual ERC20 token balance of the contract
+  async getContractTokenBalance(tokenAddress: string): Promise<string> {
+    try {
+      console.log(`🔍 Checking balance for token ${tokenAddress} in contract ${this.config.contractAddress}`);
+      const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, this.provider);
+      const balance = await tokenContract.balanceOf(this.config.contractAddress);
+      const balanceString = balance.toString();
+      console.log(`💰 Token ${tokenAddress} balance: ${balanceString}`);
+      return balanceString;
+    } catch (error) {
+      console.error(`❌ Error getting balance for token ${tokenAddress}:`, error);
+      return "0";
+    }
+  }
+
   // Generate claim signature (server-side signing)
   async generateClaimSignature(
     userAddress: string,

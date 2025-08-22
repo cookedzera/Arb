@@ -340,6 +340,47 @@ export function registerClaimRoutes(app: Express) {
     }
   });
 
+  // Debug endpoint to check token balances directly
+  app.get("/api/debug/token-balances", async (req, res) => {
+    try {
+      const contractAddress = await blockchainService.getContractAddress();
+      console.log("🧪 Debug: Checking token balances for contract:", contractAddress);
+      
+      const results = [];
+      const tokenAddresses = [
+        "0x09E18590E8F76b6Cf471B3CD30676B46Ef36F7CD", // Token 0 
+        "0xaeA5bb4F5b5524dee0E3F931911c8F8df4576E19", // Token 1
+        "0x0E1CD6557D2BA59C61c75850E674C2AD73253952"  // Token 2
+      ];
+      
+      for (let i = 0; i < tokenAddresses.length; i++) {
+        const tokenAddress = tokenAddresses[i];
+        try {
+          const balance = await blockchainService.getContractTokenBalance(tokenAddress);
+          results.push({
+            tokenId: i,
+            tokenAddress,
+            balance,
+            status: "success"
+          });
+        } catch (error) {
+          results.push({
+            tokenId: i,
+            tokenAddress,
+            balance: "0",
+            status: "error",
+            error: (error as Error).message
+          });
+        }
+      }
+      
+      res.json({ contractAddress, results });
+    } catch (error) {
+      console.error('Debug token balances error:', error);
+      res.status(500).json({ error: "Failed to check token balances" });
+    }
+  });
+
   // Get claim contract info
   app.get("/api/claim/contract-info", async (req, res) => {
     try {
@@ -348,17 +389,26 @@ export function registerClaimRoutes(app: Express) {
       const isPaused = await blockchainService.isContractPaused();
       const networkInfo = await blockchainService.getNetworkInfo();
 
-      // Get token configurations
+      // Get token configurations with actual balances
       const tokenConfigs = [];
       for (let i = 0; i < 3; i++) {
         const config = await blockchainService.getTokenConfig(i);
         if (config && config.isActive) {
+          // Get actual ERC20 balance of the contract
+          let actualBalance = "0";
+          try {
+            actualBalance = await blockchainService.getContractTokenBalance(config.tokenAddress);
+          } catch (error) {
+            console.error(`Failed to get balance for token ${i} (${config.tokenAddress}):`, error);
+          }
           const tokenInfo = await blockchainService.getTokenInfo(config.tokenAddress);
+          
           tokenConfigs.push({
             id: i,
             tokenAddress: config.tokenAddress,
             totalDistributed: config.totalDistributed,
-            reserveBalance: config.reserveBalance,
+            reserveBalance: config.reserveBalance, // Contract's internal tracking
+            actualBalance: actualBalance, // Real ERC20 balance
             isActive: config.isActive,
             // Only include token info if available (avoid errors from bad tokens)
             ...(tokenInfo && {
