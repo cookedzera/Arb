@@ -75,6 +75,28 @@ export const tokenClaims = pgTable("token_claims", {
   timestamp: timestamp("timestamp").default(sql`now()`),
 });
 
+// New table for token voting system
+export const tokenVotes = pgTable("token_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  tokenName: text("token_name").notNull(),
+  tokenSymbol: text("token_symbol").notNull(),
+  tokenAddress: text("token_address"), // Optional if user doesn't know
+  description: text("description"),
+  votes: integer("votes").default(1),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  lastVotedAt: timestamp("last_voted_at").default(sql`now()`),
+});
+
+// System settings for admin control
+export const systemSettings = pgTable("system_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  settingKey: text("setting_key").notNull().unique(),
+  settingValue: text("setting_value").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -99,6 +121,17 @@ export const insertTokenClaimSchema = createInsertSchema(tokenClaims).omit({
   timestamp: true,
 });
 
+export const insertTokenVoteSchema = createInsertSchema(tokenVotes).omit({
+  id: true,
+  createdAt: true,
+  lastVotedAt: true,
+});
+
+export const insertSystemSettingSchema = createInsertSchema(systemSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertGameStats = z.infer<typeof insertGameStatsSchema>;
@@ -109,3 +142,7 @@ export type InsertSpinResult = z.infer<typeof insertSpinResultSchema>;
 export type SpinResult = typeof spinResults.$inferSelect;
 export type InsertTokenClaim = z.infer<typeof insertTokenClaimSchema>;
 export type TokenClaim = typeof tokenClaims.$inferSelect;
+export type InsertTokenVote = z.infer<typeof insertTokenVoteSchema>;
+export type TokenVote = typeof tokenVotes.$inferSelect;
+export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
+export type SystemSetting = typeof systemSettings.$inferSelect;

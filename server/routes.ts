@@ -23,6 +23,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register share routes for Farcaster
   registerShareRoutes(app);
+  
+  // Register voting routes for token suggestions
+  const { registerVotingRoutes } = await import('./voting-routes');
+  registerVotingRoutes(app);
   // Update user data (for fixing Farcaster information)
   app.patch("/api/user/:id", async (req, res) => {
     try {

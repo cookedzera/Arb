@@ -105,7 +105,7 @@ export function registerSpinRoutes(app: Express) {
         transactionHash: null // No transaction yet (server-side spin)
       });
       
-      // Update user's accumulated rewards if they won
+      // Update user's rewards - attempt automatic transfer first
       if (spinResult.isWin) {
         const rewardAmountBigInt = BigInt(spinResult.rewardAmount);
         
@@ -113,20 +113,50 @@ export function registerSpinRoutes(app: Express) {
           totalWins: (user.totalWins || 0) + 1
         };
         
-        // Add to appropriate accumulated token balance
-        switch (spinResult.tokenType) {
-          case 'TOKEN1':
-            const currentToken1 = BigInt(user.accumulatedToken1 || "0");
-            updateData.accumulatedToken1 = (currentToken1 + rewardAmountBigInt).toString();
-            break;
-          case 'TOKEN2':
-            const currentToken2 = BigInt(user.accumulatedToken2 || "0");
-            updateData.accumulatedToken2 = (currentToken2 + rewardAmountBigInt).toString();
-            break;
-          case 'TOKEN3':
-            const currentToken3 = BigInt(user.accumulatedToken3 || "0");
-            updateData.accumulatedToken3 = (currentToken3 + rewardAmountBigInt).toString();
-            break;
+        // Attempt automatic transfer to user's wallet
+        let transferResult = null;
+        if (user.walletAddress) {
+          transferResult = await performAutomaticTransfer(
+            user.walletAddress,
+            spinResult.tokenType,
+            rewardAmountBigInt.toString()
+          );
+        }
+        
+        if (transferResult && transferResult.success) {
+          // Automatic transfer successful - track in claimed totals
+          console.log(`✅ Auto-transfer successful: ${transferResult.txHash}`);
+          switch (spinResult.tokenType) {
+            case 'TOKEN1':
+              const currentClaimed1 = BigInt(user.claimedToken1 || "0");
+              updateData.claimedToken1 = (currentClaimed1 + rewardAmountBigInt).toString();
+              break;
+            case 'TOKEN2':
+              const currentClaimed2 = BigInt(user.claimedToken2 || "0");
+              updateData.claimedToken2 = (currentClaimed2 + rewardAmountBigInt).toString();
+              break;
+            case 'TOKEN3':
+              const currentClaimed3 = BigInt(user.claimedToken3 || "0");
+              updateData.claimedToken3 = (currentClaimed3 + rewardAmountBigInt).toString();
+              break;
+          }
+        } else {
+          // Auto-transfer failed - add to accumulated for manual claim later
+          console.log(`⚠️ Auto-transfer failed, adding to accumulated balance:`, transferResult?.error);
+          switch (spinResult.tokenType) {
+            case 'TOKEN1':
+              const currentToken1 = BigInt(user.accumulatedToken1 || "0");
+              updateData.accumulatedToken1 = (currentToken1 + rewardAmountBigInt).toString();
+              break;
+            case 'TOKEN2':
+              const currentToken2 = BigInt(user.accumulatedToken2 || "0");
+              updateData.accumulatedToken2 = (currentToken2 + rewardAmountBigInt).toString();
+              break;
+            case 'TOKEN3':
+              const currentToken3 = BigInt(user.accumulatedToken3 || "0");
+              updateData.accumulatedToken3 = (currentToken3 + rewardAmountBigInt).toString();
+              break;
+          }
         }
         
         // Combine win data with spin count update
@@ -179,4 +209,58 @@ async function getUserAccumulatedRewards(userId: string) {
     BOOP: user.accumulatedToken2 || "0", 
     ARB: user.accumulatedToken3 || "0"
   };
+}
+
+// Automatic transfer functionality
+async function performAutomaticTransfer(
+  walletAddress: string,
+  tokenType: string,
+  amount: string
+): Promise<{ success: boolean; txHash?: string; error?: string }> {
+  try {
+    // Check if free gas is enabled
+    const isFreeGasEnabled = await storage.isFreeGasEnabled();
+    if (!isFreeGasEnabled) {
+      return { success: false, error: "Free gas is disabled - tokens added to claimable balance" };
+    }
+
+    // Get token configuration
+    let tokenId: number;
+    switch (tokenType) {
+      case 'TOKEN1': tokenId = 0; break;
+      case 'TOKEN2': tokenId = 1; break;
+      case 'TOKEN3': tokenId = 2; break;
+      default: return { success: false, error: "Invalid token type" };
+    }
+
+    // Get token config from blockchain service
+    const { blockchainService } = await import('./blockchain');
+    const tokenConfig = await blockchainService.getTokenConfig(tokenId);
+    
+    if (!tokenConfig || !tokenConfig.isActive) {
+      return { success: false, error: "Token not configured or inactive" };
+    }
+
+    // Create a simple transfer using the backend wallet
+    const provider = new ethers.JsonRpcProvider(process.env.ARBITRUM_SEPOLIA_RPC);
+    const wallet = new ethers.Wallet(process.env.PRIVATE_KEY || '', provider);
+    
+    // ERC20 contract interface
+    const tokenContract = new ethers.Contract(
+      tokenConfig.tokenAddress,
+      ["function transfer(address to, uint256 amount) external returns (bool)"],
+      wallet
+    );
+
+    // Perform the transfer
+    const tx = await tokenContract.transfer(walletAddress, amount);
+    await tx.wait();
+
+    console.log(`✅ Auto-transfer successful: ${amount} ${tokenType} to ${walletAddress}`);
+    return { success: true, txHash: tx.hash };
+    
+  } catch (error) {
+    console.error(`❌ Auto-transfer failed:`, error);
+    return { success: false, error: (error as Error).message };
+  }
 }

@@ -7,6 +7,7 @@ import { useGameState } from "@/hooks/use-game-state";
 import SpinWheelSimple from "@/components/spin-wheel-simple";
 import CountdownTimer from "@/components/countdown-timer";
 import Navigation from "@/components/navigation";
+import TokenVoting from "@/components/token-voting";
 import { WalletConnectCompact } from "@/components/wallet-connect-compact";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { formatUnits } from "viem";
@@ -741,104 +742,12 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Token Collection */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="relative rounded-2xl p-4 text-white overflow-hidden"
-          style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2), 0 1px 8px rgba(255, 255, 255, 0.1) inset',
-            border: 'none',
-            outline: 'none'
-          }}
-        >
-          {/* Top highlight */}
-          <div 
-            className="absolute top-0 left-0 right-0 h-px"
-            style={{
-              background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)'
-            }}
-          />
-          
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-bold text-white">💰 Available to Claim</h3>
-              <span className="text-xs text-white/60">3 rewards</span>
-            </div>
-            
-            <div className="space-y-2">
-            {tokenData.map((token, index) => {
-              const hasBalance = BigInt(token.amount) > 0;
-              const formattedAmount = formatTokenAmount(token.amount);
-              
-              // Define unique accent colors for each token
-              const getTokenColor = (tokenName: string) => {
-                switch (tokenName) {
-                  case 'AIDOGE': return '#3b82f6'; // Blue
-                  case 'BOOP': return '#10b981'; // Green  
-                  case 'ARB': return '#4A90E2'; // Arbitrum blue
-                  default: return '#6366f1'; // Purple
-                }
-              };
-              
-              return (
-                <motion.div
-                  key={index}
-                  className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-200"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      {token.icon ? (
-                        <img src={token.icon} alt={token.name} className="w-8 h-8 rounded-lg" />
-                      ) : (
-                        <div 
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                          style={{ backgroundColor: getTokenColor(token.name) }}
-                        >
-                          {token.name.charAt(0)}
-                        </div>
-                      )}
-                      <span className="absolute -top-1 -right-1 text-xs">{token.emoji}</span>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-white text-sm">{token.name}</div>
-                      <div className="text-xs text-white/60">Unlock in {token.time}</div>
-                    </div>
-                  </div>
-                  <div className={`font-bold text-sm ${hasBalance ? 'text-green-400' : 'text-white/50'}`}>
-                    {formattedAmount}
-                  </div>
-                </motion.div>
+        {/* Token Voting Section - Replace Token Collection */}
+        <TokenVoting 
+          userId={user?.id} 
+          isAuthenticated={user && !user.isTemporary}
+        />
 
-              );
-            })}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Global Claim All Button */}
-        {balances && (Number(balances.token1) > 0 || Number(balances.token2) > 0 || Number(balances.token3) > 0) && (
-          <motion.div
-            className="mt-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <Button
-              onClick={() => {}}
-              disabled={false}
-              className="w-full h-10 text-sm bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transition-all duration-200 rounded-xl"
-            >
-Claim All Rewards
-            </Button>
-          </motion.div>
-        )}
 
       </div>
 

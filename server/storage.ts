@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type GameStats, type InsertGameStats, type SpinResult, type InsertSpinResult, type Token, type InsertToken, type TokenClaim, type InsertTokenClaim, users, gameStats, spinResults, tokens, tokenClaims } from "@shared/schema";
+import { type User, type InsertUser, type GameStats, type InsertGameStats, type SpinResult, type InsertSpinResult, type Token, type InsertToken, type TokenClaim, type InsertTokenClaim, type TokenVote, type InsertTokenVote, type SystemSetting, type InsertSystemSetting, users, gameStats, spinResults, tokens, tokenClaims, tokenVotes, systemSettings } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -28,6 +28,15 @@ export interface IStorage {
   getUserClaims(userId: string): Promise<TokenClaim[]>;
   canUserClaim(userId: string): Promise<{ canClaim: boolean; totalValueUSD: string }>;
   getAllUsers(): Promise<User[]>;
+  // Token voting methods
+  createTokenVote(vote: InsertTokenVote): Promise<TokenVote>;
+  getTokenVotes(): Promise<TokenVote[]>;
+  voteForToken(userId: string, tokenName: string): Promise<TokenVote | undefined>;
+  getPopularTokens(limit: number): Promise<TokenVote[]>;
+  // System settings methods
+  getSetting(key: string): Promise<SystemSetting | undefined>;
+  setSetting(key: string, value: string, description?: string): Promise<SystemSetting>;
+  isFreeGasEnabled(): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -233,6 +242,102 @@ export class DatabaseStorage implements IStorage {
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
   }
+
+  // Token voting methods
+  async createTokenVote(vote: InsertTokenVote): Promise<TokenVote> {
+    const [newVote] = await db
+      .insert(tokenVotes)
+      .values(vote)
+      .returning();
+    return newVote;
+  }
+
+  async getTokenVotes(): Promise<TokenVote[]> {
+    return await db
+      .select()
+      .from(tokenVotes)
+      .orderBy(desc(tokenVotes.votes));
+  }
+
+  async voteForToken(userId: string, tokenName: string): Promise<TokenVote | undefined> {
+    // Check if user already voted for this token
+    const [existingVote] = await db
+      .select()
+      .from(tokenVotes)
+      .where(sql`${tokenVotes.userId} = ${userId} AND ${tokenVotes.tokenName} = ${tokenName}`);
+
+    if (existingVote) {
+      // Update existing vote
+      const [updatedVote] = await db
+        .update(tokenVotes)
+        .set({ 
+          votes: sql`${tokenVotes.votes} + 1`,
+          lastVotedAt: new Date()
+        })
+        .where(eq(tokenVotes.id, existingVote.id))
+        .returning();
+      return updatedVote;
+    } else {
+      // Create new vote
+      return await this.createTokenVote({
+        userId,
+        tokenName,
+        tokenSymbol: tokenName.substring(0, 8).toUpperCase(),
+        votes: 1
+      });
+    }
+  }
+
+  async getPopularTokens(limit: number = 10): Promise<TokenVote[]> {
+    return await db
+      .select()
+      .from(tokenVotes)
+      .orderBy(desc(tokenVotes.votes))
+      .limit(limit);
+  }
+
+  // System settings methods
+  async getSetting(key: string): Promise<SystemSetting | undefined> {
+    const [setting] = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.settingKey, key));
+    return setting || undefined;
+  }
+
+  async setSetting(key: string, value: string, description?: string): Promise<SystemSetting> {
+    const existingSetting = await this.getSetting(key);
+    
+    if (existingSetting) {
+      // Update existing setting
+      const [updatedSetting] = await db
+        .update(systemSettings)
+        .set({ 
+          settingValue: value,
+          description: description || existingSetting.description,
+          updatedAt: new Date()
+        })
+        .where(eq(systemSettings.id, existingSetting.id))
+        .returning();
+      return updatedSetting;
+    } else {
+      // Create new setting
+      const [newSetting] = await db
+        .insert(systemSettings)
+        .values({
+          settingKey: key,
+          settingValue: value,
+          description: description || null
+        })
+        .returning();
+      return newSetting;
+    }
+  }
+
+  async isFreeGasEnabled(): Promise<boolean> {
+    const setting = await this.getSetting('FREE_GAS_ENABLED');
+    return setting ? setting.settingValue === 'true' : true; // Default to true
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -286,6 +391,7 @@ export class MemStorage implements IStorage {
         claimedToken3: "0",
         lastClaimDate: null,
         lastSpinDate: new Date(),
+        totalClaims: 0,
         isTemporary: false,
         createdAt: new Date(),
       };
@@ -373,6 +479,7 @@ export class MemStorage implements IStorage {
       claimedToken3: "0",
       lastSpinDate: null,
       lastClaimDate: null,
+      totalClaims: 0,
       isTemporary: insertUser.isTemporary || false,
       createdAt: new Date(),
     };
@@ -515,6 +622,57 @@ export class MemStorage implements IStorage {
 
   async canUserClaim(userId: string): Promise<{ canClaim: boolean; totalValueUSD: string }> {
     return { canClaim: false, totalValueUSD: '0' };
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  // Token voting methods (placeholder implementations)
+  async createTokenVote(vote: InsertTokenVote): Promise<TokenVote> {
+    const id = randomUUID();
+    const tokenVote: TokenVote = {
+      ...vote,
+      userId: vote.userId || null,
+      votes: vote.votes || 1,
+      id,
+      createdAt: new Date(),
+      lastVotedAt: new Date(),
+    };
+    return tokenVote;
+  }
+
+  async getTokenVotes(): Promise<TokenVote[]> {
+    return [];
+  }
+
+  async voteForToken(userId: string, tokenName: string): Promise<TokenVote | undefined> {
+    return undefined;
+  }
+
+  async getPopularTokens(limit: number): Promise<TokenVote[]> {
+    return [];
+  }
+
+  // System settings methods (placeholder implementations)
+  async getSetting(key: string): Promise<SystemSetting | undefined> {
+    return undefined;
+  }
+
+  async setSetting(key: string, value: string, description?: string): Promise<SystemSetting> {
+    const id = randomUUID();
+    const setting: SystemSetting = {
+      id,
+      settingKey: key,
+      settingValue: value,
+      description: description || null,
+      updatedAt: new Date(),
+    };
+    return setting;
+  }
+
+  async isFreeGasEnabled(): Promise<boolean> {
+    return true; // Default to free gas for memory storage
   }
 }
 
