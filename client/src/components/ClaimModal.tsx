@@ -3,6 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Coins, ExternalLink } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { useAccount, useConnect, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { parseEther } from 'viem';
+import { CLAIM_CONTRACT_ABI } from '@/lib/claim-contract-abi';
 
 interface ClaimModalProps {
   isOpen: boolean;
@@ -16,6 +19,14 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
   const [claimAmount, setClaimAmount] = useState('0');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Wagmi hooks for Farcaster wallet integration
+  const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { writeContract, data: txHash, isPending: isWriting } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
 
   // Get claimable balances
   const { data: claimableData, isLoading: loadingBalances } = useQuery<{
@@ -52,12 +63,19 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
     }
   });
 
-  // Handle claim
+  // Handle Farcaster wallet connection
+  const handleConnect = async () => {
+    if (connectors[0]) {
+      await connect({ connector: connectors[0] });
+    }
+  };
+
+  // Handle claim with Farcaster wallet
   const handleClaim = async () => {
-    if (!walletAddress) {
+    if (!isConnected || !address) {
       toast({
-        title: "Wallet Required",
-        description: "Please connect your wallet to claim tokens",
+        title: "Connect Wallet",
+        description: "Connect your Farcaster wallet to claim tokens",
         variant: "destructive"
       });
       return;
@@ -73,23 +91,31 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
     }
 
     try {
+      // Generate claim signature from server
       toast({
         title: "Preparing Claim",
         description: "Generating claim signature..."
       });
 
-      await generateSignature.mutateAsync({
+      const signatureData = await generateSignature.mutateAsync({
         tokenId: selectedToken,
         amount: claimAmount,
-        walletAddress
+        walletAddress: address
       });
 
+      // Execute transaction through Farcaster wallet
       toast({
-        title: "Claim Ready",
-        description: "Contract deployment coming soon!"
+        title: "Confirm Transaction",
+        description: "Please confirm the transaction in your wallet"
       });
 
-      onClose();
+      await writeContract({
+        address: contractInfo?.contractAddress as `0x${string}`,
+        abi: CLAIM_CONTRACT_ABI,
+        functionName: 'claimTokens',
+        args: [signatureData.claimRequest],
+      });
+
     } catch (error: any) {
       toast({
         title: "Claim Failed",
@@ -258,26 +284,47 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleClaim}
-              disabled={
-                !walletAddress ||
-                parseFloat(claimAmount) <= 0 ||
-                generateSignature.isPending
-              }
-              className="flex-1"
-              data-testid="button-claim"
-            >
-              {generateSignature.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Preparing...
-                </>
-              ) : (
-                'Claim Tokens'
-              )}
-            </Button>
+            
+            {!isConnected ? (
+              <Button
+                onClick={handleConnect}
+                className="flex-1"
+                data-testid="button-connect-wallet"
+              >
+                Connect Farcaster Wallet
+              </Button>
+            ) : (
+              <Button
+                onClick={handleClaim}
+                disabled={!claimAmount || parseFloat(claimAmount) <= 0 || isWriting || isConfirming}
+                className="flex-1"
+                data-testid="button-claim"
+              >
+                {isWriting || isConfirming ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isWriting ? 'Confirm in Wallet...' : 'Confirming...'}
+                  </>
+                ) : (
+                  'Claim Tokens'
+                )}
+              </Button>
+            )}
           </div>
+          
+          {isConnected && (
+            <div className="text-xs text-green-600 dark:text-green-400 text-center mt-2">
+              Connected: {address?.slice(0, 8)}...{address?.slice(-6)}
+            </div>
+          )}
+          
+          {isConfirmed && (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mt-3">
+              <p className="text-sm text-green-700 dark:text-green-300 text-center">
+                ✅ Tokens claimed successfully! Transaction: {txHash?.slice(0, 10)}...
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
