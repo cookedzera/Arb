@@ -18,6 +18,7 @@ interface ClaimModalProps {
 export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModalProps) {
   const [selectedToken, setSelectedToken] = useState(0);
   const [claimAmount, setClaimAmount] = useState('0');
+  const [isClaimingAll, setIsClaimingAll] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -72,7 +73,118 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
     }
   };
 
-  // Handle claim with Farcaster wallet
+  // Handle claiming all tokens
+  const handleClaimAll = async () => {
+    setIsClaimingAll(true);
+    
+    if (!isConnected || !address) {
+      toast({
+        title: "Connect Wallet",
+        description: "Connect your Farcaster wallet to claim tokens",
+        variant: "destructive"
+      });
+      setIsClaimingAll(false);
+      return;
+    }
+
+    // Check if we need to switch to Arbitrum Sepolia
+    if (chainId !== arbitrumSepolia.id) {
+      try {
+        toast({
+          title: "Switching Network",
+          description: "Switching to Arbitrum Sepolia..."
+        });
+        
+        await switchChain({ chainId: arbitrumSepolia.id });
+        
+        toast({
+          title: "Network Switched",
+          description: "Successfully switched to Arbitrum Sepolia"
+        });
+      } catch (error: any) {
+        toast({
+          title: "Network Switch Failed",
+          description: error.message || "Failed to switch to Arbitrum Sepolia",
+          variant: "destructive"
+        });
+        setIsClaimingAll(false);
+        return;
+      }
+    }
+
+    // Check if user has any tokens to claim
+    const hasTokens = claimableData && (
+      parseFloat(claimableData.token1) > 0 || 
+      parseFloat(claimableData.token2) > 0 || 
+      parseFloat(claimableData.token3) > 0
+    );
+
+    if (!hasTokens) {
+      toast({
+        title: "No Tokens to Claim",
+        description: "You don't have any tokens available to claim",
+        variant: "destructive"
+      });
+      setIsClaimingAll(false);
+      return;
+    }
+
+    try {
+      // Claim each token that has a balance > 0
+      const claimPromises = [];
+      
+      if (parseFloat(claimableData!.token1) > 0) {
+        claimPromises.push(claimSingleToken(0, claimableData!.token1));
+      }
+      if (parseFloat(claimableData!.token2) > 0) {
+        claimPromises.push(claimSingleToken(1, claimableData!.token2));
+      }
+      if (parseFloat(claimableData!.token3) > 0) {
+        claimPromises.push(claimSingleToken(2, claimableData!.token3));
+      }
+
+      toast({
+        title: "Processing Claims",
+        description: `Claiming ${claimPromises.length} token types...`
+      });
+
+      await Promise.all(claimPromises);
+
+      toast({
+        title: "All Tokens Claimed!",
+        description: "Successfully claimed all available tokens"
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Claim Failed",
+        description: error.message || "Failed to claim tokens",
+        variant: "destructive"
+      });
+    }
+    
+    setIsClaimingAll(false);
+  };
+
+  // Helper function to claim a single token
+  const claimSingleToken = async (tokenId: number, amount: string) => {
+    // Generate claim signature from server
+    const signatureData = await generateSignature.mutateAsync({
+      tokenId,
+      amount,
+      walletAddress: address!
+    });
+
+    // Execute transaction through Farcaster wallet
+    await writeContract({
+      address: contractInfo?.contractAddress as `0x${string}`,
+      abi: CLAIM_CONTRACT_ABI,
+      functionName: 'claimTokens',
+      args: [signatureData.claimRequest],
+    });
+  };
+
+  // Handle claim with Farcaster wallet (single token)
   const handleClaim = async () => {
     if (!isConnected || !address) {
       toast({
@@ -320,21 +432,39 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
                 Connect Farcaster Wallet
               </Button>
             ) : (
-              <Button
-                onClick={handleClaim}
-                disabled={!claimAmount || parseFloat(claimAmount) <= 0 || isWriting || isConfirming}
-                className="flex-1"
-                data-testid="button-claim"
-              >
-                {isWriting || isConfirming ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isWriting ? 'Confirm in Wallet...' : 'Confirming...'}
-                  </>
-                ) : (
-                  'Claim Tokens'
-                )}
-              </Button>
+              <div className="flex-1 space-y-2">
+                <Button
+                  onClick={handleClaimAll}
+                  disabled={isClaimingAll || isWriting || isConfirming}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  data-testid="button-claim-all"
+                >
+                  {isClaimingAll ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Claiming All...
+                    </>
+                  ) : (
+                    'Claim All Rewards'
+                  )}
+                </Button>
+                <Button
+                  onClick={handleClaim}
+                  disabled={!claimAmount || parseFloat(claimAmount) <= 0 || isWriting || isConfirming}
+                  className="w-full"
+                  variant="outline"
+                  data-testid="button-claim-single"
+                >
+                  {isWriting || isConfirming ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {isWriting ? 'Confirm in Wallet...' : 'Confirming...'}
+                    </>
+                  ) : (
+                    'Claim Selected Amount'
+                  )}
+                </Button>
+              </div>
             )}
           </div>
           
