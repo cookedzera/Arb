@@ -64,6 +64,8 @@ A dynamic web application that combines server-based gameplay with blockchain to
 - ✅ **User Experience**: Seamless wallet connection and transaction flow in Farcaster environment
 - ✅ **Critical Bug Fixed**: Homepage now displays all accumulated unclaimed tokens from previous days, not just today's tokens
 - ✅ **Endpoint Correction**: Fixed both TokenBalanceCard and Homepage to use correct `/claimable` endpoint instead of `/balances`
+- ✅ **Display Formatting Fixed**: Homepage now shows exact values (1, 0.50, 0.25) matching ClaimModal instead of (+1, +0, +0)
+- ✅ **Decimal Precision Added**: Token amounts now display with proper decimal places for fractional balances
 
 ### Previous Completion - January 21, 2025 - Contract Deployment and Integration
 - ✅ Created secure ClaimOnlyContract with emergency controls

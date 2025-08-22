@@ -181,7 +181,7 @@ export default function Home() {
 
 
 
-  // Memoize expensive token formatting function
+  // Memoize expensive token formatting function to match ClaimModal display
   const formatTokenAmount = useCallback((amount: string, decimals = 18) => {
     try {
       const parsed = parseFloat(formatUnits(BigInt(amount), decimals));
@@ -189,6 +189,8 @@ export default function Home() {
         return `${(parsed / 1000).toFixed(1)}K`;
       } else if (parsed >= 1) {
         return `${parsed.toFixed(0)}`;
+      } else if (parsed > 0) {
+        return `${parsed.toFixed(2)}`;
       }
       return "0";
     } catch {
@@ -810,7 +812,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className={`font-bold text-sm ${hasBalance ? 'text-green-400' : 'text-white/50'}`}>
-                    +{formattedAmount}
+                    {formattedAmount}
                   </div>
                 </motion.div>
 
