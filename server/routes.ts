@@ -17,9 +17,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register new spin routes (server-based, gas-free)
   registerSpinRoutes(app);
   
-  // Register claim routes (blockchain-based for token claiming)
-  const { registerClaimRoutes } = await import('./claim-routes');
-  registerClaimRoutes(app);
+  // Claim routes removed - auto-transfer only now
   
   // Register share routes for Farcaster
   registerShareRoutes(app);
@@ -322,115 +320,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user's accumulated token balances - handle temporary users
+  // Auto-transfer status - no accumulated balances anymore
   app.get("/api/user/:id/balances", async (req, res) => {
     try {
-      // Handle temporary users (fun-only mode) - return zero balances
-      if (req.params.id.startsWith('temp_')) {
-        console.log(`🎮 Returning fun-only balances for: ${req.params.id}`);
-        return res.json({
-          token1: "0",
-          token2: "0", 
-          token3: "0",
-          canClaim: false,
-          hasMinimumBalance: false
-        });
-      }
-      
-      // Run balance and claim queries in parallel for database users
-      const [balances, claimInfo] = await Promise.all([
-        storage.getUserAccumulatedBalances(req.params.id),
-        storage.canUserClaim(req.params.id)
-      ]);
-      
-      res.json({ ...balances, ...claimInfo });
+      // All users get the same response: auto-transfer enabled
+      res.json({
+        autoTransferEnabled: true,
+        message: "Tokens are automatically transferred to your wallet when you win"
+      });
     } catch (error) {
-      console.error('Get balances error:', error);
-      res.status(500).json({ error: "Failed to get user balances" });
+      console.error('Get auto-transfer status error:', error);
+      res.status(500).json({ error: "Failed to get auto-transfer status" });
     }
   });
 
-  // Claim accumulated tokens
+  // Claim endpoint removed - auto-transfer only now
   app.post("/api/claim", async (req, res) => {
-    try {
-      const { userId } = req.body;
-      
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      if (!user.walletAddress) {
-        return res.status(400).json({ error: "Wallet address required for claiming" });
-      }
-
-      const claimInfo = await storage.canUserClaim(userId);
-      
-      // For testing: allow claims even if threshold not met
-      console.log("🧪 TESTING MODE - Force claim: Bypassing minimum threshold requirements");
-
-      const balances = await storage.getUserAccumulatedBalances(userId);
-      
-      // Token addresses will be configured when contracts are deployed
-      const tokenAddresses = await blockchainService.getTokenAddresses();
-
-      let transactionHash = null;
-      let claimStatus = "pending";
-
-      try {
-        // For now, we'll simulate the transfer and just record the claim
-        // In production, you'd batch transfer all tokens in a single transaction
-        console.log(`🚀 Claiming tokens for user ${userId}:`);
-        console.log(`  TOKEN1: ${balances.token1}`);
-        console.log(`  TOKEN2: ${balances.token2}`);
-        console.log(`  TOKEN3: ${balances.token3}`);
-        console.log(`  Total Value: $${claimInfo.totalValueUSD}`);
-
-        // Create the claim record
-        const tokenClaim = await storage.createTokenClaim({
-          userId,
-          token1Amount: balances.token1,
-          token2Amount: balances.token2,
-          token3Amount: balances.token3,
-          totalValueUSD: claimInfo.totalValueUSD,
-          transactionHash: null, // Will be updated when transaction is confirmed
-          status: "pending"
-        });
-
-        // Reset user's accumulated balances and update claimed totals
-        await storage.updateUser(userId, {
-          accumulatedToken1: "0",
-          accumulatedToken2: "0", 
-          accumulatedToken3: "0",
-          claimedToken1: (BigInt(user.claimedToken1 || '0') + BigInt(balances.token1)).toString(),
-          claimedToken2: (BigInt(user.claimedToken2 || '0') + BigInt(balances.token2)).toString(),
-          claimedToken3: (BigInt(user.claimedToken3 || '0') + BigInt(balances.token3)).toString(),
-          lastClaimDate: new Date()
-        });
-
-        res.json({ 
-          success: true, 
-          claim: tokenClaim,
-          message: "Tokens claimed successfully! They will be transferred to your wallet soon."
-        });
-
-      } catch (error) {
-        console.error("❌ Claim failed:", error);
-        res.status(500).json({ error: "Failed to process claim" });
-      }
-    } catch (error) {
-      res.status(500).json({ error: "Failed to claim tokens" });
-    }
+    res.status(410).json({ 
+      error: "Claiming is no longer available",
+      message: "Tokens are now automatically transferred to your wallet when you win!"
+    });
   });
 
-  // Get user's claim history
+  // Claim history endpoint removed - auto-transfer only now
   app.get("/api/user/:id/claims", async (req, res) => {
-    try {
-      const claims = await storage.getUserClaims(req.params.id);
-      res.json(claims);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get user claims" });
-    }
+    res.status(410).json({ 
+      error: "Claim history is no longer available",
+      message: "Tokens are now automatically transferred to your wallet!"
+    });
   });
 
   // Token management routes

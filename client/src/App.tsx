@@ -7,7 +7,6 @@ import { useEffect } from "react";
 // Direct imports
 import Home from "@/pages/home";
 import Profile from "@/pages/profile";
-import TokenCollection from "@/pages/token-collection";
 import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 import Leaderboard from "@/pages/leaderboard";
@@ -20,7 +19,6 @@ function Router() {
     <div className="page-transition gpu-accelerated">
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/tokens" component={TokenCollection} />
         <Route path="/profile" component={Profile} />
         <Route path="/leaderboard" component={Leaderboard} />
         <Route path="/admin" component={Admin} />

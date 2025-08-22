@@ -141,22 +141,9 @@ export function registerSpinRoutes(app: Express) {
               break;
           }
         } else {
-          // Auto-transfer failed - add to accumulated for manual claim later
-          console.log(`⚠️ Auto-transfer failed, adding to accumulated balance:`, transferResult?.error);
-          switch (spinResult.tokenType) {
-            case 'TOKEN1':
-              const currentToken1 = BigInt(user.accumulatedToken1 || "0");
-              updateData.accumulatedToken1 = (currentToken1 + rewardAmountBigInt).toString();
-              break;
-            case 'TOKEN2':
-              const currentToken2 = BigInt(user.accumulatedToken2 || "0");
-              updateData.accumulatedToken2 = (currentToken2 + rewardAmountBigInt).toString();
-              break;
-            case 'TOKEN3':
-              const currentToken3 = BigInt(user.accumulatedToken3 || "0");
-              updateData.accumulatedToken3 = (currentToken3 + rewardAmountBigInt).toString();
-              break;
-          }
+          // Auto-transfer failed - no accumulated balance, user loses reward
+          console.log(`⚠️ Auto-transfer failed:`, transferResult?.error);
+          console.log(`💔 User ${userId} lost potential ${spinResult.tokenType} reward due to transfer failure`);
         }
         
         // Combine win data with spin count update
@@ -179,7 +166,7 @@ export function registerSpinRoutes(app: Express) {
       res.json({
         ...spinResult,
         spinsRemaining: 3 - (currentSpinsUsed + 1),
-        totalAccumulated: await getUserAccumulatedRewards(userId)
+        autoTransferEnabled: true
       });
       
     } catch (error: any) {
@@ -199,17 +186,7 @@ export function registerSpinRoutes(app: Express) {
 // All tokens must now be claimed through Farcaster wallet popup
 // This ensures users pay their own gas and sign their own transactions
 
-// Helper function to get user's accumulated rewards
-async function getUserAccumulatedRewards(userId: string) {
-  const user = await storage.getUserById(userId);
-  if (!user) return null;
-  
-  return {
-    AIDOGE: user.accumulatedToken1 || "0",
-    BOOP: user.accumulatedToken2 || "0", 
-    ARB: user.accumulatedToken3 || "0"
-  };
-}
+// Helper function removed - no more accumulated rewards with auto-transfer
 
 // Automatic transfer functionality
 async function performAutomaticTransfer(
