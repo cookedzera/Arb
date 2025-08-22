@@ -183,6 +183,17 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
         description: "Please confirm the batch claim transaction in your wallet"
       });
 
+      console.log("🔍 About to execute batch claim with data:", {
+        contractAddress: contractInfo?.contractAddress,
+        claimRequests: batchData.claimRequests.map((req: any) => ({
+          user: req.user,
+          tokenId: req.tokenId,
+          amount: req.amount,
+          nonce: req.nonce,
+          deadline: req.deadline
+        }))
+      });
+
       await writeContract({
         address: contractInfo?.contractAddress as `0x${string}`,
         abi: CLAIM_CONTRACT_ABI,
@@ -193,10 +204,18 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
     } catch (error: any) {
       let errorMessage = error.message || "Failed to claim tokens";
       
-      // Handle nonce error specifically
+      // Handle specific error types
       if (errorMessage.includes("nonce")) {
         errorMessage = "Transaction nonce conflict. Please wait a moment and try again.";
+      } else if (errorMessage.includes("User rejected") || errorMessage.includes("denied")) {
+        errorMessage = "Transaction cancelled by user";
+      } else if (errorMessage.includes("insufficient balance")) {
+        errorMessage = "Contract has insufficient token balance. Please contact support.";
+      } else if (errorMessage.includes("gas")) {
+        errorMessage = "Transaction failed due to gas issues. Try again with higher gas.";
       }
+      
+      console.error("Batch claim error details:", error);
       
       toast({
         title: "Batch Claim Failed",

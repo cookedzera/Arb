@@ -161,6 +161,30 @@ export function registerClaimRoutes(app: Express) {
 
       const signedClaims = [];
       
+      // Verify contract has sufficient balance for all tokens BEFORE generating signatures
+      for (let i = 0; i < claims.length; i++) {
+        const { tokenId, amount } = claims[i];
+        
+        // Check contract balance for this specific token
+        const tokenConfig = await blockchainService.getTokenConfig(tokenId);
+        if (!tokenConfig) {
+          return res.status(500).json({ 
+            error: `Token ${tokenId} not configured in contract`
+          });
+        }
+        
+        const contractBalance = await blockchainService.getContractTokenBalance(tokenConfig.tokenAddress);
+        if (parseFloat(contractBalance) < parseFloat(amount)) {
+          return res.status(500).json({ 
+            error: `Contract has insufficient balance for token ${tokenId} (${tokenConfig.tokenAddress})`,
+            required: amount,
+            available: contractBalance,
+            tokenId,
+            tokenAddress: tokenConfig.tokenAddress
+          });
+        }
+      }
+
       // Generate signatures for each claim with sequential nonces
       for (let i = 0; i < claims.length; i++) {
         const { tokenId, amount } = claims[i];

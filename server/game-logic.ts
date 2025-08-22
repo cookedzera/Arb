@@ -8,22 +8,22 @@ export interface SpinResult {
   randomSeed: string;
 }
 
-// Token configurations - reduced amounts for 80/20 distribution  
+// Token configurations - MUST match the deployed contract addresses!
 export const TOKEN_CONFIG = {
   TOKEN1: {
-    address: "0x09e18590e8f76b6cf471b3cd30676b46ef36f7cd", // AIDOGE on Arbitrum Sepolia
+    address: "0x287396E90c5febB4dC1EDbc0EEF8e5668cdb08D4", // AIDOGE Test Token in Contract
     symbol: "AIDOGE", 
     rewardAmount: "500000000000000000" // 0.5 AIDOGE
   },
   TOKEN2: {
-    address: "0x13a7dedb7169a17be92b0e3c7c2315b46f4772b3", // BOOP on Arbitrum Sepolia  
+    address: "0xaeA5bb4F5b5524dee0E3F931911c8F8df4576E19", // BOOP Test Token in Contract
     symbol: "BOOP",
     rewardAmount: "500000000000000000" // 0.5 BOOP
   },
   TOKEN3: {
-    address: "0x980b62da83eff3d4576c647993b0c1d7faf17c73", // ARB on Arbitrum Sepolia
-    symbol: "ARB",
-    rewardAmount: "250000000000000000" // 0.25 ARB
+    address: "0x0E1CD6557D2BA59C61c75850E674C2AD73253952", // BOBOTRUM Test Token in Contract
+    symbol: "BOBOTRUM",
+    rewardAmount: "250000000000000000" // 0.25 BOBOTRUM
   }
 } as const;
 
