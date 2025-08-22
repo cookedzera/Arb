@@ -36,7 +36,7 @@ export function TokenBalanceCard({ userId }: TokenBalanceCardProps) {
   const queryClient = useQueryClient();
 
   const { data: balances, isLoading } = useQuery<TokenBalances>({
-    queryKey: ['/api/user', userId, 'balances'],
+    queryKey: ['/api/user', userId, 'claimable'],
     enabled: !!userId,
   });
 
@@ -65,7 +65,7 @@ export function TokenBalanceCard({ userId }: TokenBalanceCardProps) {
         title: "Tokens Claimed!",
         description: data.message || "Tokens claimed successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/user', userId, 'balances'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user', userId, 'claimable'] });
       queryClient.invalidateQueries({ queryKey: ['/api/user', userId, 'claims'] });
     },
     onError: (error: Error) => {
