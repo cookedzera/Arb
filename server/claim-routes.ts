@@ -134,12 +134,22 @@ export function registerClaimRoutes(app: Express) {
         return res.status(404).json({ error: "User not found for wallet address" });
       }
 
-      // Get current nonce from smart contract to ensure synchronization
+      // Get current nonce from smart contract with retry mechanism
       let baseNonce: number;
       try {
+        // Add small delay to prevent race conditions
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const contractNonce = await blockchainService.getUserNonce(walletAddress);
         baseNonce = contractNonce + 1; // Next nonce to use
         console.log(`📊 User ${walletAddress} current nonce: ${contractNonce}, starting batch at: ${baseNonce}`);
+        
+        // Double-check nonce hasn't changed (anti-race condition)
+        const recheckNonce = await blockchainService.getUserNonce(walletAddress);
+        if (recheckNonce !== contractNonce) {
+          console.log(`⚠️ Nonce changed during generation, updating: ${contractNonce} -> ${recheckNonce}`);
+          baseNonce = recheckNonce + 1;
+        }
       } catch (error) {
         console.log("Warning: Could not get contract nonce, using database nonce:", error);
         baseNonce = (user.totalClaims || 0) + 1;
@@ -159,12 +169,42 @@ export function registerClaimRoutes(app: Express) {
         const tokenField = `accumulatedToken${tokenId + 1}` as keyof typeof user;
         const userBalance = user[tokenField] as string || "0";
         
-        if (parseFloat(userBalance) < parseFloat(amount)) {
+        // Check minimum amount requirements (contract requires >= 100 wei for fee calculation)
+        const amountWei = parseFloat(amount);
+        const balanceWei = parseFloat(userBalance);
+        
+        if (balanceWei <= 0) {
+          return res.status(400).json({ 
+            error: `No accumulated balance for token ${tokenId}`,
+            tokenId,
+            available: userBalance
+          });
+        }
+        
+        if (amountWei <= 0) {
+          return res.status(400).json({ 
+            error: `Invalid claim amount for token ${tokenId}`,
+            tokenId,
+            amount: amount
+          });
+        }
+        
+        if (balanceWei < amountWei) {
           return res.status(400).json({ 
             error: `Insufficient accumulated balance for token ${tokenId}`,
             tokenId,
             required: amount,
             available: userBalance
+          });
+        }
+        
+        // Contract requires minimum 100 wei for treasury fee calculation
+        if (amountWei < 100) {
+          return res.status(400).json({ 
+            error: `Amount too small for claiming (minimum 100 wei required)`,
+            tokenId,
+            amount: amount,
+            minimum: "100"
           });
         }
 
@@ -230,8 +270,39 @@ export function registerClaimRoutes(app: Express) {
       const tokenField = `accumulatedToken${tokenId + 1}` as keyof typeof user;
       const userBalance = user[tokenField] as string || "0";
       
-      if (parseFloat(userBalance) < parseFloat(amount)) {
-        return res.status(400).json({ error: "Insufficient accumulated balance" });
+      // Check minimum amount requirements
+      const amountWei = parseFloat(amount);
+      const balanceWei = parseFloat(userBalance);
+      
+      if (balanceWei <= 0) {
+        return res.status(400).json({ 
+          error: "No accumulated balance for this token",
+          available: userBalance
+        });
+      }
+      
+      if (amountWei <= 0) {
+        return res.status(400).json({ 
+          error: "Invalid claim amount",
+          amount: amount
+        });
+      }
+      
+      if (balanceWei < amountWei) {
+        return res.status(400).json({ 
+          error: "Insufficient accumulated balance",
+          required: amount,
+          available: userBalance
+        });
+      }
+      
+      // Contract requires minimum 100 wei for treasury fee calculation
+      if (amountWei < 100) {
+        return res.status(400).json({ 
+          error: "Amount too small for claiming (minimum 100 wei required)",
+          amount: amount,
+          minimum: "100"
+        });
       }
 
       // Get current nonce from smart contract to ensure synchronization
