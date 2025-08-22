@@ -261,17 +261,30 @@ export function registerClaimRoutes(app: Express) {
           const tokenInfo = await blockchainService.getTokenInfo(config.tokenAddress);
           tokenConfigs.push({
             id: i,
-            ...config,
-            ...tokenInfo
+            tokenAddress: config.tokenAddress,
+            totalDistributed: config.totalDistributed,
+            reserveBalance: config.reserveBalance,
+            isActive: config.isActive,
+            // Only include token info if available (avoid errors from bad tokens)
+            ...(tokenInfo && {
+              name: tokenInfo.name,
+              symbol: tokenInfo.symbol,
+              decimals: tokenInfo.decimals?.toString(),
+              totalSupply: tokenInfo.totalSupply
+            })
           });
         }
       }
 
       res.json({
         contractAddress,
-        chainId,
+        chainId: typeof chainId === 'bigint' ? Number(chainId) : chainId,
         isPaused,
-        network: networkInfo,
+        network: {
+          ...networkInfo,
+          chainId: typeof networkInfo?.chainId === 'bigint' ? Number(networkInfo.chainId) : networkInfo?.chainId,
+          blockNumber: typeof networkInfo?.blockNumber === 'bigint' ? Number(networkInfo.blockNumber) : networkInfo?.blockNumber
+        },
         tokens: tokenConfigs,
         isConfigured: !!contractAddress
       });
