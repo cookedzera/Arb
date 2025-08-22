@@ -15,66 +15,9 @@ export function registerClaimRoutes(app: Express) {
   // Rate limiting for claim requests (prevent rapid-fire claims)
   const claimRateLimit = new Map<string, number>();
   
-  // Add a simple batch claim route that matches the frontend expectations
-  app.post("/api/claim-batch", async (req, res) => {
-    try {
-      const { walletAddress, claims } = req.body;
-      
-      // Rate limiting: prevent claims within 5 seconds of each other per wallet
-      const now = Date.now();
-      const lastClaim = claimRateLimit.get(walletAddress) || 0;
-      if (now - lastClaim < 5000) {
-        return res.status(429).json({ 
-          error: "Please wait before making another claim request",
-          retryAfter: Math.ceil((5000 - (now - lastClaim)) / 1000)
-        });
-      }
-      claimRateLimit.set(walletAddress, now);
-      
-      if (!walletAddress || !claims || !Array.isArray(claims)) {
-        return res.status(400).json({ error: "Invalid request data" });
-      }
-
-      // Get user from wallet address
-      const user = await getUserByWalletAddress(walletAddress);
-      if (!user) {
-        return res.status(404).json({ error: "User not found for wallet address" });
-      }
-
-      let totalProcessed = 0;
-      const results = [];
-
-      for (const claim of claims) {
-        try {
-          const { tokenId, amount } = claim;
-          
-          // Verify user has sufficient balance
-          const tokenField = `accumulatedToken${tokenId + 1}` as keyof typeof user;
-          const userBalance = user[tokenField] as string || "0";
-          
-          if (parseFloat(userBalance) >= parseFloat(amount)) {
-            totalProcessed += parseFloat(amount);
-            results.push({ tokenId, amount, status: "success" });
-          } else {
-            results.push({ tokenId, amount, status: "insufficient_balance" });
-          }
-        } catch (error) {
-          results.push({ tokenId: claim.tokenId, amount: claim.amount, status: "error" });
-        }
-      }
-
-      res.json({
-        success: true,
-        totalProcessed,
-        results,
-        message: `Processed ${results.filter(r => r.status === "success").length} claims`
-      });
-
-    } catch (error) {
-      console.error('Batch claim error:', error);
-      res.status(500).json({ error: "Failed to process batch claim" });
-    }
-  });
+  // REMOVED: Direct token sending batch route
+  // Claims now happen entirely through frontend Farcaster wallet popup
+  // This ensures users pay their own gas fees and sign their own transactions
   
   // Get user's claimable balance
   app.get("/api/user/:id/claimable", async (req, res) => {
