@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Coins, ExternalLink } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { useAccount, useConnect, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useConnect, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
 import { parseEther } from 'viem';
+import { arbitrumSepolia } from 'wagmi/chains';
 import { CLAIM_CONTRACT_ABI } from '@/lib/claim-contract-abi';
 
 interface ClaimModalProps {
@@ -21,9 +22,10 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
   const queryClient = useQueryClient();
   
   // Wagmi hooks for Farcaster wallet integration
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { connect, connectors } = useConnect();
   const { writeContract, data: txHash, isPending: isWriting } = useWriteContract();
+  const { switchChain } = useSwitchChain();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash: txHash,
   });
@@ -79,6 +81,30 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
         variant: "destructive"
       });
       return;
+    }
+
+    // Check if we need to switch to Arbitrum Sepolia
+    if (chainId !== arbitrumSepolia.id) {
+      try {
+        toast({
+          title: "Switching Network",
+          description: "Switching to Arbitrum Sepolia..."
+        });
+        
+        await switchChain({ chainId: arbitrumSepolia.id });
+        
+        toast({
+          title: "Network Switched",
+          description: "Successfully switched to Arbitrum Sepolia"
+        });
+      } catch (error: any) {
+        toast({
+          title: "Network Switch Failed",
+          description: error.message || "Failed to switch to Arbitrum Sepolia",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     if (!claimAmount || parseFloat(claimAmount) <= 0) {
@@ -313,8 +339,13 @@ export function ClaimModal({ isOpen, onClose, userId, walletAddress }: ClaimModa
           </div>
           
           {isConnected && (
-            <div className="text-xs text-green-600 dark:text-green-400 text-center mt-2">
-              Connected: {address?.slice(0, 8)}...{address?.slice(-6)}
+            <div className="text-xs text-center mt-2 space-y-1">
+              <div className="text-green-600 dark:text-green-400">
+                Connected: {address?.slice(0, 8)}...{address?.slice(-6)}
+              </div>
+              <div className={`${chainId === arbitrumSepolia.id ? 'text-green-500' : 'text-orange-500'}`}>
+                Network: {chainId === arbitrumSepolia.id ? 'Arbitrum Sepolia ✓' : `Chain ${chainId} (will auto-switch)`}
+              </div>
             </div>
           )}
           
