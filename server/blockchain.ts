@@ -227,11 +227,11 @@ export class BlockchainService {
   ): Promise<string> {
     const wallet = new ethers.Wallet(privateKey);
     
-    const messageHash = ethers.keccak256(
-      ethers.AbiCoder.defaultAbiCoder().encode(
-        ['address', 'uint256', 'uint256', 'uint256', 'uint256', 'address'],
-        [userAddress, tokenId, amount, nonce, deadline, this.config.contractAddress]
-      )
+    // Match the contract's signature format exactly
+    // Contract uses: abi.encodePacked(user, tokenId, amount, nonce, deadline)
+    const messageHash = ethers.solidityPackedKeccak256(
+      ['address', 'uint256', 'uint256', 'uint256', 'uint256'],
+      [userAddress, tokenId, amount, nonce, deadline]
     );
     
     const signature = await wallet.signMessage(ethers.getBytes(messageHash));
