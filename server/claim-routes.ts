@@ -340,6 +340,47 @@ export function registerClaimRoutes(app: Express) {
     }
   });
 
+  // Debug endpoint to check ALL token configurations
+  app.get("/api/debug/all-tokens", async (req, res) => {
+    try {
+      const results = [];
+      
+      // Check all 10 possible token slots
+      for (let i = 0; i < 10; i++) {
+        try {
+          const config = await blockchainService.getTokenConfig(i);
+          if (config) {
+            results.push({
+              tokenId: i,
+              tokenAddress: config.tokenAddress,
+              isActive: config.isActive,
+              totalDistributed: config.totalDistributed,
+              status: "configured"
+            });
+          } else {
+            results.push({
+              tokenId: i,
+              tokenAddress: "0x0000000000000000000000000000000000000000",
+              isActive: false,
+              status: "empty"
+            });
+          }
+        } catch (error) {
+          results.push({
+            tokenId: i,
+            status: "error",
+            error: (error as Error).message
+          });
+        }
+      }
+      
+      res.json({ results });
+    } catch (error) {
+      console.error('Debug all tokens error:', error);
+      res.status(500).json({ error: "Failed to check all tokens" });
+    }
+  });
+
   // Debug endpoint to check token balances directly
   app.get("/api/debug/token-balances", async (req, res) => {
     try {
@@ -445,12 +486,26 @@ export function registerClaimRoutes(app: Express) {
 // Helper function to get user by wallet address
 async function getUserByWalletAddress(walletAddress: string) {
   try {
-    // This would need to be implemented in your storage layer
-    // For now, we'll use a simple approach
+    console.log(`🔍 Looking for user with wallet: ${walletAddress}`);
+    
+    // Get all users to check wallet mapping
     const users = await storage.getAllUsers();
-    return users.find((user: any) => 
+    const foundUser = users.find((user: any) => 
       user.walletAddress?.toLowerCase() === walletAddress.toLowerCase()
     );
+    
+    if (!foundUser) {
+      console.log(`❌ No user found for wallet ${walletAddress}`);
+      console.log('Available users with wallets:', users.filter(u => u.walletAddress).map(u => ({
+        id: u.id,
+        username: u.username,
+        wallet: u.walletAddress
+      })));
+    } else {
+      console.log(`✅ Found user: ${foundUser.username} (${foundUser.id})`);
+    }
+    
+    return foundUser;
   } catch (error) {
     console.error('Error finding user by wallet:', error);
     return null;
