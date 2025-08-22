@@ -77,9 +77,9 @@ export class BlockchainService {
     const defaultConfig: ContractConfig = {
       contractAddress: process.env.SPIN_CLAIM_CONTRACT_ADDRESS || "",
       tokenAddresses: {
-        TOKEN1: "0x09e18590e8f76b6cf471b3cd30676b46ef36f7cd", // AIDOGE on Arbitrum Sepolia
-        TOKEN2: "0x13a7dedb7169a17be92b0c1d7faf17c7b3", // BOOP on Arbitrum Sepolia
-        TOKEN3: "0x980b62da83eff3d4576c647993b0c1d7faf17c73" // ARB on Arbitrum Sepolia
+        TOKEN1: "0x09E18590E8F76b6Cf471B3CD30676B46Ef36F7CD", // AIDOGE on Arbitrum Sepolia
+        TOKEN2: "0xaeA5bb4F5b5524dee0E3F931911c8F8df4576E19", // BOOP Test on Arbitrum Sepolia
+        TOKEN3: "0x0E1CD6557D2BA59C61c75850E674C2AD73253952" // BOBOTRUM Test on Arbitrum Sepolia
       },
       chainId: 421614,
       rpcUrl: "https://421614.rpc.thirdweb.com",
