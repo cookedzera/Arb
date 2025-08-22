@@ -62,6 +62,8 @@ A dynamic web application that combines server-based gameplay with blockchain to
 - ✅ **Token Addresses Updated**: Using user's deployed test tokens (BOOP: `0xaeA5bb4F...`, BOBOTRUM: `0x0E1CD6...`)
 - ✅ **Backend Integration**: Full API support for contract interaction and claim verification
 - ✅ **User Experience**: Seamless wallet connection and transaction flow in Farcaster environment
+- ✅ **Critical Bug Fixed**: Homepage now displays all accumulated unclaimed tokens from previous days, not just today's tokens
+- ✅ **Endpoint Correction**: Fixed both TokenBalanceCard and Homepage to use correct `/claimable` endpoint instead of `/balances`
 
 ### Previous Completion - January 21, 2025 - Contract Deployment and Integration
 - ✅ Created secure ClaimOnlyContract with emergency controls

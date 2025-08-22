@@ -173,7 +173,7 @@ export default function Home() {
 
   // Get token balances for real data
   const { data: balances, isLoading: balancesLoading } = useQuery<TokenBalances>({
-    queryKey: ['/api/user', user?.id, 'balances'],
+    queryKey: ['/api/user', user?.id, 'claimable'],
     enabled: !!user?.id,
   });
 
