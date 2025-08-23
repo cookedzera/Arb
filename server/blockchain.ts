@@ -4,37 +4,24 @@ import path from "path";
 
 // Contract ABIs - Auto-Transfer Contract (server handles spinning + transfers)
 const AUTO_TRANSFER_ABI = [
-  // Auto-transfer functions
+  // Main function
   "function autoTransfer(address user, uint256 tokenId, uint256 amount) external",
-  "function batchAutoTransfer(address[] users, uint256[] tokenIds, uint256[] amounts) external",
   
-  // Configuration functions
-  "function configureToken(uint256 tokenId, address tokenAddress, bool isActive, uint256 minAmount, uint256 maxAmount) external",
-  "function setAutoTransferSettings(bool enabled, uint256 maxPerCall, uint256 dailyLimit, uint256 globalLimit) external",
-  "function setTreasury(address newTreasury, uint256 newFeePercent) external",
-  "function setRateLimiting(uint256 newCooldownPeriod) external",
-  
-  // Emergency functions
-  "function emergencyPause() external",
+  // Admin functions
+  "function setTokens(uint256 tokenId, address token, bool active) external",
+  "function pause() external",
   "function unpause() external",
-  "function resetCircuitBreaker() external",
+  "function paused() external view returns (bool)",
   
   // View functions
-  "function getTokenConfig(uint256 tokenId) external view returns (address tokenAddress, uint256 totalDistributed, uint256 autoTransferred, uint256 reserveBalance, bool isActive, uint256 minAmount, uint256 maxAmount)",
-  "function getUserTransferStats(address user) external view returns (uint256[] tokenAmounts, uint256 dailyTransferred, uint256 transferCount, uint256 lastTransfer, bool canTransfer)",
-  "function getSecurityStatus() external view returns (bool autoTransferEnabled, bool gasPopupBackupEnabled, bool circuitBreakerTripped, bool isPaused, uint256 activeTokens, uint256 globalDailyTransferred, uint256 deploymentAge)",
-  "function getCurrentLimits() external view returns (uint256 maxPerCall, uint256 dailyLimit, uint256 globalLimit, uint256 treasuryFee, uint256 cooldown, uint256 minTransfer)",
-  "function canUseGasPopupBackup(address user) external view returns (bool canUseBackup, uint256 estimatedGas)",
-  "function paused() external view returns (bool)",
-  "function autoTransferEnabled() external view returns (bool)",
+  "function tokens(uint256) external view returns (address)",
+  "function tokenActive(uint256) external view returns (bool)",
+  "function server() external view returns (address)",
   "function treasury() external view returns (address)",
-  "function treasuryFeePercent() external view returns (uint256)",
   
   // Events
-  "event AutoTransferCompleted(address indexed user, uint256 indexed tokenId, uint256 amount, address indexed serverCaller, uint256 timestamp)",
-  "event TokenConfigured(uint256 indexed tokenId, address indexed token, bool isActive, uint256 minAmount, uint256 maxAmount)",
-  "event SecurityLimitUpdated(string indexed limitType, uint256 oldValue, uint256 newValue, address indexed updatedBy)",
-  "event CircuitBreakerTripped(string reason, uint256 timestamp, address indexed triggeredBy)"
+  "event Transfer(address indexed user, uint256 indexed tokenId, uint256 amount)",
+  "event TokenSet(uint256 indexed tokenId, address token, bool active)"
 ];
 
 const ERC20_ABI = [
@@ -182,11 +169,12 @@ export class BlockchainService {
         return { success: false, error: "User rate limited or contract paused" };
       }
       
-      // Execute auto-transfer
-      console.log(`📡 Calling autoTransfer(${userAddress}, ${tokenId}, ${amount})`);
+      // Execute auto-transfer with proper address checksum
+      const checksummedAddress = ethers.getAddress(userAddress);
+      console.log(`📡 Calling autoTransfer(${checksummedAddress}, ${tokenId}, ${amount})`);
       
       const tx = await contractWithSigner.autoTransfer(
-        userAddress,
+        checksummedAddress,
         tokenId,
         amount
       );
@@ -322,19 +310,11 @@ export class BlockchainService {
     return tokenMap[tokenType.toUpperCase()] ?? -1;
   }
 
-  // Helper: Check if user can receive transfer
+  // Helper: Check if user can receive transfer - simplified for minimal contract
   async canUserReceiveTransfer(userAddress: string): Promise<boolean> {
-    if (!this.contract) {
-      return false;
-    }
-
-    try {
-      const stats = await this.contract.getUserTransferStats(userAddress);
-      return stats[4]; // canTransfer boolean from getUserTransferStats
-    } catch (error) {
-      console.warn("⚠️  Could not check user transfer eligibility:", error);
-      return true; // Default to allowing transfer
-    }
+    // Minimal contract doesn't have transfer stats, so always allow
+    // In production, add proper rate limiting here
+    return true;
   }
 
   // Get user's current nonce from contract (legacy method for compatibility)

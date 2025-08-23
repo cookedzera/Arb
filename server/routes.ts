@@ -17,7 +17,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register new spin routes (server-based, gas-free)
   registerSpinRoutes(app);
   
-  // Claim routes removed - auto-transfer only now
+  // Register claim routes for balance checking and auto-transfer
+  const { registerClaimRoutes } = await import('./claim-routes');
+  registerClaimRoutes(app);
   
   // Register share routes for Farcaster
   registerShareRoutes(app);
@@ -96,10 +98,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, walletAddress, farcasterFid, farcasterUsername, farcasterDisplayName, farcasterPfpUrl } = req.body;
       
-      // Allow all users to access the app, but only save Farcaster users to database
+      // For testing: Allow all users to be saved to database
+      // In production, only save Farcaster users  
       const isValidFarcasterUser = farcasterFid && farcasterFid > 0;
+      const allowAllUsersForTesting = true; // Set to false in production
       
-      if (!isValidFarcasterUser) {
+      if (!isValidFarcasterUser && !allowAllUsersForTesting) {
         console.log(`🎮 Fun-only user (no database): ${username} (FID: ${farcasterFid})`);
         // Return temporary user data for fun gameplay without database storage
         return res.json({
