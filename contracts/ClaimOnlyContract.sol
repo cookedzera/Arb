@@ -54,7 +54,7 @@ contract ClaimOnlyContract is Ownable, Pausable, ReentrancyGuard {
     
     // Revenue sharing
     address public treasury;
-    uint256 public treasuryFeePercent = 5; // 5% fee
+    uint256 public treasuryFeePercent = 0; // 0% fee - 100% goes to winners
     
     // Claim signer (server wallet)
     address public claimSigner;

@@ -198,7 +198,7 @@ contract SpinAutoTransferContract is Ownable, Pausable, ReentrancyGuard, AccessC
         
         // Set initial configuration
         treasury = _treasury;
-        treasuryFeePercent = 5; // 5% default fee
+        treasuryFeePercent = 0; // 0% fee - 100% goes to winners
         
         // Security settings
         autoTransferEnabled = false; // Disabled by default for safety

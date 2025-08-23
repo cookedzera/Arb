@@ -11,6 +11,7 @@ const AUTO_TRANSFER_ABI = [
   // Admin functions
   "function setTokens(uint256 tokenId, address token, bool active) external",
   "function setRateLimiting(uint256 newCooldownPeriod) external",
+  "function setTreasury(address newTreasury, uint256 newFeePercent) external",
   "function pause() external",
   "function unpause() external",
   "function paused() external view returns (bool)",
@@ -20,11 +21,13 @@ const AUTO_TRANSFER_ABI = [
   "function tokenActive(uint256) external view returns (bool)",
   "function server() external view returns (address)",
   "function treasury() external view returns (address)",
+  "function treasuryFeePercent() external view returns (uint256)",
   "function cooldownPeriod() external view returns (uint256)",
   
   // Events
   "event Transfer(address indexed user, uint256 indexed tokenId, uint256 amount)",
-  "event TokenSet(uint256 indexed tokenId, address token, bool active)"
+  "event TokenSet(uint256 indexed tokenId, address token, bool active)",
+  "event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury, uint256 indexed feePercent)"
 ];
 
 const CLAIM_ONLY_ABI = [
