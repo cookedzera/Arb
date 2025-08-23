@@ -39,14 +39,20 @@ export function useGameState() {
 
   // Initialize user on mount - simplified to prevent infinite loops
   useEffect(() => {
-    // Wait for Farcaster auth to complete
-    if (farcasterLoading) return;
+    // Wait for Farcaster auth to complete, but with timeout
+    if (farcasterLoading) {
+      // Set a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.log('⏱️ Farcaster loading timeout - proceeding without Farcaster data');
+      }, 5000);
+      return () => clearTimeout(timeoutId);
+    }
 
     const storedUserId = localStorage.getItem("arbcasino_user_id");
     
     // Clear invalid stored user IDs that start with "temp_" when we have Farcaster auth
     if (storedUserId && storedUserId.startsWith("temp_") && isFarcasterAuth) {
-      // Clearing temporary user ID for Farcaster user
+      console.log('🔄 Clearing temporary user ID for Farcaster user');
       localStorage.removeItem("arbcasino_user_id");
       setUserId(null);
       return;
@@ -54,12 +60,14 @@ export function useGameState() {
     
     // If we have a stored user ID and no error, use it
     if (storedUserId && !error && !userId) {
+      console.log('✅ Using stored user ID:', storedUserId);
       setUserId(storedUserId);
       return;
     }
     
     // Clear invalid stored user ID if there's an error
     if (storedUserId && error) {
+      console.log('❌ Clearing invalid user ID due to error');
       localStorage.removeItem("arbcasino_user_id");
       setUserId(null);
     }
@@ -73,7 +81,7 @@ export function useGameState() {
         
       const walletAddress = `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
       
-      // Initializing user with Farcaster data
+      console.log('🚀 Creating new user:', { username, isFarcasterAuth });
       
       initUserMutation.mutate({
         username,
@@ -84,13 +92,13 @@ export function useGameState() {
         farcasterPfpUrl: isFarcasterAuth && farcasterUser ? farcasterUser.pfpUrl : undefined,
       });
     }
-  }, [farcasterLoading, error, userId, initUserMutation.isPending, initUserMutation.isSuccess, isFarcasterAuth, farcasterUser]); // Fixed dependencies
+  }, [farcasterLoading, error, userId, initUserMutation.isPending, initUserMutation.isSuccess, isFarcasterAuth, farcasterUser]);
 
   return {
     user,
     farcasterUser,
     isFarcasterAuthenticated: isFarcasterAuth,
-    isLoading: isLoading || initUserMutation.isPending,
+    isLoading: (isLoading || initUserMutation.isPending) && farcasterLoading === false, // Only show loading after Farcaster check is done
     initUser: initUserMutation.mutate,
   };
 }

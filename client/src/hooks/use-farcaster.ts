@@ -55,6 +55,7 @@ export function useFarcaster() {
           setLoading(false);
         }
       } catch (error) {
+        console.log('ℹ️ Farcaster user loading failed:', error);
         // Update cache with null data
         globalFarcasterCache = {
           user: null,
@@ -70,12 +71,23 @@ export function useFarcaster() {
       }
     }
 
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (mounted && loading) {
+        console.log('⏱️ Farcaster loading timeout - proceeding without auth');
+        setLoading(false);
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    }, 3000);
+
     loadFarcasterUser();
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [loading]);
 
   return {
     user,

@@ -34,8 +34,10 @@ const initializeFarcasterSDK = async () => {
     // Call ready() immediately to dismiss splash screen
     await sdk.actions.ready();
     
+    console.log('✅ Farcaster SDK initialized and ready() called');
     // Success - splash screen should be dismissed
   } catch (error) {
+    console.log('ℹ️ Farcaster SDK not available - running in regular browser mode');
     // Silent fail for development/non-Farcaster environments
     // The splash screen only appears in Farcaster, so this is expected outside Farcaster
   }

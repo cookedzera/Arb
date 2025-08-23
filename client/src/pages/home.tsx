@@ -206,7 +206,7 @@ export default function Home() {
     { name: 'ARB', icon: officialArbLogo, amount: balances?.token3 || '0', time: '1h 8 min', emoji: '🔷' }
   ], [balances?.token1, balances?.token2, balances?.token3]);
 
-  // Show minimal loading state while preserving background
+  // Show minimal loading state while preserving background - but with timeout
   if (userLoading) {
     return (
       <div className="min-h-screen relative" style={{
@@ -214,7 +214,10 @@ export default function Home() {
       }}>
         {/* Loading spinner */}
         <div className="flex items-center justify-center min-h-screen">
-          <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-white/60 text-sm">Loading game...</p>
+          </div>
         </div>
       </div>
     );

@@ -6,6 +6,7 @@ import path from "path";
 const AUTO_TRANSFER_ABI = [
   // Main function
   "function autoTransfer(address user, uint256 tokenId, uint256 amount) external",
+  "function batchAutoTransfer(address[] calldata users, uint256[] calldata tokenIds, uint256[] calldata amounts) external",
   
   // Admin functions
   "function setTokens(uint256 tokenId, address token, bool active) external",
@@ -22,6 +23,12 @@ const AUTO_TRANSFER_ABI = [
   // Events
   "event Transfer(address indexed user, uint256 indexed tokenId, uint256 amount)",
   "event TokenSet(uint256 indexed tokenId, address token, bool active)"
+];
+
+const CLAIM_ONLY_ABI = [
+  "function claimTokens(tuple(address user, uint256 tokenId, uint256 amount, uint256 nonce, uint256 deadline, bytes signature) claimRequest) external",
+  "function paused() external view returns (bool)",
+  "function getTokenConfig(uint256 tokenId) external view returns (address tokenAddress, uint256 totalDistributed, uint256 reserveBalance, bool isActive)"
 ];
 
 const ERC20_ABI = [
