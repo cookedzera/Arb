@@ -63,18 +63,15 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
   
-  // Add error handling for port conflicts
+  // Add proper error handling without infinite retry
   server.on('error', (err: any) => {
     if (err.code === 'EADDRINUSE') {
-      console.error(`Port ${port} is already in use. Attempting to retry...`);
-      setTimeout(() => {
-        server.close();
-        server.listen(port, "0.0.0.0", () => {
-          log(`serving on port ${port}`);
-        });
-      }, 1000);
+      console.error(`❌ Port ${port} is already in use`);
+      console.error('Please wait a moment and try restarting the workflow again');
+      process.exit(1);
     } else {
-      throw err;
+      console.error('❌ Server error:', err);
+      process.exit(1);
     }
   });
   
