@@ -182,7 +182,7 @@ export class BlockchainService {
       const checksummedAddress = ethers.getAddress(userAddress);
       console.log(`📡 Calling autoTransfer(${checksummedAddress}, ${tokenId}, ${amount})`);
       
-      const tx = await contractWithSigner.autoTransfer(
+      const tx = await (contractWithSigner as any).autoTransfer(
         checksummedAddress,
         tokenId,
         amount
@@ -211,12 +211,12 @@ export class BlockchainService {
         // Handle cooldown specifically
         if (error.reason === "Cooldown") {
           console.log("⏱️ Secure auto-transfer failed: Cooldown");
-          return { success: false, error: "Cooldown", cooldown: true };
+          return { success: false, error: "Cooldown" };
         }
       } else if (error.message) {
         if (error.message.includes("Cooldown")) {
           console.log("⏱️ Auto-transfer failed: Cooldown");
-          return { success: false, error: "Cooldown", cooldown: true };
+          return { success: false, error: "Cooldown" };
         } else if (error.message.includes("daily limit")) {
           errorMessage = "Daily transfer limit reached";
         } else if (error.message.includes("rate limit")) {
@@ -271,7 +271,7 @@ export class BlockchainService {
       // Execute batch auto-transfer
       console.log("📡 Calling batchAutoTransfer...");
       
-      const tx = await contractWithSigner.batchAutoTransfer(
+      const tx = await (contractWithSigner as any).batchAutoTransfer(
         users,
         tokenIds,
         amounts
@@ -485,7 +485,7 @@ export class BlockchainService {
       }
       
       const contractWithSigner = this.contract.connect(serverWallet);
-      const tx = await contractWithSigner.setRateLimiting(seconds);
+      const tx = await (contractWithSigner as any).setRateLimiting(seconds);
       
       console.log("⏳ Cooldown update transaction submitted:", tx.hash);
       await tx.wait();
