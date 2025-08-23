@@ -12,31 +12,37 @@ export interface SpinResult {
 export const TOKEN_CONFIG = {
   TOKEN1: {
     address: "0x287396E90c5febB4dC1EDbc0EEF8e5668cdb08D4", // AIDOGE Test Token in Contract
-    symbol: "AIDOGE", 
-    rewardAmount: "500000000000000000" // 0.5 AIDOGE
+    symbol: "AIDOGE"
   },
   TOKEN2: {
     address: "0xaeA5bb4F5b5524dee0E3F931911c8F8df4576E19", // BOOP Test Token in Contract
-    symbol: "BOOP",
-    rewardAmount: "500000000000000000" // 0.5 BOOP
+    symbol: "BOOP"
   },
   TOKEN3: {
     address: "0x0E1CD6557D2BA59C61c75850E674C2AD73253952", // BOBOTRUM Test Token in Contract
-    symbol: "BOBOTRUM",
-    rewardAmount: "250000000000000000" // 0.25 BOBOTRUM
+    symbol: "BOBOTRUM"
   }
 } as const;
 
+// Generate random reward amount between 20-50 tokens
+function generateRandomReward(): string {
+  const minTokens = 20;
+  const maxTokens = 50;
+  const randomTokens = Math.floor(Math.random() * (maxTokens - minTokens + 1)) + minTokens;
+  // Convert to Wei (multiply by 10^18)
+  return (BigInt(randomTokens) * BigInt("1000000000000000000")).toString();
+}
+
 // Wheel segments with probabilities - 30% win rate for true 80/20 distribution
 const WHEEL_SEGMENTS = [
-  { name: 'AIDOGE', weight: 10 }, // 10% - 0.5 tokens
+  { name: 'AIDOGE', weight: 10 }, // 10% - random 20-50 tokens
   { name: 'BUST', weight: 66 },   // 66% - no win (reduced to make room for jackpot)
-  { name: 'BOOP', weight: 8 },    // 8% - 0.5 tokens  
-  { name: 'BONUS', weight: 2 },   // 2% - 1 token (rare)
-  { name: 'ARB', weight: 6 },     // 6% - 0.25 tokens
+  { name: 'BOOP', weight: 8 },    // 8% - random 20-50 tokens  
+  { name: 'BONUS', weight: 2 },   // 2% - random 20-50 tokens (rare)
+  { name: 'ARB', weight: 6 },     // 6% - random 20-50 tokens
   { name: 'BUST', weight: 1 },    // 1% - no win
   { name: 'AIDOGE', weight: 0 },  // 0% - removed
-  { name: 'JACKPOT', weight: 7 }, // 7% - 2 tokens (better jackpot odds!)
+  { name: 'JACKPOT', weight: 7 }, // 7% - random 20-50 tokens (better jackpot odds!)
 ];
 
 // Calculate winning probabilities based on user's daily spin count
@@ -82,10 +88,10 @@ function getRandomSegment(): string {
 // Generate beginner-friendly winning segment  
 function getBeginnerWinSegment(): string {
   const beginnerSegments = [
-    { name: 'AIDOGE', weight: 40 }, // 0.5 tokens
-    { name: 'BOOP', weight: 30 },   // 0.5 tokens  
-    { name: 'ARB', weight: 25 },    // 0.25 tokens
-    { name: 'BONUS', weight: 5 },   // 1 token (rare treat)
+    { name: 'AIDOGE', weight: 40 }, // random 20-50 tokens
+    { name: 'BOOP', weight: 30 },   // random 20-50 tokens  
+    { name: 'ARB', weight: 25 },    // random 20-50 tokens
+    { name: 'BONUS', weight: 5 },   // random 20-50 tokens (rare treat)
   ];
   
   const totalWeight = beginnerSegments.reduce((sum, segment) => sum + segment.weight, 0);
@@ -134,35 +140,35 @@ export function performSpin(isNewPlayer: boolean = false, spinsUsed: number = 0)
       isWin = true;
       tokenType = "TOKEN1";
       tokenAddress = TOKEN_CONFIG.TOKEN1.address || "";
-      rewardAmount = TOKEN_CONFIG.TOKEN1.rewardAmount;
+      rewardAmount = generateRandomReward(); // Random 20-50 tokens
       break;
       
     case 'BOOP':
       isWin = true;
       tokenType = "TOKEN2";
       tokenAddress = TOKEN_CONFIG.TOKEN2.address || "";
-      rewardAmount = TOKEN_CONFIG.TOKEN2.rewardAmount;
+      rewardAmount = generateRandomReward(); // Random 20-50 tokens
       break;
       
     case 'ARB':
       isWin = true;
       tokenType = "TOKEN3";
       tokenAddress = TOKEN_CONFIG.TOKEN3.address || "";
-      rewardAmount = TOKEN_CONFIG.TOKEN3.rewardAmount;
+      rewardAmount = generateRandomReward(); // Random 20-50 tokens
       break;
       
     case 'BONUS':
       isWin = true;
       tokenType = "TOKEN2";
       tokenAddress = TOKEN_CONFIG.TOKEN2.address || "";
-      rewardAmount = "1000000000000000000"; // 2x 0.5 BOOP = 1 token
+      rewardAmount = generateRandomReward(); // Random 20-50 tokens
       break;
       
     case 'JACKPOT':
       isWin = true;
       tokenType = "TOKEN1";
       tokenAddress = TOKEN_CONFIG.TOKEN1.address || "";
-      rewardAmount = "2000000000000000000"; // 4x 0.5 AIDOGE = 2 tokens
+      rewardAmount = generateRandomReward(); // Random 20-50 tokens
       break;
       
     default: // BUST
