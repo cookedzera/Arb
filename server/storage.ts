@@ -634,6 +634,8 @@ export class MemStorage implements IStorage {
     const tokenVote: TokenVote = {
       ...vote,
       userId: vote.userId || null,
+      tokenAddress: vote.tokenAddress || null,
+      description: vote.description || null,
       votes: vote.votes || 1,
       id,
       createdAt: new Date(),

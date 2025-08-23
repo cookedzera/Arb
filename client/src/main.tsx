@@ -11,17 +11,7 @@ if (typeof global === 'undefined') {
   (window as any).global = globalThis;
 }
 
-// Buffer polyfill for crypto libraries
-(async () => {
-  try {
-    if (typeof Buffer === 'undefined') {
-      const { Buffer } = await import('buffer');
-      (window as any).Buffer = Buffer;
-    }
-  } catch (error) {
-    // Buffer polyfill not needed or already available
-  }
-})();
+// Buffer polyfill removed - modern browsers and libraries handle this automatically
 
 // Initialize Farcaster SDK immediately to prevent splash screen
 const initializeFarcasterSDK = async () => {

@@ -23,7 +23,7 @@
   <body>
     <div id="root"></div>
     <script>
-      // Polyfill for buffer to fix blockchain dependencies
+      // Global polyfill for Node.js compatibility
       if (typeof global === 'undefined') {
         var global = globalThis;
       }
