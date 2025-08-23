@@ -10,6 +10,7 @@ const AUTO_TRANSFER_ABI = [
   
   // Admin functions
   "function setTokens(uint256 tokenId, address token, bool active) external",
+  "function setRateLimiting(uint256 newCooldownPeriod) external",
   "function pause() external",
   "function unpause() external",
   "function paused() external view returns (bool)",
@@ -19,6 +20,7 @@ const AUTO_TRANSFER_ABI = [
   "function tokenActive(uint256) external view returns (bool)",
   "function server() external view returns (address)",
   "function treasury() external view returns (address)",
+  "function cooldownPeriod() external view returns (uint256)",
   
   // Events
   "event Transfer(address indexed user, uint256 indexed tokenId, uint256 amount)",
@@ -465,6 +467,50 @@ export class BlockchainService {
     } catch (error) {
       console.error("Error checking pause status:", error);
       return true;
+    }
+  }
+
+  // Remove or reduce cooldown for gaming experience
+  async setCooldownPeriod(seconds: number): Promise<{ success: boolean; error?: string }> {
+    if (!this.contract) {
+      return { success: false, error: "Contract not initialized" };
+    }
+
+    try {
+      console.log(`🎮 Setting cooldown period to ${seconds} seconds for better gaming experience...`);
+      
+      const serverWallet = this.getServerWallet();
+      if (!serverWallet) {
+        return { success: false, error: "Server wallet not configured" };
+      }
+      
+      const contractWithSigner = this.contract.connect(serverWallet);
+      const tx = await contractWithSigner.setRateLimiting(seconds);
+      
+      console.log("⏳ Cooldown update transaction submitted:", tx.hash);
+      await tx.wait();
+      
+      console.log(`✅ Cooldown period updated to ${seconds} seconds!`);
+      return { success: true };
+      
+    } catch (error: any) {
+      console.error("❌ Failed to update cooldown:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get current cooldown period
+  async getCooldownPeriod(): Promise<number> {
+    if (!this.contract) {
+      return 0;
+    }
+
+    try {
+      const cooldown = await this.contract.cooldownPeriod();
+      return Number(cooldown);
+    } catch (error) {
+      console.error("Error getting cooldown period:", error);
+      return 0;
     }
   }
 

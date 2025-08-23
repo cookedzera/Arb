@@ -467,6 +467,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // URGENT: Fix cooldown for gaming experience
+  app.post("/api/fix-cooldown", async (req, res) => {
+    try {
+      console.log("🎮 Fixing cooldown for better gaming experience...");
+      
+      const currentCooldown = await blockchainService.getCooldownPeriod();
+      console.log(`Current cooldown: ${currentCooldown} seconds`);
+      
+      if (currentCooldown > 5) {
+        const result = await blockchainService.setCooldownPeriod(5);
+        if (result.success) {
+          res.json({ 
+            success: true, 
+            message: `Cooldown reduced from ${currentCooldown}s to 5s for better gaming!`,
+            oldCooldown: currentCooldown,
+            newCooldown: 5
+          });
+        } else {
+          res.json({ 
+            success: false, 
+            error: result.error,
+            currentCooldown 
+          });
+        }
+      } else {
+        res.json({ 
+          success: true, 
+          message: `Cooldown already optimized at ${currentCooldown}s`,
+          currentCooldown 
+        });
+      }
+    } catch (error: any) {
+      console.error("Error fixing cooldown:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
+  });
+
   // Configuration endpoint for frontend
   app.get("/api/config", async (req, res) => {
     try {
