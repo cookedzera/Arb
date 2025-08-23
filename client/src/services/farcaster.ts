@@ -19,51 +19,60 @@ export interface FarcasterUser {
  */
 export async function getFarcasterUser(): Promise<FarcasterUser | null> {
   try {
-    // Simple check: are we inside Farcaster SDK context?
-    const isInFarcaster = window.parent !== window; // Running in iframe (Farcaster app)
+    // Proper Farcaster detection: try to use the actual SDK
+    let isRealFarcaster = false;
+    let farcasterContext = null;
     
-    console.log('Simple Farcaster check:', {
-      isInFarcaster,
-      hasParent: window.parent !== window,
-      hostname: window.location.hostname
+    try {
+      // Test if Farcaster SDK is actually available and working
+      farcasterContext = await farcasterSDK.context;
+      if (farcasterContext && farcasterContext.user && farcasterContext.user.fid) {
+        isRealFarcaster = true;
+      }
+    } catch (sdkError) {
+      // SDK not available or failed - not in Farcaster
+      isRealFarcaster = false;
+    }
+    
+    // Additional check: look for Farcaster-specific URL patterns or referrers
+    const url = window.location.href;
+    const referrer = document.referrer;
+    const userAgent = navigator.userAgent;
+    
+    // Check for Farcaster-specific indicators
+    const hasFarcasterIndicators = 
+      url.includes('farcaster') || 
+      referrer.includes('farcaster') ||
+      userAgent.includes('Farcaster') ||
+      window.location.search.includes('fc_');
+    
+    console.log('🔍 Farcaster Detection:', {
+      isRealFarcaster,
+      hasFarcasterIndicators,
+      hasSDKContext: !!farcasterContext,
+      hasValidUser: !!(farcasterContext && farcasterContext.user),
+      url: url.substring(0, 100),
+      referrer: referrer.substring(0, 100),
+      userAgent: userAgent.substring(0, 50)
     });
     
-    if (isInFarcaster) {
-      console.log('✅ Running in Farcaster SDK - enabling database mode');
-      
-      try {
-        // Try to get real user data from Farcaster SDK
-        const context = await farcasterSDK.context;
-        if (context && context.user) {
-          console.log('Farcaster user authenticated:', context.user);
-          return {
-            fid: context.user.fid,
-            username: context.user.username || '',
-            displayName: context.user.displayName || context.user.username || '',
-            pfpUrl: context.user.pfpUrl || '',
-            bio: 'ArbCasino Player'
-          };
-        }
-      } catch (sdkError) {
-        console.log('Farcaster SDK error, using fallback data:', sdkError);
-      }
-      
-      // Fallback to known working data if SDK fails
+    if (isRealFarcaster && farcasterContext && farcasterContext.user) {
+      console.log('✅ Real Farcaster detected - enabling database mode');
       return {
-        fid: 190522,
-        username: 'cookedzera',
-        displayName: 'cookedzera',
-        pfpUrl: 'https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/309c4432-ce5e-4e2c-a2f4-50a0f8e21f00/original',
+        fid: farcasterContext.user.fid,
+        username: farcasterContext.user.username || '',
+        displayName: farcasterContext.user.displayName || farcasterContext.user.username || '',
+        pfpUrl: farcasterContext.user.pfpUrl || '',
         bio: 'ArbCasino Player'
       };
     } else {
       // We're outside Farcaster - fun mode
-      console.log('❌ Not in Farcaster SDK - enabling fun mode');
+      console.log('🎮 Chrome browser detected - enabling FUN MODE (no data saved)');
       return null;
     }
 
   } catch (error) {
-    console.log('Error in getFarcasterUser:', error);
+    console.log('🎮 Farcaster detection failed - defaulting to FUN MODE:', error);
     return null;
   }
 }

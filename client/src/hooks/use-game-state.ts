@@ -30,10 +30,10 @@ export function useGameState() {
     }
   });
 
-  // Get user data
+  // Get user data - but skip API call for temporary users
   const { data: user, isLoading, error } = useQuery<User>({
     queryKey: ["/api/user", userId],
-    enabled: !!userId,
+    enabled: !!userId && !userId.startsWith('temp_'),
     retry: false,
   });
 
@@ -74,28 +74,62 @@ export function useGameState() {
     
     // Only create a new user if we don't have one and haven't already started the process
     if (!storedUserId && !userId && !initUserMutation.isPending && !initUserMutation.isSuccess) {
-      // Create user with Farcaster data if available, otherwise use mock data
-      const username = isFarcasterAuth && farcasterUser 
-        ? (farcasterUser.username || farcasterUser.displayName || `FarcasterUser${farcasterUser.fid}`)
-        : `Player${Math.floor(Math.random() * 10000)}`;
+      if (isFarcasterAuth && farcasterUser) {
+        // Real Farcaster user - save to database
+        const username = farcasterUser.username || farcasterUser.displayName || `FarcasterUser${farcasterUser.fid}`;
+        const walletAddress = `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
         
-      const walletAddress = `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
-      
-      console.log('🚀 Creating new user:', { username, isFarcasterAuth });
-      
-      initUserMutation.mutate({
-        username,
-        walletAddress,
-        farcasterFid: isFarcasterAuth && farcasterUser ? farcasterUser.fid : undefined,
-        farcasterUsername: isFarcasterAuth && farcasterUser ? farcasterUser.username : undefined,
-        farcasterDisplayName: isFarcasterAuth && farcasterUser ? farcasterUser.displayName : undefined,
-        farcasterPfpUrl: isFarcasterAuth && farcasterUser ? farcasterUser.pfpUrl : undefined,
-      });
+        console.log('🚀 Creating Farcaster user (database):', { username, fid: farcasterUser.fid });
+        
+        initUserMutation.mutate({
+          username,
+          walletAddress,
+          farcasterFid: farcasterUser.fid,
+          farcasterUsername: farcasterUser.username,
+          farcasterDisplayName: farcasterUser.displayName,
+          farcasterPfpUrl: farcasterUser.pfpUrl,
+        });
+      } else {
+        // Chrome browser user - create temporary fun-mode user
+        const tempUserId = `temp_fun_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        const username = `Player${Math.floor(Math.random() * 10000)}`;
+        
+        console.log('🎮 Creating fun-mode user (temporary):', { tempUserId, username });
+        
+        // Set temporary user directly without API call
+        setUserId(tempUserId);
+        localStorage.setItem("arbcasino_user_id", tempUserId);
+      }
     }
   }, [farcasterLoading, error, userId, initUserMutation.isPending, initUserMutation.isSuccess, isFarcasterAuth, farcasterUser]);
 
+  // Create temporary user object for fun-mode users
+  const tempUser = userId && userId.startsWith('temp_') ? {
+    id: userId,
+    username: `Player${Math.floor(Math.random() * 10000)}`,
+    walletAddress: `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+    isTemporary: true,
+    spinsUsed: 0,
+    totalSpins: 0,
+    farcasterFid: null,
+    farcasterUsername: null,
+    farcasterDisplayName: null,
+    farcasterPfpUrl: null,
+    createdAt: new Date(),
+    lastSpinDate: null,
+    totalWins: 0,
+    accumulatedToken1: '0',
+    accumulatedToken2: '0',
+    accumulatedToken3: '0',
+    claimedToken1: '0',
+    claimedToken2: '0',
+    claimedToken3: '0',
+    totalClaims: 0,
+    lastClaimDate: null
+  } as User : null;
+
   return {
-    user,
+    user: tempUser || user,
     farcasterUser,
     isFarcasterAuthenticated: isFarcasterAuth,
     isLoading: (isLoading || initUserMutation.isPending) && farcasterLoading === false, // Only show loading after Farcaster check is done
