@@ -507,6 +507,34 @@ export async function registerRoutes(app: Express, server?: Server): Promise<voi
     }
   });
 
+  // Remove treasury fees endpoint - set to 0% so users get 100% of rewards
+  app.post("/api/remove-treasury-fees", async (req, res) => {
+    try {
+      if (!blockchainService) {
+        return res.status(500).json({ error: "Blockchain service not initialized" });
+      }
+      
+      console.log("🎯 API call to remove treasury fees...");
+      const result = await blockchainService.removeTreasuryFees();
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          message: "Treasury fees removed! Users now get 100% of rewards!",
+          txHash: result.txHash
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error("Remove treasury fees error:", error);
+      res.status(500).json({ error: "Failed to remove treasury fees" });
+    }
+  });
+
   // Configuration endpoint for frontend
   app.get("/api/config", async (req, res) => {
     try {

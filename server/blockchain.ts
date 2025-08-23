@@ -526,6 +526,46 @@ export class BlockchainService {
     }
   }
 
+  // Remove treasury fees - set to 0% so users get 100% of rewards
+  async removeTreasuryFees(): Promise<{ success: boolean; txHash?: string; error?: string }> {
+    if (!this.contract) {
+      return { success: false, error: "Contract not initialized" };
+    }
+
+    try {
+      // Get server wallet with treasury role
+      const serverWallet = this.getServerWallet();
+      if (!serverWallet) {
+        return { success: false, error: "Server wallet not configured" };
+      }
+
+      // Connect contract with server wallet (should have TREASURY_ROLE)
+      const contractWithSigner = this.contract.connect(serverWallet);
+      
+      // Get current treasury address
+      const currentTreasury = await this.contract.treasury();
+      console.log(`📋 Current treasury: ${currentTreasury}`);
+      
+      // Set treasury fee to 0% (users get 100% of rewards!)
+      console.log("🎯 Setting treasury fee to 0% - users get 100% of rewards!");
+      const tx = await (contractWithSigner as any).setTreasury(currentTreasury, 0);
+      
+      console.log("⏳ Transaction submitted:", tx.hash);
+      const receipt = await tx.wait();
+      
+      if (receipt.status === 1) {
+        console.log("✅ Treasury fee removed! Users now get 100% of rewards!");
+        return { success: true, txHash: tx.hash };
+      } else {
+        return { success: false, error: "Transaction failed" };
+      }
+      
+    } catch (error: any) {
+      console.error("❌ Failed to remove treasury fees:", error);
+      return { success: false, error: error.message || "Failed to update treasury" };
+    }
+  }
+
   // Update contract configuration
   async updateConfig(newConfig: Partial<ContractConfig>): Promise<void> {
     this.config = { ...this.config, ...newConfig };
