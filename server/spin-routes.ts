@@ -105,6 +105,9 @@ export function registerSpinRoutes(app: Express) {
         transactionHash: null // No transaction yet (server-side spin)
       });
       
+      // Declare transferResult in function scope
+      let transferResult = null;
+      
       // Update user's rewards - attempt automatic transfer first
       if (spinResult.isWin) {
         const rewardAmountBigInt = BigInt(spinResult.rewardAmount);
@@ -114,7 +117,6 @@ export function registerSpinRoutes(app: Express) {
         };
         
         // Attempt automatic transfer to user's current connected wallet
-        let transferResult = null;
         const targetWallet = userAddress || user.walletAddress; // Use current connected wallet first
         if (targetWallet) {
           console.log(`🎯 Transferring ${spinResult.tokenType} to connected wallet: ${targetWallet}`);
@@ -141,7 +143,7 @@ export function registerSpinRoutes(app: Express) {
         }
         
         if (transferResult && transferResult.success) {
-          // Automatic transfer successful - track in claimed totals
+          // Automatic transfer successful - track in claimed totals and count the spin
           console.log(`✅ Auto-transfer successful: ${transferResult.txHash}`);
           switch (spinResult.tokenType) {
             case 'TOKEN1':
@@ -157,43 +159,27 @@ export function registerSpinRoutes(app: Express) {
               updateData.claimedToken3 = (currentClaimed3 + rewardAmountBigInt).toString();
               break;
           }
+          
+          // Only count the spin if auto-transfer succeeds
+          const finalUpdateData = {
+            ...updateData,
+            spinsUsed: currentSpinsUsed + 1,
+            totalSpins: (user.totalSpins || 0) + 1,
+            lastSpinDate: new Date()
+          };
+          await storage.updateUser(userId, finalUpdateData);
         } else {
-          // Auto-transfer failed - accumulate tokens for later claiming
-          console.log(`⚠️ Auto-transfer failed:`, transferResult?.error);
-          
-          if (transferResult && transferResult.reason === 'cooldown') {
-            console.log(`⏱️ Cooldown active - accumulating ${spinResult.tokenType} for ${user.username}`);
-          } else {
-            console.log(`💰 Transfer failed - accumulating ${spinResult.tokenType} tokens for ${user.username} to claim later`);
-          }
-          
-          // Add to accumulated balance for later claiming
-          switch (spinResult.tokenType) {
-            case 'TOKEN1':
-              const currentAccum1 = BigInt(user.accumulatedToken1 || "0");
-              updateData.accumulatedToken1 = (currentAccum1 + rewardAmountBigInt).toString();
-              break;
-            case 'TOKEN2':
-              const currentAccum2 = BigInt(user.accumulatedToken2 || "0");
-              updateData.accumulatedToken2 = (currentAccum2 + rewardAmountBigInt).toString();
-              break;
-            case 'TOKEN3':
-              const currentAccum3 = BigInt(user.accumulatedToken3 || "0");
-              updateData.accumulatedToken3 = (currentAccum3 + rewardAmountBigInt).toString();
-              break;
-          }
+          // Auto-transfer failed - don't count the spin, return error
+          console.log(`❌ Auto-transfer failed: ${transferResult?.error || 'Unknown error'}`);
+          return res.status(400).json({ 
+            error: `Transfer failed: ${transferResult?.error || 'Unable to transfer tokens to your wallet'}`,
+            reason: 'auto_transfer_failed',
+            segment: spinResult.segment,
+            isWin: spinResult.isWin
+          });
         }
-        
-        // Combine win data with spin count update
-        const finalUpdateData = {
-          ...updateData,
-          spinsUsed: currentSpinsUsed + 1,
-          totalSpins: (user.totalSpins || 0) + 1,
-          lastSpinDate: new Date()
-        };
-        await storage.updateUser(userId, finalUpdateData);
       } else {
-        // No win - just update spin count
+        // No win - update spin count
         await storage.updateUser(userId, {
           spinsUsed: currentSpinsUsed + 1,
           totalSpins: (user.totalSpins || 0) + 1,

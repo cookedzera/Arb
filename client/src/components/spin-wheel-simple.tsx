@@ -49,11 +49,6 @@ interface SpinWheelSimpleProps {
   onSpinComplete?: (result: SpinResult) => void;
   userSpinsUsed: number;
   userId?: string;
-  userAccumulated?: {
-    AIDOGE: string;
-    BOOP: string;
-    ARB: string;
-  };
 }
 
 // Helper function to format token amounts from Wei to human-readable
@@ -75,7 +70,7 @@ const formatTokenAmount = (amount: string, decimals = 18) => {
   }
 };
 
-export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId, userAccumulated }: SpinWheelSimpleProps) {
+export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId }: SpinWheelSimpleProps) {
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<SpinResult | null>(null);
   const [sessionSpinsUsed, setSessionSpinsUsed] = useState(userSpinsUsed);
@@ -374,51 +369,6 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
 
 
 
-  const handleBatchClaim = async () => {
-    if (!address || !userId) return;
-
-    try {
-      const response = await fetch('/api/claim-batch', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          userAddress: address
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Batch claim failed');
-      }
-
-      const claimResult = await response.json();
-      
-      toast({
-        title: "🎉 All Tokens Claimed!",
-        description: `All accumulated rewards sent to your wallet`,
-      });
-
-      // Refresh by calling parent callback
-      if (onSpinComplete) {
-        onSpinComplete({
-          segment: 'CLAIM_ALL',
-          isWin: true,
-          rewardAmount: '0',
-          tokenType: 'ALL'
-        });
-      }
-
-    } catch (error: any) {
-      toast({
-        title: "Batch Claim Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   const segmentAngle = 360 / WHEEL_SEGMENTS.length;
 
@@ -632,75 +582,6 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         </Button>
       </div>
 
-      {/* Rewards Section - Ultra Modern Design */}
-      {userAccumulated && (
-        (userAccumulated.AIDOGE && parseFloat(userAccumulated.AIDOGE) > 0) ||
-        (userAccumulated.BOOP && parseFloat(userAccumulated.BOOP) > 0) ||
-        (userAccumulated.ARB && parseFloat(userAccumulated.ARB) > 0)
-      ) && (
-        <div className="w-full max-w-sm mt-6">
-          {/* Header - Clean & Minimal */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center">
-                <Gift className="w-3 h-3 text-white" />
-              </div>
-              <span className="text-white font-medium text-sm">Rewards</span>
-            </div>
-            <span className="text-xs text-gray-400">
-              {userSpinsUsed >= 3 ? 'Ready' : `${3-userSpinsUsed} left`}
-            </span>
-          </div>
-
-          {/* Token Display - Single Row Grid */}
-          <div className="flex gap-2">
-            {userAccumulated?.AIDOGE && parseFloat(formatUnits(userAccumulated.AIDOGE, 18)) > 0 && (
-              <div className="flex-1 bg-blue-600/15 border border-blue-500/20 rounded-lg p-2 text-center">
-                <div className="text-xs text-blue-400 font-medium">AIDOGE</div>
-                <div className="text-white text-sm font-bold font-mono mt-1">
-                  {formatTokenAmount(userAccumulated.AIDOGE)}
-                </div>
-              </div>
-            )}
-
-            {userAccumulated?.BOOP && parseFloat(formatUnits(userAccumulated.BOOP, 18)) > 0 && (
-              <div className="flex-1 bg-green-600/15 border border-green-500/20 rounded-lg p-2 text-center">
-                <div className="text-xs text-green-400 font-medium">BOOP</div>
-                <div className="text-white text-sm font-bold font-mono mt-1">
-                  {formatTokenAmount(userAccumulated.BOOP)}
-                </div>
-              </div>
-            )}
-
-            {userAccumulated?.ARB && parseFloat(formatUnits(userAccumulated.ARB, 18)) > 0 && (
-              <div className="flex-1 bg-purple-600/15 border border-purple-500/20 rounded-lg p-2 text-center">
-                <div className="text-xs text-purple-400 font-medium">ARB</div>
-                <div className="text-white text-sm font-bold font-mono mt-1">
-                  {formatTokenAmount(userAccumulated.ARB)}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Action Button */}
-          {userSpinsUsed >= 3 ? (
-            <Button 
-              className="w-full h-9 text-sm font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 transition-all duration-200 mt-3"
-              onClick={handleBatchClaim}
-              data-testid="button-claim-all"
-            >
-              <Coins className="w-4 h-4 mr-2" />
-              Claim All
-            </Button>
-          ) : (
-            <div className="text-center mt-3">
-              <span className="text-yellow-400 text-xs">
-                Complete {3 - userSpinsUsed} more spin{3 - userSpinsUsed !== 1 ? 's' : ''} to claim
-              </span>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Beautiful Reward Popup */}
       <AnimatePresence>

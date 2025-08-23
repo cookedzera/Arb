@@ -60,11 +60,14 @@ export function useSimpleSpin() {
       } else if (error.message.includes('User not found')) {
         errorMessage = "Please connect your wallet and try again"
         errorTitle = "User Not Found"
+      } else if (error.message.includes('Transfer failed')) {
+        errorMessage = error.message
+        errorTitle = "Auto-Transfer Failed"
       } else {
         errorMessage = error.message || "An unexpected error occurred"
       }
 
-      // Only show error toast for actual failures (not animation results)
+      // Show error toast for failures (but not for daily limit which is handled elsewhere)
       if (!error.message.includes('Daily spin limit')) {
         toast({
           title: errorTitle,
