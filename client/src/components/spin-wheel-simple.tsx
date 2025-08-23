@@ -319,7 +319,8 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
           segment: displaySegmentName,
           isWin: lastSpinResult.isWin,
           reward: lastSpinResult.rewardAmount || '0',
-          tokenType: lastSpinResult.tokenType
+          tokenType: lastSpinResult.tokenType,
+          txHash: lastSpinResult.txHash
         };
         
         // 🎰 TRIGGER EPIC JACKPOT CELEBRATION! 🎰
@@ -340,13 +341,8 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
           onSpinComplete(finalResult);
         }
         
-        // Reset center display after 3.5 seconds
-        const clearResultTimeout = setTimeout(() => {
-          setResult(null);
-          resetSpinResult(); // Clear the spin result from the hook
-        }, 3500);
-        
-        return () => clearTimeout(clearResultTimeout);
+        // Don't auto-clear result - let it persist until next spin
+        // User requested that reward popup stays visible until they spin again
       }, 4500); // Wait for wheel animation (4s) + small delay (0.5s)
       
       return () => clearTimeout(resultTimeout);
@@ -357,14 +353,18 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
 
   const handleSpin = async () => {
     // Prevent multiple spins - check all blocking conditions
-    if (userSpinsUsed >= 3 || isSpinning || result !== null) {
-      return; // Don't allow spin if: daily limit reached, currently spinning, or result showing
+    if (userSpinsUsed >= 3 || isSpinning) {
+      return; // Don't allow spin if: daily limit reached or currently spinning
     }
 
     // Check if user ID is available
     if (!userId) {
       return; // Don't show toast - user will see the wheel doesn't spin
     }
+
+    // Clear previous result when starting new spin
+    setResult(null);
+    resetSpinResult();
 
     // Use server-side spinning with the new hook
     await triggerSpin(userId);
@@ -702,26 +702,109 @@ export default function SpinWheelSimple({ onSpinComplete, userSpinsUsed, userId,
         </div>
       )}
 
-      {/* Result Display */}
+      {/* Beautiful Reward Popup */}
       <AnimatePresence>
         {result && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className={`p-4 rounded-xl border-2 ${result.isWin ? 'border-green-400 bg-green-400/20' : 'border-red-400 bg-red-400/20'} text-center`}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.9 }}
+            transition={{ type: "spring", damping: 25, stiffness: 500 }}
+            className="fixed inset-x-4 bottom-24 z-50 max-w-sm mx-auto"
           >
-            <h3 className={`text-xl font-bold ${result.isWin ? 'text-green-400' : 'text-red-400'}`}>
-              {result.isWin ? '🎉 Winner!' : '💀 Better Luck Next Time!'}
-            </h3>
-            <p className="text-white mt-2">
-              You landed on <span className="font-bold">{result.segment}</span>
-              {result.isWin && (
-                <span className="block text-sm text-white/80 mt-1">
-                  Reward: {formatTokenAmount(result.reward || result.rewardAmount || "0")} tokens
-                </span>
-              )}
-            </p>
+            <div className={`relative overflow-hidden rounded-2xl border-2 backdrop-blur-xl ${
+              result.isWin 
+                ? 'border-emerald-400/50 bg-gradient-to-br from-emerald-500/20 via-green-500/15 to-emerald-600/20' 
+                : 'border-red-400/50 bg-gradient-to-br from-red-500/20 via-rose-500/15 to-red-600/20'
+            } shadow-2xl shadow-black/40`}>
+              
+              {/* Animated Background Glow */}
+              <div className={`absolute inset-0 opacity-30 ${
+                result.isWin ? 'bg-emerald-400/10' : 'bg-red-400/10'
+              }`}>
+                <div className={`absolute inset-0 animate-pulse ${
+                  result.isWin ? 'bg-emerald-300/20' : 'bg-red-300/20'
+                }`} />
+              </div>
+              
+              {/* Content */}
+              <div className="relative p-6 text-center">
+                {/* Icon and Title */}
+                <div className="mb-4">
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-3 ${
+                    result.isWin 
+                      ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-400/30' 
+                      : 'bg-red-500/20 text-red-400 border-2 border-red-400/30'
+                  } shadow-lg`}>
+                    <span className="text-3xl">
+                      {result.isWin ? '🎉' : '💀'}
+                    </span>
+                  </div>
+                  
+                  <h3 className={`text-2xl font-bold font-pixel ${
+                    result.isWin ? 'text-emerald-400 neon-green-text' : 'text-red-400'
+                  }`}>
+                    {result.isWin ? 'EPIC WIN!' : 'BUST!'}
+                  </h3>
+                </div>
+
+                {/* Segment Result */}
+                <div className="mb-4 p-3 rounded-xl bg-black/30 border border-white/10">
+                  <p className="text-white/80 text-sm mb-1">You landed on</p>
+                  <p className="text-white font-bold text-xl font-pixel">
+                    {result.segment}
+                  </p>
+                </div>
+
+                {/* Reward Display */}
+                {result.isWin && (
+                  <div className="mb-4">
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-400/30">
+                      <p className="text-emerald-300 text-sm mb-1">Reward Amount</p>
+                      <p className="text-white font-bold text-2xl font-mono">
+                        {formatTokenAmount(result.reward || result.rewardAmount || "0")} 
+                        <span className="text-emerald-400 text-lg ml-1">tokens</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Transaction Hash */}
+                {result.isWin && result.txHash && (
+                  <div className="mb-4">
+                    <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-400/30">
+                      <p className="text-blue-300 text-xs mb-2">Transaction Hash</p>
+                      <div className="flex items-center justify-between">
+                        <code className="text-white/70 text-xs font-mono bg-black/30 px-2 py-1 rounded">
+                          {result.txHash.slice(0, 8)}...{result.txHash.slice(-6)}
+                        </code>
+                        <a
+                          href={`https://sepolia.arbiscan.io/tx/${result.txHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-1 text-xs bg-blue-500/20 hover:bg-blue-500/30 border border-blue-400/30 rounded-lg text-blue-300 hover:text-blue-200 transition-all duration-200"
+                          data-testid="link-explorer"
+                        >
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          View
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Message */}
+                <div className="text-center">
+                  <p className="text-white/60 text-sm">
+                    {result.isWin 
+                      ? "Tokens transferred to your wallet!" 
+                      : "Spin again for another chance!"}
+                  </p>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

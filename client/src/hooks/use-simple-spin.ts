@@ -42,7 +42,8 @@ export function useSimpleSpin() {
         isWin: data.isWin,
         tokenType: data.tokenType,
         rewardAmount: data.rewardAmount,
-        spinsRemaining: data.spinsRemaining
+        spinsRemaining: data.spinsRemaining,
+        txHash: data.txHash
       })
 
       // Don't show toast - will show after wheel animation completes

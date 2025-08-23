@@ -204,7 +204,8 @@ export function registerSpinRoutes(app: Express) {
       res.json({
         ...spinResult,
         spinsRemaining: 3 - (currentSpinsUsed + 1),
-        autoTransferEnabled: true
+        autoTransferEnabled: true,
+        txHash: transferResult?.success ? transferResult.txHash : null
       });
       
     } catch (error: any) {
