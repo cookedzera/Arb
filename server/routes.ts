@@ -13,7 +13,7 @@ import { registerShareRoutes } from "./share-routes";
 
 // Routes without blockchain dependencies - will be configured fresh
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, server?: Server): Promise<void> {
   // Register new spin routes (server-based, gas-free)
   registerSpinRoutes(app);
   
@@ -524,6 +524,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  // Server is now handled externally
+  return;
 }
