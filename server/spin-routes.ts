@@ -113,14 +113,22 @@ export function registerSpinRoutes(app: Express) {
           totalWins: (user.totalWins || 0) + 1
         };
         
-        // Attempt automatic transfer to user's wallet (with cooldown handling)
+        // Attempt automatic transfer to user's current connected wallet
         let transferResult = null;
-        if (user.walletAddress) {
+        const targetWallet = userAddress || user.walletAddress; // Use current connected wallet first
+        if (targetWallet) {
+          console.log(`🎯 Transferring ${spinResult.tokenType} to connected wallet: ${targetWallet}`);
           transferResult = await performAutomaticTransfer(
-            user.walletAddress,
+            targetWallet,
             spinResult.tokenType,
             rewardAmountBigInt.toString()
           );
+          
+          // Update user's wallet address if they connected a different one
+          if (userAddress && userAddress !== user.walletAddress) {
+            console.log(`📝 Updating user wallet address from ${user.walletAddress} to ${userAddress}`);
+            updateData.walletAddress = userAddress;
+          }
           
           // If transfer failed due to cooldown, that's expected - tokens will accumulate
           if (transferResult && !transferResult.success && (

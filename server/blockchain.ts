@@ -239,6 +239,9 @@ export class BlockchainService {
         return { success: false, error: errorMessage };
       }
     }
+    
+    // Should never reach here, but TypeScript wants a return
+    return { success: false, error: "All retry attempts failed" };
   }
 
   // Batch auto-transfer for multiple users (gas optimization)
