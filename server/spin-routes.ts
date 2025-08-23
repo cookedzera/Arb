@@ -113,7 +113,7 @@ export function registerSpinRoutes(app: Express) {
           totalWins: (user.totalWins || 0) + 1
         };
         
-        // Attempt automatic transfer to user's wallet
+        // Attempt automatic transfer to user's wallet (with cooldown handling)
         let transferResult = null;
         if (user.walletAddress) {
           transferResult = await performAutomaticTransfer(
@@ -121,6 +121,15 @@ export function registerSpinRoutes(app: Express) {
             spinResult.tokenType,
             rewardAmountBigInt.toString()
           );
+          
+          // If transfer failed due to cooldown, that's expected - tokens will accumulate
+          if (transferResult && !transferResult.success && (
+            transferResult.error?.includes('Cooldown') || 
+            transferResult.cooldown === true
+          )) {
+            console.log(`⏱️ Transfer cooldown active for ${user.username} - tokens will accumulate for later claiming`);
+            transferResult = { success: false, accumulated: true, reason: 'cooldown' };
+          }
         }
         
         if (transferResult && transferResult.success) {
@@ -141,9 +150,30 @@ export function registerSpinRoutes(app: Express) {
               break;
           }
         } else {
-          // Auto-transfer failed - no accumulated balance, user loses reward
+          // Auto-transfer failed - accumulate tokens for later claiming
           console.log(`⚠️ Auto-transfer failed:`, transferResult?.error);
-          console.log(`💔 User ${userId} lost potential ${spinResult.tokenType} reward due to transfer failure`);
+          
+          if (transferResult && transferResult.reason === 'cooldown') {
+            console.log(`⏱️ Cooldown active - accumulating ${spinResult.tokenType} for ${user.username}`);
+          } else {
+            console.log(`💰 Transfer failed - accumulating ${spinResult.tokenType} tokens for ${user.username} to claim later`);
+          }
+          
+          // Add to accumulated balance for later claiming
+          switch (spinResult.tokenType) {
+            case 'TOKEN1':
+              const currentAccum1 = BigInt(user.accumulatedToken1 || "0");
+              updateData.accumulatedToken1 = (currentAccum1 + rewardAmountBigInt).toString();
+              break;
+            case 'TOKEN2':
+              const currentAccum2 = BigInt(user.accumulatedToken2 || "0");
+              updateData.accumulatedToken2 = (currentAccum2 + rewardAmountBigInt).toString();
+              break;
+            case 'TOKEN3':
+              const currentAccum3 = BigInt(user.accumulatedToken3 || "0");
+              updateData.accumulatedToken3 = (currentAccum3 + rewardAmountBigInt).toString();
+              break;
+          }
         }
         
         // Combine win data with spin count update

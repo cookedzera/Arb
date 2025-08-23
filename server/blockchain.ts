@@ -206,8 +206,16 @@ export class BlockchainService {
       
       if (error.reason) {
         errorMessage = error.reason;
+        // Handle cooldown specifically
+        if (error.reason === "Cooldown") {
+          console.log("⏱️ Secure auto-transfer failed: Cooldown");
+          return { success: false, error: "Cooldown", cooldown: true };
+        }
       } else if (error.message) {
-        if (error.message.includes("daily limit")) {
+        if (error.message.includes("Cooldown")) {
+          console.log("⏱️ Auto-transfer failed: Cooldown");
+          return { success: false, error: "Cooldown", cooldown: true };
+        } else if (error.message.includes("daily limit")) {
           errorMessage = "Daily transfer limit reached";
         } else if (error.message.includes("rate limit")) {
           errorMessage = "Transfer too frequent, please wait";
