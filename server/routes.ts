@@ -467,22 +467,22 @@ export async function registerRoutes(app: Express, server?: Server): Promise<voi
     }
   });
 
-  // URGENT: Fix cooldown for gaming experience
+  // URGENT: Disable cooldown completely for instant transfers
   app.post("/api/fix-cooldown", async (req, res) => {
     try {
-      console.log("🎮 Fixing cooldown for better gaming experience...");
+      console.log("🚀 Disabling cooldown completely for instant transfers...");
       
       const currentCooldown = await blockchainService.getCooldownPeriod();
       console.log(`Current cooldown: ${currentCooldown} seconds`);
       
-      if (currentCooldown > 5) {
-        const result = await blockchainService.setCooldownPeriod(5);
+      if (currentCooldown > 0) {
+        const result = await blockchainService.setCooldownPeriod(0);
         if (result.success) {
           res.json({ 
             success: true, 
-            message: `Cooldown reduced from ${currentCooldown}s to 5s for better gaming!`,
+            message: `Cooldown disabled! Transfers are now instant (was ${currentCooldown}s)`,
             oldCooldown: currentCooldown,
-            newCooldown: 5
+            newCooldown: 0
           });
         } else {
           res.json({ 
@@ -494,12 +494,12 @@ export async function registerRoutes(app: Express, server?: Server): Promise<voi
       } else {
         res.json({ 
           success: true, 
-          message: `Cooldown already optimized at ${currentCooldown}s`,
+          message: `Cooldown already disabled - transfers are instant!`,
           currentCooldown 
         });
       }
     } catch (error: any) {
-      console.error("Error fixing cooldown:", error);
+      console.error("Error disabling cooldown:", error);
       res.status(500).json({ 
         success: false, 
         error: error.message 

@@ -154,81 +154,90 @@ export class BlockchainService {
       return { success: false, error: "Contract not initialized" };
     }
 
-    try {
-      console.log(`🚀 Initiating auto-transfer: ${amount} ${tokenType} to ${userAddress}`);
-      
-      // Map token type to ID
-      const tokenId = this.getTokenId(tokenType);
-      if (tokenId === -1) {
-        return { success: false, error: `Invalid token type: ${tokenType}` };
-      }
-      
-      // Get server wallet with private key
-      const serverWallet = this.getServerWallet();
-      if (!serverWallet) {
-        return { success: false, error: "Server wallet not configured" };
-      }
-      
-      // Connect contract with server wallet
-      const contractWithSigner = this.contract.connect(serverWallet);
-      
-      // Check if user can receive transfer
-      const canTransfer = await this.canUserReceiveTransfer(userAddress);
-      if (!canTransfer) {
-        return { success: false, error: "User rate limited or contract paused" };
-      }
-      
-      // Execute auto-transfer with proper address checksum
-      const checksummedAddress = ethers.getAddress(userAddress);
-      console.log(`📡 Calling autoTransfer(${checksummedAddress}, ${tokenId}, ${amount})`);
-      
-      const tx = await (contractWithSigner as any).autoTransfer(
-        checksummedAddress,
-        tokenId,
-        amount
-      );
-      
-      console.log("⏳ Transaction submitted:", tx.hash);
-      
-      // Wait for confirmation
-      const receipt = await tx.wait();
-      
-      if (receipt.status === 1) {
-        console.log("✅ Auto-transfer successful:", tx.hash);
-        return { success: true, txHash: tx.hash };
-      } else {
-        return { success: false, error: "Transaction failed" };
-      }
-      
-    } catch (error: any) {
-      console.error("❌ Auto-transfer failed:", error);
-      
-      // Parse error message for user-friendly response
-      let errorMessage = "Auto-transfer failed";
-      
-      if (error.reason) {
-        errorMessage = error.reason;
-        // Handle cooldown specifically
-        if (error.reason === "Cooldown") {
-          console.log("⏱️ Secure auto-transfer failed: Cooldown");
-          return { success: false, error: "Cooldown" };
+    // Retry logic for RPC rate limiting
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        console.log(`🚀 Initiating auto-transfer (attempt ${attempt}/3): ${amount} ${tokenType} to ${userAddress}`);
+        
+        // Map token type to ID
+        const tokenId = this.getTokenId(tokenType);
+        if (tokenId === -1) {
+          return { success: false, error: `Invalid token type: ${tokenType}` };
         }
-      } else if (error.message) {
-        if (error.message.includes("Cooldown")) {
-          console.log("⏱️ Auto-transfer failed: Cooldown");
-          return { success: false, error: "Cooldown" };
-        } else if (error.message.includes("daily limit")) {
-          errorMessage = "Daily transfer limit reached";
-        } else if (error.message.includes("rate limit")) {
-          errorMessage = "Transfer too frequent, please wait";
-        } else if (error.message.includes("paused")) {
-          errorMessage = "Contract is paused for maintenance";
-        } else if (error.message.includes("insufficient")) {
-          errorMessage = "Insufficient contract balance";
+        
+        // Get server wallet with private key
+        const serverWallet = this.getServerWallet();
+        if (!serverWallet) {
+          return { success: false, error: "Server wallet not configured" };
         }
+        
+        // Connect contract with server wallet
+        const contractWithSigner = this.contract.connect(serverWallet);
+        
+        // Check if user can receive transfer (skip for instant transfers)
+        // const canTransfer = await this.canUserReceiveTransfer(userAddress);
+        // Always allow transfers now since cooldown is disabled
+        
+        // Execute auto-transfer with proper address checksum
+        const checksummedAddress = ethers.getAddress(userAddress);
+        console.log(`📡 Calling autoTransfer(${checksummedAddress}, ${tokenId}, ${amount})`);
+        
+        const tx = await (contractWithSigner as any).autoTransfer(
+          checksummedAddress,
+          tokenId,
+          amount
+        );
+        
+        console.log("⏳ Transaction submitted:", tx.hash);
+        
+        // Wait for confirmation
+        const receipt = await tx.wait();
+        
+        if (receipt.status === 1) {
+          console.log("✅ Auto-transfer successful:", tx.hash);
+          return { success: true, txHash: tx.hash };
+        } else {
+          return { success: false, error: "Transaction failed" };
+        }
+        
+      } catch (error: any) {
+        // Check if it's an RPC rate limit error
+        if (error.message && error.message.includes("rate limit") && attempt < 3) {
+          console.log(`⏱️ RPC rate limit hit, retrying in ${attempt * 2} seconds...`);
+          await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+          continue;
+        }
+        
+        // If it's the last attempt or not a rate limit error, handle normally
+        console.error(`❌ Auto-transfer failed (attempt ${attempt}/3):`, error);
+        
+        // Parse error message for user-friendly response
+        let errorMessage = "Auto-transfer failed";
+        
+        if (error.reason) {
+          errorMessage = error.reason;
+          // Handle cooldown specifically (though it should be disabled now)
+          if (error.reason === "Cooldown") {
+            console.log("⏱️ Auto-transfer failed: Cooldown (this should not happen!)");
+            return { success: false, error: "Cooldown" };
+          }
+        } else if (error.message) {
+          if (error.message.includes("Cooldown")) {
+            console.log("⏱️ Auto-transfer failed: Cooldown (this should not happen!)");
+            return { success: false, error: "Cooldown" };
+          } else if (error.message.includes("daily limit")) {
+            errorMessage = "Daily transfer limit reached";
+          } else if (error.message.includes("rate limit")) {
+            errorMessage = "RPC provider is overloaded, transfer will accumulate for later claim";
+          } else if (error.message.includes("paused")) {
+            errorMessage = "Contract is paused for maintenance";
+          } else if (error.message.includes("insufficient")) {
+            errorMessage = "Insufficient contract balance";
+          }
+        }
+        
+        return { success: false, error: errorMessage };
       }
-      
-      return { success: false, error: errorMessage };
     }
   }
 
