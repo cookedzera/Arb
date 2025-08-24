@@ -7,7 +7,7 @@ import { useGameState } from "@/hooks/use-game-state";
 import SpinWheelSimple from "@/components/spin-wheel-simple";
 import CountdownTimer from "@/components/countdown-timer";
 import Navigation from "@/components/navigation";
-import TokenVoting from "@/components/token-voting";
+import RecentSpins from "@/components/recent-spins";
 import { WalletConnectCompact } from "@/components/wallet-connect-compact";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { formatUnits } from "viem";
@@ -745,11 +745,8 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Token Voting Section - Replace Token Collection */}
-        <TokenVoting 
-          userId={user?.id} 
-          isAuthenticated={user && !user.isTemporary}
-        />
+        {/* Recent Spins Section - Live Activity Feed */}
+        <RecentSpins />
 
 
       </div>

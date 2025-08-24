@@ -37,6 +37,8 @@ export interface IStorage {
   getSetting(key: string): Promise<SystemSetting | undefined>;
   setSetting(key: string, value: string, description?: string): Promise<SystemSetting>;
   isFreeGasEnabled(): Promise<boolean>;
+  // Recent spins methods
+  getRecentSpins(limit: number): Promise<SpinResult[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -109,6 +111,15 @@ export class DatabaseStorage implements IStorage {
 
   async addSpinResult(result: InsertSpinResult): Promise<SpinResult> {
     return this.createSpinResult(result);
+  }
+
+  async getRecentSpins(limit: number = 20): Promise<SpinResult[]> {
+    const recentSpins = await db
+      .select()
+      .from(spinResults)
+      .orderBy(desc(spinResults.timestamp))
+      .limit(limit);
+    return recentSpins;
   }
 
   async getLeaderboard(): Promise<User[]> {
@@ -675,6 +686,12 @@ export class MemStorage implements IStorage {
 
   async isFreeGasEnabled(): Promise<boolean> {
     return true; // Default to free gas for memory storage
+  }
+
+  async getRecentSpins(limit: number): Promise<SpinResult[]> {
+    return Array.from(this.spinResults.values())
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
   }
 }
 
