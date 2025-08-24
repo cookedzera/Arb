@@ -19,9 +19,14 @@ interface RecentTransactionsResponse {
   count: number;
 }
 
-export default function RecentTransactions() {
+interface RecentTransactionsProps {
+  userId?: string;
+}
+
+export default function RecentTransactions({ userId }: RecentTransactionsProps) {
   const { data: txData, isLoading } = useQuery<RecentTransactionsResponse>({
-    queryKey: ['/api/recent-transactions'],
+    queryKey: ['/api/user', userId, 'transactions'],
+    enabled: !!userId,
     refetchInterval: 15000 // Refresh every 15 seconds
   });
 

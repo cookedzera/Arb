@@ -3,19 +3,25 @@ import { storage } from "./storage";
 
 export function registerRecentSpinsRoutes(app: Express) {
   
-  // Get recent transactions with links to Arbiscan
-  app.get("/api/recent-transactions", async (req, res) => {
+  // Get user's recent transactions with links to Arbiscan
+  app.get("/api/user/:userId/transactions", async (req, res) => {
     try {
+      const { userId } = req.params;
       const limit = parseInt(req.query.limit as string) || 15;
-      const recentTransactions = await storage.getRecentTransactions(limit);
+      
+      if (!userId) {
+        return res.status(400).json({ error: "User ID required" });
+      }
+      
+      const userTransactions = await storage.getUserTransactions(userId, limit);
       
       res.json({
-        transactions: recentTransactions,
-        count: recentTransactions.length
+        transactions: userTransactions,
+        count: userTransactions.length
       });
     } catch (error) {
-      console.error('Get recent transactions error:', error);
-      res.status(500).json({ error: "Failed to get recent transactions" });
+      console.error('Get user transactions error:', error);
+      res.status(500).json({ error: "Failed to get user transactions" });
     }
   });
 

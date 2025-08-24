@@ -40,7 +40,7 @@ export interface IStorage {
   // Recent spins methods
   getRecentSpins(limit: number): Promise<SpinResult[]>;
   // Recent transactions methods
-  getRecentTransactions(limit: number): Promise<Array<{
+  getUserTransactions(userId: string, limit: number): Promise<Array<{
     id: string;
     transactionHash: string;
     type: 'spin' | 'claim';
@@ -133,7 +133,7 @@ export class DatabaseStorage implements IStorage {
     return recentSpins;
   }
 
-  async getRecentTransactions(limit: number): Promise<Array<{
+  async getUserTransactions(userId: string, limit: number): Promise<Array<{
     id: string;
     transactionHash: string;
     type: 'spin' | 'claim';
@@ -143,8 +143,8 @@ export class DatabaseStorage implements IStorage {
     timestamp: Date;
     playerName?: string;
   }>> {
-    // Get recent spins with transaction hashes
-    const recentSpins = await db
+    // Get user's spins with transaction hashes
+    const userSpins = await db
       .select({
         id: spinResults.id,
         transactionHash: spinResults.transactionHash,
@@ -155,22 +155,22 @@ export class DatabaseStorage implements IStorage {
         timestamp: spinResults.timestamp
       })
       .from(spinResults)
-      .where(sql`${spinResults.transactionHash} IS NOT NULL`)
+      .where(sql`${spinResults.transactionHash} IS NOT NULL AND ${spinResults.userId} = ${userId}`)
       .orderBy(desc(spinResults.timestamp))
       .limit(limit);
 
-    // Get recent claims with transaction hashes  
-    const recentClaims = await db
+    // Get user's claims with transaction hashes  
+    const userClaims = await db
       .select({
         id: tokenClaims.id,
         transactionHash: tokenClaims.transactionHash,
         userId: tokenClaims.userId,
         totalValueUSD: tokenClaims.totalValueUSD,
-        timestamp: tokenClaims.claimedAt
+        timestamp: tokenClaims.timestamp
       })
       .from(tokenClaims)
-      .where(sql`${tokenClaims.transactionHash} IS NOT NULL`)
-      .orderBy(desc(tokenClaims.claimedAt))
+      .where(sql`${tokenClaims.transactionHash} IS NOT NULL AND ${tokenClaims.userId} = ${userId}`)
+      .orderBy(desc(tokenClaims.timestamp))
       .limit(limit);
 
     // Map token addresses to symbols
@@ -180,47 +180,43 @@ export class DatabaseStorage implements IStorage {
       '0x0E1CD6557D2BA59C61c75850E674C2AD73253952': 'BOBOTRUM'
     };
 
+    // Get user info once
+    const user = await this.getUserById(userId);
+    const playerName = user?.username || 'Player';
+
     // Convert to unified format
     const transactions = [];
 
     // Add spins
-    for (const spin of recentSpins) {
-      let playerName = 'Anonymous';
-      if (spin.userId && !spin.userId.startsWith('temp_')) {
-        const user = await this.getUserById(spin.userId);
-        playerName = user?.username || 'Anonymous';
+    for (const spin of userSpins) {
+      if (spin.transactionHash && spin.timestamp) {
+        transactions.push({
+          id: spin.id,
+          transactionHash: spin.transactionHash,
+          type: 'spin' as const,
+          amount: spin.rewardAmount && spin.rewardAmount !== '0' 
+            ? (parseFloat(spin.rewardAmount) / 1e18).toFixed(1) 
+            : undefined,
+          tokenSymbol: spin.tokenAddress ? tokenSymbols[spin.tokenAddress] : undefined,
+          isWin: spin.isWin || false,
+          timestamp: spin.timestamp,
+          playerName
+        });
       }
-
-      transactions.push({
-        id: spin.id,
-        transactionHash: spin.transactionHash!,
-        type: 'spin' as const,
-        amount: spin.rewardAmount && spin.rewardAmount !== '0' 
-          ? (parseFloat(spin.rewardAmount) / 1e18).toFixed(1) 
-          : undefined,
-        tokenSymbol: spin.tokenAddress ? tokenSymbols[spin.tokenAddress] : undefined,
-        isWin: spin.isWin,
-        timestamp: spin.timestamp,
-        playerName
-      });
     }
 
     // Add claims
-    for (const claim of recentClaims) {
-      let playerName = 'Anonymous';
-      if (claim.userId && !claim.userId.startsWith('temp_')) {
-        const user = await this.getUserById(claim.userId);
-        playerName = user?.username || 'Anonymous';
+    for (const claim of userClaims) {
+      if (claim.transactionHash && claim.timestamp) {
+        transactions.push({
+          id: claim.id,
+          transactionHash: claim.transactionHash,
+          type: 'claim' as const,
+          amount: claim.totalValueUSD,
+          timestamp: claim.timestamp,
+          playerName
+        });
       }
-
-      transactions.push({
-        id: claim.id,
-        transactionHash: claim.transactionHash!,
-        type: 'claim' as const,
-        amount: claim.totalValueUSD,
-        timestamp: claim.timestamp,
-        playerName
-      });
     }
 
     // Sort by timestamp and return top results
@@ -801,7 +797,7 @@ export class MemStorage implements IStorage {
       .slice(0, limit);
   }
 
-  async getRecentTransactions(limit: number): Promise<Array<{
+  async getUserTransactions(userId: string, limit: number): Promise<Array<{
     id: string;
     transactionHash: string;
     type: 'spin' | 'claim';

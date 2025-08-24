@@ -745,8 +745,8 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Recent Transactions Section - Blockchain Activity */}
-        <RecentTransactions />
+        {/* Recent Transactions Section - User's Blockchain Activity */}
+        <RecentTransactions userId={user?.id} />
 
 
       </div>
