@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Coins, Zap, Clock, TrendingUp, Users } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface RecentSpin {
@@ -55,30 +54,28 @@ export default function RecentSpins() {
 
   if (isLoading) {
     return (
-      <Card className="bg-gradient-to-br from-indigo-950/50 to-purple-950/50 border-white/10">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-white font-medium flex items-center gap-2">
+            <TrendingUp className="w-4 h-4" />
             Recent Spins
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
-                  <div className="w-8 h-8 bg-white/10 rounded-full"></div>
-                  <div className="flex-1">
-                    <div className="h-3 bg-white/10 rounded mb-1 w-20"></div>
-                    <div className="h-2 bg-white/5 rounded w-16"></div>
-                  </div>
-                  <div className="w-12 h-6 bg-white/10 rounded"></div>
+          </h3>
+        </div>
+        <div className="space-y-2">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5">
+                <div className="w-6 h-6 bg-white/10 rounded-full"></div>
+                <div className="flex-1">
+                  <div className="h-2 bg-white/10 rounded mb-1 w-16"></div>
+                  <div className="h-1.5 bg-white/5 rounded w-12"></div>
                 </div>
+                <div className="w-8 h-4 bg-white/10 rounded"></div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -86,53 +83,45 @@ export default function RecentSpins() {
   const winningSpins = recentSpins.filter(spin => spin.isWin);
 
   return (
-    <Card className="bg-gradient-to-br from-indigo-950/50 to-purple-950/50 border-white/10 overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Recent Spins
-          </CardTitle>
-          <Badge variant="secondary" className="bg-white/10 text-white border-white/20">
-            <Users className="w-3 h-3 mr-1" />
-            {recentSpins.length}
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-white font-medium flex items-center gap-2">
+          <TrendingUp className="w-4 h-4" />
+          Recent Spins
+        </h3>
+        {recentSpins.length > 0 && (
+          <Badge variant="secondary" className="bg-white/10 text-white border-white/20 text-xs">
+            {winningSpins.length} wins
           </Badge>
-        </div>
-        {winningSpins.length > 0 && (
-          <div className="flex items-center gap-2 text-sm text-white/70">
-            <Coins className="w-4 h-4 text-yellow-400" />
-            <span>{winningSpins.length} recent wins!</span>
-          </div>
         )}
-      </CardHeader>
+      </div>
       
-      <CardContent className="space-y-1 max-h-64 overflow-y-auto">
+      <div className="space-y-1 max-h-48 overflow-y-auto">
         <AnimatePresence mode="popLayout">
           {recentSpins.map((spin, index) => (
             <motion.div
               key={spin.id}
-              initial={{ opacity: 0, x: -20, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 20, scale: 0.95 }}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
               transition={{ 
-                delay: index * 0.05,
+                delay: index * 0.03,
                 type: "spring",
-                stiffness: 300,
-                damping: 30
+                stiffness: 400,
+                damping: 25
               }}
-              className="group"
             >
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-white/10">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/8 transition-all duration-200">
                 {/* Player Avatar */}
                 <div className="relative">
                   {spin.playerAvatar ? (
                     <img 
                       src={spin.playerAvatar} 
                       alt={spin.playerName}
-                      className="w-8 h-8 rounded-full border-2 border-white/20"
+                      className="w-6 h-6 rounded-full border border-white/20"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
                       <span className="text-white text-xs font-bold">
                         {spin.playerName.charAt(0).toUpperCase()}
                       </span>
@@ -140,47 +129,44 @@ export default function RecentSpins() {
                   )}
                   
                   {/* Win/Loss indicator */}
-                  <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center ${
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center ${
                     spin.isWin ? 'bg-green-500' : 'bg-red-500'
                   }`}>
-                    {getSpinIcon(spin.isWin, spin.tokenSymbol)}
+                    {spin.isWin ? (
+                      <Trophy className="w-2 h-2 text-white" />
+                    ) : (
+                      <Zap className="w-2 h-2 text-white" />
+                    )}
                   </div>
                 </div>
 
                 {/* Spin Details */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-white text-sm font-medium truncate">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-white text-xs font-medium truncate">
                       {spin.isTemporary ? `Player${spin.playerName.slice(-4)}` : spin.playerName}
                     </span>
                     {spin.isWin && spin.tokenSymbol && (
                       <Badge 
-                        className={`bg-gradient-to-r ${getTokenColor(spin.tokenSymbol)} text-white text-xs px-2 py-0.5`}
+                        className={`bg-gradient-to-r ${getTokenColor(spin.tokenSymbol)} text-white text-xs px-1.5 py-0.5 h-4`}
                       >
                         {spin.tokenSymbol}
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <Clock className="w-3 h-3 text-white/40" />
-                    <span className="text-white/60">{formatTimeAgo(spin.timestamp)}</span>
-                  </div>
+                  <span className="text-white/50 text-xs">{formatTimeAgo(spin.timestamp)}</span>
                 </div>
 
                 {/* Reward Amount */}
                 <div className="text-right">
                   {spin.isWin && spin.rewardAmount ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="text-yellow-400 font-bold text-sm"
-                    >
+                    <span className="text-yellow-400 font-bold text-xs">
                       +{spin.rewardAmount}
-                    </motion.div>
+                    </span>
                   ) : (
-                    <div className="text-red-400 text-sm font-medium">
+                    <span className="text-red-400 text-xs font-medium">
                       BUST
-                    </div>
+                    </span>
                   )}
                 </div>
               </div>
@@ -189,17 +175,12 @@ export default function RecentSpins() {
         </AnimatePresence>
         
         {recentSpins.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-8 text-white/60"
-          >
-            <TrendingUp className="w-12 h-12 mx-auto mb-3 text-white/20" />
-            <p className="text-sm">No recent spins yet...</p>
-            <p className="text-xs text-white/40 mt-1">Be the first to spin!</p>
-          </motion.div>
+          <div className="text-center py-6 text-white/60">
+            <TrendingUp className="w-8 h-8 mx-auto mb-2 text-white/20" />
+            <p className="text-xs">No recent spins yet</p>
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
