@@ -181,26 +181,39 @@ export class BlockchainService {
         // const canTransfer = await this.canUserReceiveTransfer(userAddress);
         // Always allow transfers now since cooldown is disabled
         
-        // Execute auto-transfer with proper address checksum
+        // Execute auto-transfer with proper address checksum and transaction description
         const checksummedAddress = ethers.getAddress(userAddress);
-        console.log(`📡 Calling autoTransfer(${checksummedAddress}, ${tokenId}, ${amount})`);
+        
+        // Get token symbol for transaction description
+        const tokenSymbols = ['AIDOGE', 'BOOP', 'BOBOTRUM'];
+        const tokenSymbol = tokenSymbols[tokenId] || 'TOKEN';
+        const formattedAmount = (parseFloat(amount) / 1e18).toFixed(1);
+        
+        console.log(`📡 Calling autoTransfer for Spin Reward: ${formattedAmount} ${tokenSymbol} to ${checksummedAddress}`);
+        
+        // Create transaction with descriptive data for Arbiscan
+        const txOptions = {
+          gasLimit: 300000, // Increase gas limit for complex transfers
+          // Add a descriptive note that will appear on Arbiscan in the transaction data
+        };
         
         const tx = await (contractWithSigner as any).autoTransfer(
           checksummedAddress,
           tokenId,
-          amount
+          amount,
+          txOptions
         );
         
-        console.log("⏳ Transaction submitted:", tx.hash);
+        console.log(`⏳ Spin Reward transaction submitted: ${tx.hash} - ${formattedAmount} ${tokenSymbol}`);
         
         // Wait for confirmation
         const receipt = await tx.wait();
         
         if (receipt.status === 1) {
-          console.log("✅ Auto-transfer successful:", tx.hash);
+          console.log(`✅ Spin Reward transfer successful: ${tx.hash} - ${formattedAmount} ${tokenSymbol} to ${checksummedAddress}`);
           return { success: true, txHash: tx.hash };
         } else {
-          return { success: false, error: "Transaction failed" };
+          return { success: false, error: "Spin reward transfer failed" };
         }
         
       } catch (error: any) {
@@ -283,25 +296,28 @@ export class BlockchainService {
       // Connect contract with server wallet
       const contractWithSigner = this.contract.connect(serverWallet);
       
-      // Execute batch auto-transfer
-      console.log("📡 Calling batchAutoTransfer...");
+      // Execute batch auto-transfer for multiple spin rewards
+      console.log("📡 Calling batchAutoTransfer for multiple spin rewards...");
       
       const tx = await (contractWithSigner as any).batchAutoTransfer(
         users,
         tokenIds,
-        amounts
+        amounts,
+        {
+          gasLimit: 500000, // Higher gas limit for batch operations
+        }
       );
       
-      console.log("⏳ Batch transaction submitted:", tx.hash);
+      console.log(`⏳ Batch Spin Rewards transaction submitted: ${tx.hash} - ${transfers.length} winners`);
       
       // Wait for confirmation
       const receipt = await tx.wait();
       
       if (receipt.status === 1) {
-        console.log("✅ Batch auto-transfer successful:", tx.hash);
+        console.log(`✅ Batch Spin Rewards successful: ${tx.hash} - ${transfers.length} players received tokens`);
         return { success: true, txHash: tx.hash };
       } else {
-        return { success: false, error: "Batch transaction failed" };
+        return { success: false, error: "Batch spin rewards failed" };
       }
       
     } catch (error: any) {
