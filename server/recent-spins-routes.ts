@@ -3,6 +3,22 @@ import { storage } from "./storage";
 
 export function registerRecentSpinsRoutes(app: Express) {
   
+  // Get recent transactions with links to Arbiscan
+  app.get("/api/recent-transactions", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 15;
+      const recentTransactions = await storage.getRecentTransactions(limit);
+      
+      res.json({
+        transactions: recentTransactions,
+        count: recentTransactions.length
+      });
+    } catch (error) {
+      console.error('Get recent transactions error:', error);
+      res.status(500).json({ error: "Failed to get recent transactions" });
+    }
+  });
+
   // Get recent spins with enhanced data
   app.get("/api/recent-spins", async (req, res) => {
     try {

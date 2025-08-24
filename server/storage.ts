@@ -39,6 +39,17 @@ export interface IStorage {
   isFreeGasEnabled(): Promise<boolean>;
   // Recent spins methods
   getRecentSpins(limit: number): Promise<SpinResult[]>;
+  // Recent transactions methods
+  getRecentTransactions(limit: number): Promise<Array<{
+    id: string;
+    transactionHash: string;
+    type: 'spin' | 'claim';
+    amount?: string;
+    tokenSymbol?: string;
+    isWin?: boolean;
+    timestamp: Date;
+    playerName?: string;
+  }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -120,6 +131,102 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(spinResults.timestamp))
       .limit(limit);
     return recentSpins;
+  }
+
+  async getRecentTransactions(limit: number): Promise<Array<{
+    id: string;
+    transactionHash: string;
+    type: 'spin' | 'claim';
+    amount?: string;
+    tokenSymbol?: string;
+    isWin?: boolean;
+    timestamp: Date;
+    playerName?: string;
+  }>> {
+    // Get recent spins with transaction hashes
+    const recentSpins = await db
+      .select({
+        id: spinResults.id,
+        transactionHash: spinResults.transactionHash,
+        userId: spinResults.userId,
+        isWin: spinResults.isWin,
+        rewardAmount: spinResults.rewardAmount,
+        tokenAddress: spinResults.tokenAddress,
+        timestamp: spinResults.timestamp
+      })
+      .from(spinResults)
+      .where(sql`${spinResults.transactionHash} IS NOT NULL`)
+      .orderBy(desc(spinResults.timestamp))
+      .limit(limit);
+
+    // Get recent claims with transaction hashes  
+    const recentClaims = await db
+      .select({
+        id: tokenClaims.id,
+        transactionHash: tokenClaims.transactionHash,
+        userId: tokenClaims.userId,
+        totalValueUSD: tokenClaims.totalValueUSD,
+        timestamp: tokenClaims.claimedAt
+      })
+      .from(tokenClaims)
+      .where(sql`${tokenClaims.transactionHash} IS NOT NULL`)
+      .orderBy(desc(tokenClaims.claimedAt))
+      .limit(limit);
+
+    // Map token addresses to symbols
+    const tokenSymbols: { [key: string]: string } = {
+      '0x287396E90c5febB4dC1EDbc0EEF8e5668cdb08D4': 'AIDOGE',
+      '0xaeA5bb4F5b5524dee0E3F931911c8F8df4576E19': 'BOOP',
+      '0x0E1CD6557D2BA59C61c75850E674C2AD73253952': 'BOBOTRUM'
+    };
+
+    // Convert to unified format
+    const transactions = [];
+
+    // Add spins
+    for (const spin of recentSpins) {
+      let playerName = 'Anonymous';
+      if (spin.userId && !spin.userId.startsWith('temp_')) {
+        const user = await this.getUserById(spin.userId);
+        playerName = user?.username || 'Anonymous';
+      }
+
+      transactions.push({
+        id: spin.id,
+        transactionHash: spin.transactionHash!,
+        type: 'spin' as const,
+        amount: spin.rewardAmount && spin.rewardAmount !== '0' 
+          ? (parseFloat(spin.rewardAmount) / 1e18).toFixed(1) 
+          : undefined,
+        tokenSymbol: spin.tokenAddress ? tokenSymbols[spin.tokenAddress] : undefined,
+        isWin: spin.isWin,
+        timestamp: spin.timestamp,
+        playerName
+      });
+    }
+
+    // Add claims
+    for (const claim of recentClaims) {
+      let playerName = 'Anonymous';
+      if (claim.userId && !claim.userId.startsWith('temp_')) {
+        const user = await this.getUserById(claim.userId);
+        playerName = user?.username || 'Anonymous';
+      }
+
+      transactions.push({
+        id: claim.id,
+        transactionHash: claim.transactionHash!,
+        type: 'claim' as const,
+        amount: claim.totalValueUSD,
+        timestamp: claim.timestamp,
+        playerName
+      });
+    }
+
+    // Sort by timestamp and return top results
+    return transactions
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
   }
 
   async getLeaderboard(): Promise<User[]> {
@@ -692,6 +799,20 @@ export class MemStorage implements IStorage {
     return Array.from(this.spinResults.values())
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, limit);
+  }
+
+  async getRecentTransactions(limit: number): Promise<Array<{
+    id: string;
+    transactionHash: string;
+    type: 'spin' | 'claim';
+    amount?: string;
+    tokenSymbol?: string;
+    isWin?: boolean;
+    timestamp: Date;
+    playerName?: string;
+  }>> {
+    // Memory storage doesn't have real transactions, return empty array
+    return [];
   }
 }
 

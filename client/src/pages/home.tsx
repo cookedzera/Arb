@@ -7,7 +7,7 @@ import { useGameState } from "@/hooks/use-game-state";
 import SpinWheelSimple from "@/components/spin-wheel-simple";
 import CountdownTimer from "@/components/countdown-timer";
 import Navigation from "@/components/navigation";
-import RecentSpins from "@/components/recent-spins";
+import RecentTransactions from "@/components/recent-transactions";
 import { WalletConnectCompact } from "@/components/wallet-connect-compact";
 import { useFarcaster } from "@/hooks/use-farcaster";
 import { formatUnits } from "viem";
@@ -745,8 +745,8 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Recent Spins Section - Live Activity Feed */}
-        <RecentSpins />
+        {/* Recent Transactions Section - Blockchain Activity */}
+        <RecentTransactions />
 
 
       </div>
