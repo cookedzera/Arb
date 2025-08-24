@@ -52,9 +52,26 @@ export default function RecentTransactions({ userId }: RecentTransactionsProps) 
     }
   };
 
-  const getTransactionTypeIcon = (type: string) => {
+  const getTransactionTypeIcon = (type: string, isWin?: boolean) => {
     if (type === 'claim') return <Receipt className="w-3 h-3" />;
-    return <Coins className="w-3 h-3" />;
+    if (type === 'spin' && isWin) return <Coins className="w-3 h-3" />;
+    return <Activity className="w-3 h-3" />;
+  };
+
+  const getTransactionMessage = (tx: RecentTransaction) => {
+    if (tx.type === 'claim') {
+      return `Token Claim`;
+    }
+    if (tx.type === 'spin') {
+      if (tx.isWin && tx.amount && tx.tokenSymbol) {
+        return `Spin Reward - Won ${tx.amount} ${tx.tokenSymbol}`;
+      }
+      if (tx.isWin) {
+        return `Spin Reward - Lucky Win!`;
+      }
+      return `Spin Transaction`;
+    }
+    return 'Transaction';
   };
 
   const formatTxHash = (hash: string) => {
@@ -127,24 +144,17 @@ export default function RecentTransactions({ userId }: RecentTransactionsProps) 
                 {/* Transaction Type Icon */}
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
                   tx.type === 'claim' ? 'bg-green-500/20 text-green-400' : 
-                  tx.isWin ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+                  tx.isWin ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'
                 }`}>
-                  {getTransactionTypeIcon(tx.type)}
+                  {getTransactionTypeIcon(tx.type, tx.isWin)}
                 </div>
 
                 {/* Transaction Details */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-white text-xs font-medium">
-                      {tx.type === 'claim' ? 'Claim' : tx.isWin ? 'Win' : 'Spin'}
+                      {getTransactionMessage(tx)}
                     </span>
-                    {tx.tokenSymbol && (
-                      <Badge 
-                        className={`bg-gradient-to-r ${getTokenColor(tx.tokenSymbol)} text-white text-xs px-1.5 py-0.5 h-4`}
-                      >
-                        {tx.tokenSymbol}
-                      </Badge>
-                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-2.5 h-2.5 text-white/40" />
@@ -154,17 +164,13 @@ export default function RecentTransactions({ userId }: RecentTransactionsProps) 
 
                 {/* Transaction Hash Link */}
                 <div className="flex items-center gap-2">
-                  {tx.amount && (
-                    <span className="text-xs text-yellow-400 font-medium">
-                      +{tx.amount}
-                    </span>
-                  )}
                   <a
                     href={getArbiscanUrl(tx.transactionHash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors text-xs"
                     data-testid={`link-transaction-${tx.id}`}
+                    title="View on Arbiscan"
                   >
                     <span className="font-mono">{formatTxHash(tx.transactionHash)}</span>
                     <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
