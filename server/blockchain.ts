@@ -100,7 +100,7 @@ export class BlockchainService {
         TOKEN3: "0x0E1CD6557D2BA59C61c75850E674C2AD73253952" // BOBOTRUM Test on Arbitrum Sepolia
       },
       chainId: 421614,
-      rpcUrl: "https://421614.rpc.thirdweb.com",
+      rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc",
       explorerUrl: "https://sepolia.arbiscan.io"
     };
 

@@ -21,7 +21,7 @@ module.exports = {
       chainId: 1337
     },
     arbitrumSepolia: {
-      url: "https://421614.rpc.thirdweb.com",
+      url: "https://sepolia-rollup.arbitrum.io/rpc",
       chainId: 421614,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       gasPrice: 100000000, // 0.1 gwei - very low for Arbitrum
